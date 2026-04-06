@@ -1,0 +1,60 @@
+import Database from "better-sqlite3";
+import request from "supertest";
+import { beforeEach, describe, expect, it } from "vitest";
+
+import { createApp } from "../../src/server/app.js";
+import { runMigrations } from "../../src/server/db/migrate.js";
+import { seedMockData } from "../../src/server/db/seed.js";
+
+describe("PilotCheck API", () => {
+  let db: Database.Database;
+
+  beforeEach(async () => {
+    db = new Database(":memory:");
+    runMigrations(db);
+    await seedMockData(db);
+  });
+
+  it("serves dashboard aggregates", async () => {
+    const app = createApp(db);
+    const response = await request(app).get("/api/dashboard").expect(200);
+
+    const total = Object.values(response.body.counts).reduce(
+      (sum: number, value: number) => sum + value,
+      0
+    );
+    expect(total).toBeGreaterThan(0);
+    expect(response.body.failurePatterns.length).toBeGreaterThan(0);
+  });
+
+  it("lists devices and returns detail", async () => {
+    const app = createApp(db);
+    const listResponse = await request(app).get("/api/devices").expect(200);
+
+    expect(listResponse.body.items.length).toBeGreaterThan(0);
+
+    const detailResponse = await request(app)
+      .get(`/api/devices/${listResponse.body.items[0].deviceKey}`)
+      .expect(200);
+
+    expect(detailResponse.body.assignmentPath).toBeDefined();
+    expect(detailResponse.body.diagnostics).toBeDefined();
+  });
+
+  it("updates tag config through the settings API", async () => {
+    const app = createApp(db);
+
+    await request(app)
+      .post("/api/settings/tag-config")
+      .send({
+        groupTag: "LAB",
+        propertyLabel: "Lab",
+        expectedProfileNames: ["AP-Lab-UserDriven"],
+        expectedGroupNames: ["AP-Lab-Devices"]
+      })
+      .expect(201);
+
+    const response = await request(app).get("/api/settings").expect(200);
+    expect(response.body.tagConfig.some((row: { groupTag: string }) => row.groupTag === "LAB")).toBe(true);
+  });
+});
