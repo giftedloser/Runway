@@ -1,6 +1,7 @@
 import { Outlet } from "@tanstack/react-router";
 
 import { CommandPalette } from "../command/CommandPalette.js";
+import { KeyboardShortcuts } from "../command/KeyboardShortcuts.js";
 import { ToastProvider } from "../shared/toast.js";
 import { MockModeBanner } from "./MockModeBanner.js";
 import { Sidebar } from "./Sidebar.js";
@@ -21,6 +22,7 @@ export function AppShell() {
           </main>
         </div>
         <CommandPalette />
+        <KeyboardShortcuts />
       </div>
     </ToastProvider>
   );

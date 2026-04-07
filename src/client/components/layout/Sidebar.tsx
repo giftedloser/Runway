@@ -124,6 +124,18 @@ export function Sidebar() {
           <span className="text-[var(--pc-text-muted)]">Engine</span>
           <span className="font-mono text-[var(--pc-text-secondary)]">v0.1.0</span>
         </div>
+        <div className="flex items-center justify-between gap-2 px-2 text-[10.5px] text-[var(--pc-text-muted)]">
+          <span>Shortcuts</span>
+          <span className="flex items-center gap-1">
+            <kbd className="rounded border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-1.5 py-0.5 font-mono text-[10px] text-[var(--pc-text-secondary)]">
+              ?
+            </kbd>
+            <span className="text-[var(--pc-text-muted)]">·</span>
+            <kbd className="rounded border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-1.5 py-0.5 font-mono text-[10px] text-[var(--pc-text-secondary)]">
+              ⌘K
+            </kbd>
+          </span>
+        </div>
       </div>
     </aside>
   );

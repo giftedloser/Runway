@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Dashboard "What changed in 24h" feed — surfaces the most recent state
+  transition per device in the last 24 hours, classified as regression /
+  recovery / lateral with the added/removed flag diff and a click-through
+  to the device. Built on a single windowed query against
+  `device_state_history`.
+- Keyboard shortcut overlay (`?`) and Vim-style two-key navigation
+  (`g d` Dashboard, `g v` deVices, `g c` Critical, `g p` Profiles,
+  `g g` Groups, `g s` Sync, `g a` Audit, `g ,` Settings). Sequences
+  time out after 1.2s and are suppressed while typing in form fields.
+  Sidebar footer shows the `?` and `⌘K` hint chips.
 - Device Detail header now shows four at-a-glance "breakpoint" chips
   (Identity / Targeting / Enrollment / Drift), colored by the worst severity
   in each subsystem so operators can triage in under a second.
