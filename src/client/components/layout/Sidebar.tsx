@@ -1,6 +1,7 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useRouterState, useSearch } from "@tanstack/react-router";
 import {
   Activity,
+  Building2,
   DatabaseZap,
   LayoutDashboard,
   Settings2,
@@ -9,6 +10,7 @@ import {
   UsersRound
 } from "lucide-react";
 
+import { useSettings } from "../../hooks/useSettings.js";
 import { cn } from "../../lib/utils.js";
 import { AuthIndicator } from "./AuthIndicator.js";
 
@@ -49,6 +51,21 @@ const navGroups: NavGroup[] = [
 
 export function Sidebar() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const settings = useSettings();
+
+  // Properties pulled from tag_config so each casino's leader can jump
+  // straight to "their" devices. Deduped because the same property label
+  // may map to multiple group tags.
+  const properties = (() => {
+    if (!settings.data) return [] as string[];
+    const seen = new Set<string>();
+    for (const tag of settings.data.tagConfig) {
+      if (tag.propertyLabel && !seen.has(tag.propertyLabel)) {
+        seen.add(tag.propertyLabel);
+      }
+    }
+    return Array.from(seen).sort();
+  })();
 
   return (
     <aside className="sticky top-0 flex h-screen w-[232px] shrink-0 flex-col border-r border-[var(--pc-border)] bg-[var(--pc-surface)]">
@@ -64,7 +81,7 @@ export function Sidebar() {
       </div>
 
       {/* Nav */}
-      <nav className="mt-1 flex flex-1 flex-col gap-3 px-3">
+      <nav className="mt-1 flex flex-1 flex-col gap-3 overflow-y-auto px-3 pb-3">
         {navGroups.map((group) => (
           <div key={group.label} className="flex flex-col gap-0.5">
             <div className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--pc-text-muted)]">
@@ -92,6 +109,10 @@ export function Sidebar() {
             })}
           </div>
         ))}
+
+        {properties.length > 0 && (
+          <PropertiesGroup properties={properties} pathname={pathname} />
+        )}
       </nav>
 
       {/* Footer */}
@@ -103,5 +124,60 @@ export function Sidebar() {
         </div>
       </div>
     </aside>
+  );
+}
+
+/**
+ * Properties group is rendered as its own component so we can call
+ * `useSearch` (which only resolves on the matching route) without
+ * unconditionally subscribing the rest of the sidebar to /devices state.
+ */
+function PropertiesGroup({
+  properties,
+  pathname
+}: {
+  properties: string[];
+  pathname: string;
+}) {
+  // useSearch with `strict: false` returns whatever search the closest
+  // matched route has — so we get the active property only when we're on
+  // /devices, otherwise an empty object.
+  const search = useSearch({ strict: false }) as { property?: string };
+  const activeProperty = pathname.startsWith("/devices") ? search.property : undefined;
+
+  return (
+    <div className="flex flex-col gap-0.5">
+      <div className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--pc-text-muted)]">
+        Properties
+      </div>
+      {properties.map((property) => {
+        const active = activeProperty === property;
+        return (
+          <Link
+            key={property}
+            to="/devices"
+            search={{
+              search: undefined,
+              health: undefined,
+              flag: undefined,
+              property,
+              profile: undefined,
+              page: 1,
+              pageSize: 25
+            }}
+            className={cn(
+              "flex items-center gap-3 rounded-lg px-3 py-1.5 text-[12px] font-medium transition-colors",
+              active
+                ? "bg-[var(--pc-accent-muted)] text-[var(--pc-accent-hover)]"
+                : "text-[var(--pc-text-secondary)] hover:bg-white/[0.04] hover:text-[var(--pc-text)]"
+            )}
+            title={`Filter device queue to ${property}`}
+          >
+            <Building2 className="h-3.5 w-3.5 shrink-0 opacity-70" />
+            <span className="truncate">{property}</span>
+          </Link>
+        );
+      })}
+    </div>
   );
 }

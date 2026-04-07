@@ -1,4 +1,5 @@
-import { CheckCircle, Clock, RefreshCcw, XCircle } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { AlertTriangle, CheckCircle, Clock, RefreshCcw, XCircle } from "lucide-react";
 
 import { PageHeader } from "../components/layout/PageHeader.js";
 import { ErrorState, LoadingState } from "../components/shared/ErrorState.js";
@@ -105,8 +106,16 @@ export function SyncStatusPage() {
 
       {/* Sync log */}
       <Card className="overflow-hidden">
-        <div className="border-b border-[var(--pc-border)] px-5 py-4">
-          <div className="text-[13px] font-semibold text-white">Sync History</div>
+        <div className="flex items-center justify-between border-b border-[var(--pc-border)] px-5 py-4">
+          <div>
+            <div className="text-[13px] font-semibold text-white">Sync History</div>
+            <div className="mt-0.5 text-[11px] text-[var(--pc-text-muted)]">
+              Most recent {status.data.logs.length} runs
+            </div>
+          </div>
+          {status.data.logs.length > 0 && (
+            <SyncSummary logs={status.data.logs} />
+          )}
         </div>
         {status.data.logs.length === 0 ? (
           <div className="px-5 py-8 text-center text-[13px] text-[var(--pc-text-muted)]">
@@ -119,41 +128,112 @@ export function SyncStatusPage() {
                 <tr className="border-b border-[var(--pc-border)] text-[11px] font-medium text-[var(--pc-text-muted)]">
                   <th className="px-5 py-3 text-left">Type</th>
                   <th className="px-5 py-3 text-left">Started</th>
-                  <th className="px-5 py-3 text-left">Completed</th>
+                  <th className="px-5 py-3 text-left">Duration</th>
                   <th className="px-5 py-3 text-left">Result</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--pc-border)]">
-                {status.data.logs.map((entry) => (
-                  <tr key={entry.id} className="transition-colors hover:bg-white/[0.02]">
-                    <td className="px-5 py-3 font-mono text-white">{entry.syncType}</td>
-                    <td className="px-5 py-3 text-[var(--pc-text-muted)]">
-                      <div className="flex items-center gap-1.5">
-                        <Clock className="h-3 w-3" />
-                        {new Date(entry.startedAt).toLocaleString()}
-                      </div>
-                    </td>
-                    <td className="px-5 py-3 text-[var(--pc-text-muted)]">
-                      {entry.completedAt ? (
-                        new Date(entry.completedAt).toLocaleString()
-                      ) : (
-                        <span className="text-[var(--pc-accent)]">In progress</span>
-                      )}
-                    </td>
-                    <td className="px-5 py-3 text-[var(--pc-text-secondary)]">
-                      {entry.errors.length > 0 ? (
-                        <span className="text-[var(--pc-critical)]">{entry.errors.join(", ")}</span>
-                      ) : (
-                        `${entry.devicesSynced} devices`
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                {status.data.logs.map((entry) => {
+                  const started = new Date(entry.startedAt);
+                  const completed = entry.completedAt ? new Date(entry.completedAt) : null;
+                  const durationMs = completed ? completed.getTime() - started.getTime() : null;
+                  const hasErrors = entry.errors.length > 0;
+                  return (
+                    <tr key={entry.id} className="transition-colors hover:bg-white/[0.02]">
+                      <td className="px-5 py-3">
+                        <div className="flex items-center gap-2">
+                          {hasErrors ? (
+                            <AlertTriangle className="h-3 w-3 text-[var(--pc-critical)]" />
+                          ) : completed ? (
+                            <CheckCircle className="h-3 w-3 text-[var(--pc-healthy)]" />
+                          ) : (
+                            <div className="h-2 w-2 animate-pulse rounded-full bg-[var(--pc-accent)]" />
+                          )}
+                          <span className="font-mono text-white">{entry.syncType}</span>
+                        </div>
+                      </td>
+                      <td className="px-5 py-3 text-[var(--pc-text-muted)]">
+                        <div className="flex items-center gap-1.5">
+                          <Clock className="h-3 w-3" />
+                          <span title={started.toLocaleString()}>
+                            {formatDistanceToNow(started, { addSuffix: true })}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-5 py-3 font-mono text-[12px] text-[var(--pc-text-secondary)]">
+                        {durationMs !== null ? (
+                          formatDuration(durationMs)
+                        ) : (
+                          <span className="text-[var(--pc-accent)]">running…</span>
+                        )}
+                      </td>
+                      <td className="px-5 py-3 text-[var(--pc-text-secondary)]">
+                        {hasErrors ? (
+                          <details className="group">
+                            <summary className="cursor-pointer text-[var(--pc-critical)] hover:text-rose-300">
+                              {entry.errors.length} error{entry.errors.length === 1 ? "" : "s"}
+                            </summary>
+                            <ul className="mt-2 space-y-1 pl-3 text-[11.5px] text-rose-300/90">
+                              {entry.errors.map((err, idx) => (
+                                <li key={idx} className="font-mono">
+                                  • {err}
+                                </li>
+                              ))}
+                            </ul>
+                          </details>
+                        ) : completed ? (
+                          <span>
+                            <span className="font-medium text-white">{entry.devicesSynced}</span>{" "}
+                            device{entry.devicesSynced === 1 ? "" : "s"}
+                          </span>
+                        ) : (
+                          <span className="text-[var(--pc-text-muted)]">—</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         )}
       </Card>
+    </div>
+  );
+}
+
+function formatDuration(ms: number): string {
+  if (ms < 1000) return `${ms}ms`;
+  const seconds = Math.round(ms / 100) / 10;
+  if (seconds < 60) return `${seconds}s`;
+  const minutes = Math.floor(seconds / 60);
+  const remainder = Math.round(seconds - minutes * 60);
+  return `${minutes}m ${remainder}s`;
+}
+
+function SyncSummary({ logs }: { logs: NonNullable<ReturnType<typeof useSyncStatus>["data"]>["logs"] }) {
+  const completed = logs.filter((log) => log.completedAt !== null);
+  if (completed.length === 0) return null;
+  const successes = completed.filter((log) => log.errors.length === 0).length;
+  const totalMs = completed.reduce((sum, log) => {
+    const start = new Date(log.startedAt).getTime();
+    const end = new Date(log.completedAt!).getTime();
+    return sum + Math.max(end - start, 0);
+  }, 0);
+  const avgMs = Math.round(totalMs / completed.length);
+  return (
+    <div className="flex items-center gap-4 text-[11px]">
+      <div>
+        <div className="text-[var(--pc-text-muted)]">Success rate</div>
+        <div className="font-semibold tabular-nums text-white">
+          {Math.round((successes / completed.length) * 100)}%
+        </div>
+      </div>
+      <div className="h-8 w-px bg-[var(--pc-border)]" />
+      <div>
+        <div className="text-[var(--pc-text-muted)]">Avg duration</div>
+        <div className="font-mono font-semibold text-white">{formatDuration(avgMs)}</div>
+      </div>
     </div>
   );
 }
