@@ -34,3 +34,11 @@ export function useDeviceActionLogs(deviceKey: string | undefined, limit = 25) {
       )
   });
 }
+
+export function useActionLogs(limit = 200) {
+  return useQuery({
+    queryKey: ["actions", "logs", "all", limit],
+    queryFn: () => apiRequest<ActionLogEntry[]>(`/api/actions/logs?limit=${limit}`),
+    refetchInterval: 30_000
+  });
+}

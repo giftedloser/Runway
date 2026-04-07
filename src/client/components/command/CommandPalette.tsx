@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   ArrowRight,
   DatabaseZap,
+  History,
   LayoutDashboard,
   RefreshCcw,
   Search,
@@ -168,6 +169,14 @@ export function CommandPalette() {
         hint: "Sync status & logs",
         icon: DatabaseZap,
         action: () => go("/sync")
+      },
+      {
+        type: "page",
+        id: "page-actions",
+        title: "Action Audit",
+        hint: "Cross-device action timeline",
+        icon: History,
+        action: () => go("/actions")
       },
       {
         type: "page",

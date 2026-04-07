@@ -19,10 +19,14 @@ import { Input } from "../components/ui/input.js";
 import type { HealthLevel } from "../lib/types.js";
 import { useGroup, useGroups } from "../hooks/useGroups.js";
 
+type MemberHealthFilter = "all" | "unhealthy" | "critical";
+
 export function GroupInspectorPage() {
   const groups = useGroups();
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
+  const [memberFilter, setMemberFilter] = useState<MemberHealthFilter>("all");
+  const [memberSearch, setMemberSearch] = useState("");
 
   const filteredGroups = (groups.data ?? []).filter((g) =>
     search ? g.groupName.toLowerCase().includes(search.toLowerCase()) : true
@@ -219,66 +223,124 @@ export function GroupInspectorPage() {
 
                 {/* Members */}
                 <Card className="overflow-hidden">
-                  <div className="flex items-center gap-2 border-b border-[var(--pc-border)] px-5 py-4">
-                    <Users className="h-4 w-4 text-[var(--pc-accent)]" />
-                    <span className="text-[13px] font-semibold text-white">Members</span>
-                    <span className="text-[11px] text-[var(--pc-text-muted)]">
-                      ({groupDetail.data.members.length})
-                    </span>
+                  <div className="flex flex-wrap items-center gap-3 border-b border-[var(--pc-border)] px-5 py-4">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4 text-[var(--pc-accent)]" />
+                      <span className="text-[13px] font-semibold text-white">Members</span>
+                      <span className="text-[11px] text-[var(--pc-text-muted)]">
+                        ({groupDetail.data.members.length})
+                      </span>
+                    </div>
+                    <div className="ml-auto flex flex-wrap items-center gap-1.5">
+                      <MemberFilterChip
+                        active={memberFilter === "all"}
+                        onClick={() => setMemberFilter("all")}
+                      >
+                        All
+                      </MemberFilterChip>
+                      <MemberFilterChip
+                        active={memberFilter === "unhealthy"}
+                        onClick={() => setMemberFilter("unhealthy")}
+                        tone="warning"
+                      >
+                        Unhealthy
+                      </MemberFilterChip>
+                      <MemberFilterChip
+                        active={memberFilter === "critical"}
+                        onClick={() => setMemberFilter("critical")}
+                        tone="critical"
+                      >
+                        Critical only
+                      </MemberFilterChip>
+                      <div className="relative">
+                        <Search className="pointer-events-none absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-[var(--pc-text-muted)]" />
+                        <Input
+                          value={memberSearch}
+                          onChange={(event) => setMemberSearch(event.target.value)}
+                          placeholder="Filter…"
+                          className="h-7 w-32 pl-6 text-[11px]"
+                        />
+                      </div>
+                    </div>
                   </div>
-                  {groupDetail.data.members.length === 0 ? (
-                    <div className="px-5 py-6 text-center text-[12px] text-[var(--pc-text-muted)]">
-                      No members in this group.
-                    </div>
-                  ) : (
-                    <div className="max-h-[460px] overflow-auto">
-                      <table className="w-full">
-                        <thead className="sticky top-0 bg-[var(--pc-surface)]">
-                          <tr className="text-[10px] uppercase tracking-wide text-[var(--pc-text-muted)]">
-                            <th className="px-5 py-2 text-left font-medium">Device</th>
-                            <th className="px-3 py-2 text-left font-medium">Serial</th>
-                            <th className="px-3 py-2 text-left font-medium">Group Tag</th>
-                            <th className="px-3 py-2 text-left font-medium">Profile</th>
-                            <th className="px-3 py-2 text-left font-medium">Health</th>
-                            <th className="px-3 py-2 text-right font-medium">Flags</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-[var(--pc-border)]">
-                          {groupDetail.data.members.map((member) => (
-                            <tr
-                              key={member.deviceKey}
-                              className="transition-colors hover:bg-white/[0.02]"
-                            >
-                              <td className="px-5 py-2.5 text-[12px]">
-                                <Link
-                                  to="/devices/$deviceKey"
-                                  params={{ deviceKey: member.deviceKey }}
-                                  className="font-medium text-white transition-colors hover:text-[var(--pc-accent-hover)]"
-                                >
-                                  {member.deviceName ?? "—"}
-                                </Link>
-                              </td>
-                              <td className="px-3 py-2.5 font-mono text-[11.5px] text-[var(--pc-text-secondary)]">
-                                {member.serialNumber ?? "—"}
-                              </td>
-                              <td className="px-3 py-2.5 text-[11.5px] text-[var(--pc-text-secondary)]">
-                                {member.groupTag ?? "—"}
-                              </td>
-                              <td className="px-3 py-2.5 text-[11.5px] text-[var(--pc-text-secondary)]">
-                                {member.assignedProfileName ?? "—"}
-                              </td>
-                              <td className="px-3 py-2.5">
-                                <StatusBadge health={member.health as HealthLevel} />
-                              </td>
-                              <td className="px-3 py-2.5 text-right text-[11.5px] font-mono text-[var(--pc-text-secondary)]">
-                                {member.flagCount}
-                              </td>
+                  {(() => {
+                    const lowerSearch = memberSearch.toLowerCase();
+                    const visible = groupDetail.data.members.filter((member) => {
+                      if (
+                        memberFilter === "unhealthy" &&
+                        member.health !== "warning" &&
+                        member.health !== "critical"
+                      ) {
+                        return false;
+                      }
+                      if (memberFilter === "critical" && member.health !== "critical") {
+                        return false;
+                      }
+                      if (lowerSearch) {
+                        const haystack = `${member.deviceName ?? ""} ${member.serialNumber ?? ""} ${member.groupTag ?? ""}`.toLowerCase();
+                        if (!haystack.includes(lowerSearch)) return false;
+                      }
+                      return true;
+                    });
+                    if (visible.length === 0) {
+                      return (
+                        <div className="px-5 py-6 text-center text-[12px] text-[var(--pc-text-muted)]">
+                          {groupDetail.data.members.length === 0
+                            ? "No members in this group."
+                            : "No members match the current filters."}
+                        </div>
+                      );
+                    }
+                    return (
+                      <div className="max-h-[460px] overflow-auto">
+                        <table className="w-full">
+                          <thead className="sticky top-0 bg-[var(--pc-surface)]">
+                            <tr className="text-[10px] uppercase tracking-wide text-[var(--pc-text-muted)]">
+                              <th className="px-5 py-2 text-left font-medium">Device</th>
+                              <th className="px-3 py-2 text-left font-medium">Serial</th>
+                              <th className="px-3 py-2 text-left font-medium">Group Tag</th>
+                              <th className="px-3 py-2 text-left font-medium">Profile</th>
+                              <th className="px-3 py-2 text-left font-medium">Health</th>
+                              <th className="px-3 py-2 text-right font-medium">Flags</th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
+                          </thead>
+                          <tbody className="divide-y divide-[var(--pc-border)]">
+                            {visible.map((member) => (
+                                <tr
+                                key={member.deviceKey}
+                                className="transition-colors hover:bg-white/[0.02]"
+                              >
+                                <td className="px-5 py-2.5 text-[12px]">
+                                  <Link
+                                    to="/devices/$deviceKey"
+                                    params={{ deviceKey: member.deviceKey }}
+                                    className="font-medium text-white transition-colors hover:text-[var(--pc-accent-hover)]"
+                                  >
+                                    {member.deviceName ?? "—"}
+                                  </Link>
+                                </td>
+                                <td className="px-3 py-2.5 font-mono text-[11.5px] text-[var(--pc-text-secondary)]">
+                                  {member.serialNumber ?? "—"}
+                                </td>
+                                <td className="px-3 py-2.5 text-[11.5px] text-[var(--pc-text-secondary)]">
+                                  {member.groupTag ?? "—"}
+                                </td>
+                                <td className="px-3 py-2.5 text-[11.5px] text-[var(--pc-text-secondary)]">
+                                  {member.assignedProfileName ?? "—"}
+                                </td>
+                                <td className="px-3 py-2.5">
+                                  <StatusBadge health={member.health as HealthLevel} />
+                                </td>
+                                <td className="px-3 py-2.5 text-right text-[11.5px] font-mono text-[var(--pc-text-secondary)]">
+                                  {member.flagCount}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    );
+                  })()}
                 </Card>
               </div>
             )}
@@ -286,5 +348,37 @@ export function GroupInspectorPage() {
         </div>
       )}
     </div>
+  );
+}
+
+function MemberFilterChip({
+  active,
+  onClick,
+  tone,
+  children
+}: {
+  active: boolean;
+  onClick: () => void;
+  tone?: "warning" | "critical";
+  children: React.ReactNode;
+}) {
+  const activeStyle =
+    tone === "critical"
+      ? "border-[var(--pc-critical)]/50 bg-[var(--pc-critical-muted)] text-rose-100"
+      : tone === "warning"
+        ? "border-[var(--pc-warning)]/50 bg-[var(--pc-warning-muted)] text-amber-100"
+        : "border-[var(--pc-accent)]/60 bg-[var(--pc-accent-muted)] text-white";
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors ${
+        active
+          ? activeStyle
+          : "border-[var(--pc-border)] bg-[var(--pc-surface-raised)] text-[var(--pc-text-secondary)] hover:border-[var(--pc-accent)]/40 hover:text-white"
+      }`}
+    >
+      {children}
+    </button>
   );
 }

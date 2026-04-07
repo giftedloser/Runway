@@ -3,6 +3,7 @@ import {
   Activity,
   Building2,
   DatabaseZap,
+  History,
   LayoutDashboard,
   Settings2,
   ShieldCheck,
@@ -44,6 +45,7 @@ const navGroups: NavGroup[] = [
     label: "System",
     items: [
       { to: "/sync", label: "Sync", icon: DatabaseZap },
+      { to: "/actions", label: "Action Audit", icon: History },
       { to: "/settings", label: "Settings", icon: Settings2 }
     ]
   }

@@ -1,6 +1,7 @@
 import { createRootRouteWithContext, createRoute, createRouter } from "@tanstack/react-router";
 import type { QueryClient } from "@tanstack/react-query";
 
+import { ActionAuditPage } from "./routes/ActionAudit.js";
 import { AppShell } from "./components/layout/AppShell.js";
 import { DashboardPage } from "./routes/Dashboard.js";
 import { DeviceDetailPage } from "./routes/DeviceDetail.js";
@@ -82,6 +83,12 @@ const setupRoute = createRoute({
   component: SetupPage
 });
 
+const actionAuditRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/actions",
+  component: ActionAuditPage
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   devicesRoute,
@@ -90,7 +97,8 @@ const routeTree = rootRoute.addChildren([
   groupsRoute,
   syncRoute,
   settingsRoute,
-  setupRoute
+  setupRoute,
+  actionAuditRoute
 ]);
 
 export function createAppRouter(queryClient: QueryClient) {
