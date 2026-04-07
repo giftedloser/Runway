@@ -25,9 +25,9 @@ import { useSettings, useTagConfigMutations } from "../hooks/useSettings.js";
 import type { TagConfigRecord } from "../lib/types.js";
 
 const REQUIRED_ENV = [
-  { key: "GRAPH_TENANT_ID", purpose: "Entra tenant" },
-  { key: "GRAPH_CLIENT_ID", purpose: "App registration" },
-  { key: "GRAPH_CLIENT_SECRET", purpose: "Read-only Graph access" }
+  { key: "AZURE_TENANT_ID", purpose: "Entra tenant" },
+  { key: "AZURE_CLIENT_ID", purpose: "App registration" },
+  { key: "AZURE_CLIENT_SECRET", purpose: "Read-only Graph access" }
 ] as const;
 
 const DELEGATED_SCOPES = [
