@@ -1,6 +1,8 @@
 import { CheckCircle, Clock, RefreshCcw, XCircle } from "lucide-react";
 
 import { PageHeader } from "../components/layout/PageHeader.js";
+import { ErrorState, LoadingState } from "../components/shared/ErrorState.js";
+import { SourceBadge } from "../components/shared/SourceBadge.js";
 import { SyncIndicator } from "../components/shared/SyncIndicator.js";
 import { Button } from "../components/ui/button.js";
 import { Card } from "../components/ui/card.js";
@@ -10,29 +12,34 @@ export function SyncStatusPage() {
   const status = useSyncStatus();
   const trigger = useTriggerSync();
 
-  if (status.isLoading || !status.data) {
+  if (status.isLoading) return <LoadingState label="Loading sync status…" />;
+  if (status.isError || !status.data) {
     return (
-      <div className="flex items-center gap-2 text-[13px] text-[var(--pc-text-muted)]">
-        <div className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--pc-accent)] border-t-transparent" />
-        Loading sync status&hellip;
-      </div>
+      <ErrorState
+        title="Could not load sync status"
+        error={status.error}
+        onRetry={() => status.refetch()}
+      />
     );
   }
 
   return (
     <div className="space-y-5">
       <PageHeader
-        eyebrow="Sync"
-        title="Sync Status"
-        description="Microsoft Graph ingestion status, cache freshness, and sync history."
+        eyebrow="System"
+        title="Data Ingestion"
+        description="Pulls Autopilot, Intune, and Entra ID data from Microsoft Graph into the local state engine. Run a full sync after configuration changes."
         actions={
-          <Button
-            onClick={() => trigger.mutate()}
-            disabled={trigger.isPending || status.data.inProgress}
-          >
-            <RefreshCcw className="h-3.5 w-3.5" />
-            Run Full Sync
-          </Button>
+          <>
+            <SourceBadge source="graph" />
+            <Button
+              onClick={() => trigger.mutate()}
+              disabled={trigger.isPending || status.data.inProgress}
+            >
+              <RefreshCcw className="h-3.5 w-3.5" />
+              Run Full Sync
+            </Button>
+          </>
         }
       />
 
@@ -123,11 +130,13 @@ export function SyncStatusPage() {
                     <td className="px-5 py-3 text-[var(--pc-text-muted)]">
                       <div className="flex items-center gap-1.5">
                         <Clock className="h-3 w-3" />
-                        {entry.startedAt}
+                        {new Date(entry.startedAt).toLocaleString()}
                       </div>
                     </td>
                     <td className="px-5 py-3 text-[var(--pc-text-muted)]">
-                      {entry.completedAt ?? (
+                      {entry.completedAt ? (
+                        new Date(entry.completedAt).toLocaleString()
+                      ) : (
                         <span className="text-[var(--pc-accent)]">In progress</span>
                       )}
                     </td>

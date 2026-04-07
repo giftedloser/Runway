@@ -11,29 +11,26 @@ import {
 import { FailurePatterns } from "../components/dashboard/FailurePatterns.js";
 import { HealthSummary } from "../components/dashboard/HealthSummary.js";
 import { PageHeader } from "../components/layout/PageHeader.js";
+import { ErrorState, LoadingState } from "../components/shared/ErrorState.js";
 import { SyncIndicator } from "../components/shared/SyncIndicator.js";
 import { Button } from "../components/ui/button.js";
 import { Card } from "../components/ui/card.js";
+import { humanizeFlag } from "../lib/flags.js";
 import { useDashboard } from "../hooks/useDashboard.js";
 import { useTriggerSync } from "../hooks/useSync.js";
-
-function humanizeFlag(flag: string) {
-  return flag
-    .split("_")
-    .map((part) => part[0]?.toUpperCase() + part.slice(1))
-    .join(" ");
-}
 
 export function DashboardPage() {
   const dashboard = useDashboard();
   const sync = useTriggerSync();
 
-  if (dashboard.isLoading || !dashboard.data) {
+  if (dashboard.isLoading) return <LoadingState label="Loading dashboard…" />;
+  if (dashboard.isError || !dashboard.data) {
     return (
-      <div className="flex items-center gap-2 text-[13px] text-[var(--pc-text-muted)]">
-        <div className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--pc-accent)] border-t-transparent" />
-        Loading dashboard&hellip;
-      </div>
+      <ErrorState
+        title="Could not load dashboard"
+        error={dashboard.error}
+        onRetry={() => dashboard.refetch()}
+      />
     );
   }
 
@@ -96,8 +93,8 @@ export function DashboardPage() {
     <div className="space-y-6">
       <PageHeader
         eyebrow="Overview"
-        title="Dashboard"
-        description="Estate health, failure concentration, and triage starting points for Autopilot provisioning."
+        title="Estate Health"
+        description="End-to-end visibility across Autopilot, Intune, and Entra ID — surfacing devices whose join, enrollment, configuration, or compliance state is drifting from intent."
         actions={
           <>
             <SyncIndicator lastSync={dashboard.data.lastSync} />

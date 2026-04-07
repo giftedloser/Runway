@@ -2,15 +2,9 @@ import { useNavigate } from "@tanstack/react-router";
 import { ChevronRight } from "lucide-react";
 
 import type { DashboardResponse } from "../../lib/types.js";
+import { describeFlag, humanizeFlag } from "../../lib/flags.js";
 import { StatusBadge } from "../shared/StatusBadge.js";
 import { Card } from "../ui/card.js";
-
-function humanizeFlag(flag: string) {
-  return flag
-    .split("_")
-    .map((part) => part[0]?.toUpperCase() + part.slice(1))
-    .join(" ");
-}
 
 export function FailurePatterns({
   patterns
@@ -56,6 +50,9 @@ export function FailurePatterns({
               <div className="min-w-0 flex-1">
                 <div className="text-[13px] font-medium text-white">
                   {humanizeFlag(pattern.flag)}
+                </div>
+                <div className="mt-0.5 line-clamp-1 text-[11.5px] text-[var(--pc-text-muted)]">
+                  {describeFlag(pattern.flag) ?? "Click to filter the queue"}
                 </div>
               </div>
               <StatusBadge health={pattern.severity} />

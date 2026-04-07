@@ -41,11 +41,22 @@ export async function fullSync(
 
   try {
     if (!config.isGraphConfigured) {
-      await seedMockData(db);
+      // Mock mode: seed fake data only when the DB is empty so that
+      // subsequent "syncs" don't overwrite any real state the user has
+      // been experimenting with, and never wipe an operator's data.
+      const existing = (
+        db.prepare("SELECT COUNT(*) as count FROM device_state").get() as { count: number }
+      ).count;
+      if (existing === 0) {
+        await seedMockData(db);
+      }
       const count = (
         db.prepare("SELECT COUNT(*) as count FROM device_state").get() as { count: number }
       ).count;
-      completeSyncLog(db, log.id, { devicesSynced: count });
+      completeSyncLog(db, log.id, {
+        devicesSynced: count,
+        errors: existing === 0 ? [] : ["Mock mode: skipped reseed because device_state is not empty."]
+      });
       return;
     }
 

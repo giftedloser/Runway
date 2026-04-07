@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 
 import { PageHeader } from "../components/layout/PageHeader.js";
+import { ErrorState, LoadingState } from "../components/shared/ErrorState.js";
+import { SourceBadge } from "../components/shared/SourceBadge.js";
 import { StatusBadge } from "../components/shared/StatusBadge.js";
 import { Card } from "../components/ui/card.js";
 import { Input } from "../components/ui/input.js";
@@ -31,21 +33,24 @@ export function GroupInspectorPage() {
 
   const groupDetail = useGroup(effectiveSelectedId);
 
-  if (groups.isLoading) {
+  if (groups.isLoading) return <LoadingState label="Loading groups…" />;
+  if (groups.isError) {
     return (
-      <div className="flex items-center gap-2 text-[13px] text-[var(--pc-text-muted)]">
-        <div className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--pc-accent)] border-t-transparent" />
-        Loading groups&hellip;
-      </div>
+      <ErrorState
+        title="Could not load groups"
+        error={groups.error}
+        onRetry={() => groups.refetch()}
+      />
     );
   }
 
   return (
     <div className="space-y-5">
       <PageHeader
-        eyebrow="Group Inspector"
-        title="Autopilot Targeting Groups"
-        description="Inspect which Entra groups target Autopilot profiles, verify device membership, and debug assignment failures from the ground up."
+        eyebrow="Inspect"
+        title="Targeting Groups"
+        description="Entra ID groups that drive Autopilot and Intune assignment. Inspect membership, dynamic rules, and which profiles each group resolves to."
+        actions={<SourceBadge source="entra" />}
       />
 
       {(groups.data?.length ?? 0) === 0 ? (
@@ -129,9 +134,8 @@ export function GroupInspectorPage() {
           {/* Right: group detail */}
           <div className="min-w-0">
             {groupDetail.isLoading || !groupDetail.data ? (
-              <Card className="flex items-center gap-2 p-5 text-[13px] text-[var(--pc-text-muted)]">
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--pc-accent)] border-t-transparent" />
-                Loading group details&hellip;
+              <Card className="p-5">
+                <LoadingState label="Loading group details…" />
               </Card>
             ) : (
               <div className="space-y-5">

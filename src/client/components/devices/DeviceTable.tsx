@@ -37,21 +37,28 @@ export function DeviceTable({ devices }: { devices: DeviceListItem[] }) {
                 key={device.deviceKey}
                 className="transition-colors hover:bg-white/[0.02]"
               >
-                <td className="px-4 py-3">
+                <td className="max-w-[260px] px-4 py-3">
                   <Link
                     to="/devices/$deviceKey"
                     params={{ deviceKey: device.deviceKey }}
-                    className="font-medium text-white hover:text-[var(--pc-accent-hover)]"
+                    className="block truncate font-medium text-white hover:text-[var(--pc-accent-hover)]"
+                    title={device.deviceName ?? device.serialNumber ?? device.deviceKey}
                   >
                     {device.deviceName ?? device.serialNumber ?? device.deviceKey}
                   </Link>
                   {device.propertyLabel && (
-                    <div className="mt-0.5 text-[11px] text-[var(--pc-text-muted)]">
+                    <div
+                      className="mt-0.5 truncate text-[11px] text-[var(--pc-text-muted)]"
+                      title={device.propertyLabel}
+                    >
                       {device.propertyLabel}
                     </div>
                   )}
                 </td>
-                <td className="px-4 py-3 font-mono text-[12px] text-[var(--pc-text-secondary)]">
+                <td
+                  className="px-4 py-3 font-mono text-[12px] text-[var(--pc-text-secondary)]"
+                  title={device.serialNumber ?? undefined}
+                >
                   {device.serialNumber ?? "\u2014"}
                 </td>
                 <td className="px-4 py-3">
@@ -69,7 +76,10 @@ export function DeviceTable({ devices }: { devices: DeviceListItem[] }) {
                     )}
                   </div>
                 </td>
-                <td className="px-4 py-3 text-[var(--pc-text-secondary)]">
+                <td
+                  className="max-w-[200px] truncate px-4 py-3 text-[var(--pc-text-secondary)]"
+                  title={device.assignedProfileName ?? undefined}
+                >
                   {device.assignedProfileName ?? "\u2014"}
                 </td>
                 <td className="px-4 py-3 text-[var(--pc-text-muted)]">

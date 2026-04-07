@@ -17,6 +17,15 @@ import type {
   ProfileRow
 } from "../types.js";
 
+function safeJsonParse<T>(raw: string | null | undefined, fallback: T): T {
+  if (!raw) return fallback;
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    return fallback;
+  }
+}
+
 interface DeviceStateRow {
   device_key: string;
   serial_number: string | null;
@@ -129,7 +138,7 @@ function parseDeviceListItem(row: DeviceStateRow): DeviceListItem {
     serialNumber: row.serial_number,
     propertyLabel: row.property_label,
     health: row.overall_health,
-    flags: JSON.parse(row.active_flags) as FlagCode[],
+    flags: safeJsonParse<FlagCode[]>(row.active_flags, []),
     flagCount: row.flag_count,
     assignedProfileName: row.assigned_profile_name,
     deploymentMode: row.deployment_mode,
@@ -185,8 +194,11 @@ export function listDeviceStates(
   }
 
   const whereClause = where.length ? `WHERE ${where.join(" AND ")}` : "";
-  const page = filters.page ?? 1;
-  const pageSize = filters.pageSize ?? 25;
+  const rawPage = filters.page ?? 1;
+  const rawPageSize = filters.pageSize ?? 25;
+  // Guard against DoS: cap pageSize at 200 and page at something reasonable.
+  const pageSize = Math.min(Math.max(Number.isFinite(rawPageSize) ? rawPageSize : 25, 1), 200);
+  const page = Math.min(Math.max(Number.isFinite(rawPage) ? rawPage : 1, 1), 10_000);
   params.offset = (page - 1) * pageSize;
   params.limit = pageSize;
 
@@ -245,9 +257,17 @@ export function getDeviceDetail(db: Database.Database, deviceKey: string): Devic
         | undefined)?.raw_json ?? null)
     : null;
 
-  const parsedAssignment = JSON.parse(row.assignment_path) as AssignmentPath & {
-    diagnostics?: DeviceDetailResponse["diagnostics"];
-  };
+  const parsedAssignment = safeJsonParse<
+    AssignmentPath & { diagnostics?: DeviceDetailResponse["diagnostics"] }
+  >(row.assignment_path, {
+    autopilotRecord: null,
+    targetingGroups: [],
+    assignedProfile: null,
+    effectiveMode: null,
+    chainComplete: false,
+    breakPoint: "no_record",
+    diagnostics: []
+  });
 
   return {
     summary: parseDeviceListItem(row),
@@ -297,7 +317,7 @@ export function getDashboard(db: Database.Database): DashboardResponse {
   for (const row of rows) {
     const health = row.overall_health as keyof typeof counts;
     counts[health] += 1;
-    const flags = JSON.parse(row.active_flags) as FlagCode[];
+    const flags = safeJsonParse<FlagCode[]>(row.active_flags, []);
     if (flags.includes("compliance_drift")) {
       driftCount += 1;
     }

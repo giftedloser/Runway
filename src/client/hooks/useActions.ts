@@ -1,6 +1,6 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import type { ActionResult, RemoteActionType } from "../lib/types.js";
+import type { ActionLogEntry, ActionResult, RemoteActionType } from "../lib/types.js";
 import { apiRequest } from "../lib/api.js";
 
 interface ActionPayload {
@@ -21,5 +21,16 @@ export function useRemoteAction() {
       queryClient.invalidateQueries({ queryKey: ["device", variables.deviceKey] });
       queryClient.invalidateQueries({ queryKey: ["actions", "logs"] });
     }
+  });
+}
+
+export function useDeviceActionLogs(deviceKey: string | undefined, limit = 25) {
+  return useQuery({
+    queryKey: ["actions", "logs", deviceKey, limit],
+    enabled: Boolean(deviceKey),
+    queryFn: () =>
+      apiRequest<ActionLogEntry[]>(
+        `/api/actions/logs/${deviceKey}?limit=${limit}`
+      )
   });
 }

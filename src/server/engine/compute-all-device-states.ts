@@ -122,12 +122,23 @@ export function computeAllDeviceStates(db: Database.Database) {
       actualProfile?.deployment_mode ??
       bundle.autopilotRecord?.deployment_mode ??
       null;
+    // Hybrid join detection: prefer the structured profile flag, then
+    // deployment mode enums ("hybridAzureADJoined", "hybridAADJoined"),
+    // and only as a last resort fall back to a word-boundary match on
+    // the display name so that a profile called "HybridTest" or
+    // "Win11-NotHybrid-v2" does not produce false positives.
+    const deploymentModeLower = (
+      actualProfile?.deployment_mode ??
+      bundle.autopilotRecord?.deployment_mode ??
+      ""
+    ).toLowerCase();
+    const deploymentModeSaysHybrid =
+      deploymentModeLower.includes("hybrid") && deploymentModeLower.includes("aad");
+    const profileNameSaysHybrid = /\bhybrid\b/i.test(actualProfile?.display_name ?? "");
     const hybridJoinConfigured =
       Boolean(actualProfile?.hybrid_join_config) ||
-      Boolean(
-        actualProfile?.display_name?.toLowerCase().includes("hybrid") ||
-          bundle.autopilotRecord?.deployment_mode?.toLowerCase().includes("hybrid")
-      );
+      deploymentModeSaysHybrid ||
+      profileNameSaysHybrid;
 
     const targetingGroups: AssignmentPath["targetingGroups"] = [];
     const seenGroupIds = new Set<string>();

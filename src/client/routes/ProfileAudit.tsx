@@ -1,4 +1,6 @@
 import { PageHeader } from "../components/layout/PageHeader.js";
+import { ErrorState, LoadingState } from "../components/shared/ErrorState.js";
+import { SourceBadge } from "../components/shared/SourceBadge.js";
 import { ProfileCard } from "../components/profiles/ProfileCard.js";
 import { ProfileHealthBreakdown } from "../components/profiles/ProfileHealthBreakdown.js";
 import { useProfiles } from "../hooks/useProfiles.js";
@@ -6,21 +8,24 @@ import { useProfiles } from "../hooks/useProfiles.js";
 export function ProfileAuditPage() {
   const profiles = useProfiles();
 
-  if (profiles.isLoading || !profiles.data) {
+  if (profiles.isLoading) return <LoadingState label="Loading profiles…" />;
+  if (profiles.isError || !profiles.data) {
     return (
-      <div className="flex items-center gap-2 text-[13px] text-[var(--pc-text-muted)]">
-        <div className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--pc-accent)] border-t-transparent" />
-        Loading profiles&hellip;
-      </div>
+      <ErrorState
+        title="Could not load profiles"
+        error={profiles.error}
+        onRetry={() => profiles.refetch()}
+      />
     );
   }
 
   return (
     <div className="space-y-5">
       <PageHeader
-        eyebrow="Profiles"
-        title="Profile Audit"
-        description="Review deployment profiles as shared failure domains. Identify targeting gaps, missing assignments, and tag mismatches."
+        eyebrow="Inspect"
+        title="Deployment Profiles"
+        description="Audit Intune deployment profiles as shared failure domains. Identify targeting gaps, missing assignments, hybrid-join risk, and tag mismatches across the estate."
+        actions={<SourceBadge source="intune" />}
       />
       {profiles.data.length === 0 ? (
         <div className="text-[13px] text-[var(--pc-text-muted)]">

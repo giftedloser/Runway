@@ -12,36 +12,38 @@ import {
 import { cn } from "../../lib/utils.js";
 import { AuthIndicator } from "./AuthIndicator.js";
 
-const navItems = [
+interface NavItem {
+  to: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+}
+
+interface NavGroup {
+  label: string;
+  items: NavItem[];
+}
+
+const navGroups: NavGroup[] = [
   {
-    to: "/",
-    label: "Overview",
-    icon: LayoutDashboard
+    label: "Triage",
+    items: [
+      { to: "/", label: "Overview", icon: LayoutDashboard },
+      { to: "/devices", label: "Devices", icon: TabletSmartphone }
+    ]
   },
   {
-    to: "/devices",
-    label: "Devices",
-    icon: TabletSmartphone
+    label: "Inspect",
+    items: [
+      { to: "/profiles", label: "Profiles", icon: ShieldCheck },
+      { to: "/groups", label: "Groups", icon: UsersRound }
+    ]
   },
   {
-    to: "/profiles",
-    label: "Profiles",
-    icon: ShieldCheck
-  },
-  {
-    to: "/groups",
-    label: "Groups",
-    icon: UsersRound
-  },
-  {
-    to: "/sync",
-    label: "Sync",
-    icon: DatabaseZap
-  },
-  {
-    to: "/settings",
-    label: "Settings",
-    icon: Settings2
+    label: "System",
+    items: [
+      { to: "/sync", label: "Sync", icon: DatabaseZap },
+      { to: "/settings", label: "Settings", icon: Settings2 }
+    ]
   }
 ];
 
@@ -57,32 +59,39 @@ export function Sidebar() {
         </div>
         <div>
           <div className="text-[15px] font-semibold tracking-tight text-white">PilotCheck</div>
-          <div className="text-[11px] text-[var(--pc-text-muted)]">Autopilot Diagnostics</div>
+          <div className="text-[11px] text-[var(--pc-text-muted)]">Endpoint State Validation</div>
         </div>
       </div>
 
       {/* Nav */}
-      <nav className="mt-1 flex flex-1 flex-col gap-0.5 px-3">
-        <div className="mb-2 px-2 text-[11px] font-medium text-[var(--pc-text-muted)]">Navigation</div>
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const active = pathname === item.to || (item.to !== "/" && pathname.startsWith(item.to));
-          return (
-            <Link
-              key={item.to}
-              to={item.to}
-              className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium transition-colors",
-                active
-                  ? "bg-[var(--pc-accent-muted)] text-[var(--pc-accent-hover)]"
-                  : "text-[var(--pc-text-secondary)] hover:bg-white/[0.04] hover:text-[var(--pc-text)]"
-              )}
-            >
-              <Icon className="h-4 w-4 shrink-0" />
-              {item.label}
-            </Link>
-          );
-        })}
+      <nav className="mt-1 flex flex-1 flex-col gap-3 px-3">
+        {navGroups.map((group) => (
+          <div key={group.label} className="flex flex-col gap-0.5">
+            <div className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--pc-text-muted)]">
+              {group.label}
+            </div>
+            {group.items.map((item) => {
+              const Icon = item.icon;
+              const active =
+                pathname === item.to || (item.to !== "/" && pathname.startsWith(item.to));
+              return (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  className={cn(
+                    "flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium transition-colors",
+                    active
+                      ? "bg-[var(--pc-accent-muted)] text-[var(--pc-accent-hover)]"
+                      : "text-[var(--pc-text-secondary)] hover:bg-white/[0.04] hover:text-[var(--pc-text)]"
+                  )}
+                >
+                  <Icon className="h-4 w-4 shrink-0" />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
+        ))}
       </nav>
 
       {/* Footer */}

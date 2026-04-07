@@ -25,15 +25,22 @@ export function createApp(db: Database.Database) {
   app.use(express.json());
   app.use(pinoHttp({ logger }));
 
-  // Session middleware for delegated auth
+  // Session middleware for delegated auth.
+  // This server is intended to run on the admin workstation (Tauri sidecar)
+  // so the default binding is localhost. `secure` defaults to true except
+  // when NODE_ENV is explicitly "development", which avoids the common
+  // footgun of forgetting to flip this on for production deployments.
+  const isDev = process.env.NODE_ENV === "development";
   app.use(
     session({
       secret: config.SESSION_SECRET,
       resave: false,
       saveUninitialized: false,
+      name: "pilotcheck.sid",
       cookie: {
         httpOnly: true,
-        secure: false, // localhost — set true in production
+        secure: !isDev,
+        sameSite: "lax",
         maxAge: 3600 * 1000 // 1 hour
       }
     })
