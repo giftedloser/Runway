@@ -9,7 +9,9 @@ import type {
   DeviceListItem,
   FlagCode,
   HealthLevel,
-  HealthTrendPoint
+  HealthTrendPoint,
+  RecentTransition,
+  TransitionDirection
 } from "../../../shared/types.js";
 import type {
   AutopilotRow,
@@ -503,6 +505,101 @@ export function getHealthTrend(db: Database.Database, days: number): HealthTrend
   return points;
 }
 
+/**
+ * Severity ranking used to classify a transition. Higher = worse.
+ * "unknown" is treated as 0 so first-ever observations look like recoveries
+ * if they land at "healthy" and stay neutral otherwise.
+ */
+const HEALTH_RANK: Record<HealthLevel, number> = {
+  unknown: 0,
+  healthy: 1,
+  info: 2,
+  warning: 3,
+  critical: 4
+};
+
+/**
+ * Returns the most recent state transition per device that occurred within
+ * the window, newest first. Each row also surfaces the prior state (so we
+ * can tell whether the transition was a regression, recovery, or lateral
+ * flag swap), the added/removed flag set, and the device's display fields
+ * via a join on `device_state`.
+ */
+export function getRecentTransitions(
+  db: Database.Database,
+  sinceIso: string,
+  limit: number
+): RecentTransition[] {
+  const rows = db
+    .prepare(
+      `SELECT h.device_key, h.computed_at, h.overall_health, h.active_flags,
+              ds.device_name, ds.serial_number, ds.property_label
+         FROM device_state_history h
+         INNER JOIN (
+           SELECT device_key, MAX(computed_at) AS max_computed_at
+             FROM device_state_history
+            WHERE computed_at >= ?
+         GROUP BY device_key
+         ) latest
+           ON latest.device_key = h.device_key
+          AND latest.max_computed_at = h.computed_at
+         LEFT JOIN device_state ds ON ds.device_key = h.device_key
+        ORDER BY h.computed_at DESC
+        LIMIT ?`
+    )
+    .all(sinceIso, limit) as Array<{
+    device_key: string;
+    computed_at: string;
+    overall_health: HealthLevel;
+    active_flags: string;
+    device_name: string | null;
+    serial_number: string | null;
+    property_label: string | null;
+  }>;
+
+  // Pre-compile the prior-state lookup. Each device hits this once.
+  const priorStmt = db.prepare(
+    `SELECT overall_health, active_flags
+       FROM device_state_history
+      WHERE device_key = ? AND computed_at < ?
+      ORDER BY computed_at DESC LIMIT 1`
+  );
+
+  const transitions: RecentTransition[] = [];
+  for (const row of rows) {
+    const prior = priorStmt.get(row.device_key, row.computed_at) as
+      | { overall_health: HealthLevel; active_flags: string }
+      | undefined;
+    const fromHealth = prior?.overall_health ?? null;
+    const toHealth = row.overall_health;
+    const fromRank = fromHealth ? HEALTH_RANK[fromHealth] : 0;
+    const toRank = HEALTH_RANK[toHealth];
+    const direction: TransitionDirection =
+      toRank > fromRank ? "regression" : toRank < fromRank ? "recovery" : "lateral";
+
+    const flags = safeJsonParse<FlagCode[]>(row.active_flags, []);
+    const priorFlags = safeJsonParse<FlagCode[]>(prior?.active_flags ?? null, []);
+    const flagSet = new Set(flags);
+    const priorSet = new Set(priorFlags);
+    const addedFlags = flags.filter((f) => !priorSet.has(f));
+    const removedFlags = priorFlags.filter((f) => !flagSet.has(f));
+
+    transitions.push({
+      deviceKey: row.device_key,
+      deviceName: row.device_name,
+      serialNumber: row.serial_number,
+      propertyLabel: row.property_label,
+      fromHealth,
+      toHealth,
+      direction,
+      computedAt: row.computed_at,
+      addedFlags,
+      removedFlags
+    });
+  }
+  return transitions;
+}
+
 export function getDashboard(db: Database.Database): DashboardResponse {
   const rows = db.prepare("SELECT overall_health, active_flags FROM device_state").all() as Array<{
     overall_health: DashboardResponse["counts"][keyof DashboardResponse["counts"]];
@@ -553,6 +650,7 @@ export function getDashboard(db: Database.Database): DashboardResponse {
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
   const newlyUnhealthy24h = countNewlyUnhealthy(db, since);
   const healthTrend = getHealthTrend(db, 14);
+  const recentTransitions = getRecentTransitions(db, since, 25);
 
   return {
     lastSync: lastSync?.completed_at ?? null,
@@ -560,6 +658,7 @@ export function getDashboard(db: Database.Database): DashboardResponse {
     failurePatterns,
     driftCount,
     newlyUnhealthy24h,
-    healthTrend
+    healthTrend,
+    recentTransitions
   };
 }

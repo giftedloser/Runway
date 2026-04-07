@@ -11,6 +11,7 @@ import {
 import { FailurePatterns } from "../components/dashboard/FailurePatterns.js";
 import { HealthSummary } from "../components/dashboard/HealthSummary.js";
 import { HealthTrendChart } from "../components/dashboard/HealthTrendChart.js";
+import { RecentChanges } from "../components/dashboard/RecentChanges.js";
 import { PageHeader } from "../components/layout/PageHeader.js";
 import { ErrorState, LoadingState } from "../components/shared/ErrorState.js";
 import { SyncIndicator } from "../components/shared/SyncIndicator.js";
@@ -180,6 +181,9 @@ export function DashboardPage() {
         <HealthSummary counts={dashboard.data.counts} />
         <HealthTrendChart data={dashboard.data.healthTrend} />
       </div>
+
+      {/* What changed in the last 24h */}
+      <RecentChanges transitions={dashboard.data.recentTransitions} />
 
       {/* Main content: Failures + Breakpoints */}
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">

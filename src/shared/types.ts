@@ -113,6 +113,28 @@ export interface DashboardResponse {
    * row per device whose computed_at is on-or-before that day's end.
    */
   healthTrend: HealthTrendPoint[];
+  /**
+   * Most recent state transitions in the last 24h, newest first. One entry
+   * per device — the latest transition that fell into the window.
+   */
+  recentTransitions: RecentTransition[];
+}
+
+export type TransitionDirection = "regression" | "recovery" | "lateral";
+
+export interface RecentTransition {
+  deviceKey: DeviceKey;
+  deviceName: string | null;
+  serialNumber: string | null;
+  propertyLabel: string | null;
+  fromHealth: HealthLevel | null;
+  toHealth: HealthLevel;
+  direction: TransitionDirection;
+  computedAt: string;
+  /** Flags that appeared at this transition relative to the prior state. */
+  addedFlags: FlagCode[];
+  /** Flags that disappeared at this transition relative to the prior state. */
+  removedFlags: FlagCode[];
 }
 
 export interface HealthTrendPoint {
