@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Profile inspector drawer on the Profile Audit page — segmented health
+  bar, click-through queue filters, targeting groups, common-problems
+  grid, and a 25-row device breakdown without losing page context.
+- Bulk action confirmation modal — sync/reboot from the queue now opens a
+  preview dialog with health-distribution chips, a scrollable device list,
+  and a destructive warning banner before any action fires.
+- Device detail single-key shortcuts: `r` refetches device data, `s`
+  dispatches a sync, `b` returns to the queue. Hint chips render in the
+  breadcrumb row and the global shortcut overlay learns the new section.
+- **Test suite expansion** — 32 new tests covering the rule DSL evaluator
+  (every operator, scope filter, and malformed-predicate safety net), the
+  recent-transitions and newly-unhealthy queries against a real sqlite
+  schema, and remote action route guardrails (allowlist enforcement, 200
+  device cap, NetBIOS rename validation, audit log writes). Total suite
+  now 37 tests.
+
+### Changed
+- Global keyboard shortcut listener now attaches in capture phase so
+  Vim-style two-key sequences (`g s`) preempt page-local single-key
+  handlers like the new device detail shortcuts.
+
+### Added (earlier)
 - Dashboard "What changed in 24h" feed — surfaces the most recent state
   transition per device in the last 24 hours, classified as regression /
   recovery / lateral with the added/removed flag diff and a click-through
