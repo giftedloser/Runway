@@ -1,17 +1,23 @@
 # PilotCheck
 
-> A local-first diagnostic state engine for Windows Autopilot, Intune, and Entra ID.
+> A local-first triage console for **Windows** Autopilot, Intune, and Entra ID.
+> Windows-only by design.
 
-PilotCheck correlates device identities across Microsoft endpoint-management
-systems, computes provisioning health with a transparent rule engine, and
-presents **problem-first** diagnostics — so an operator opening the app on a
-Monday morning can tell within seconds which devices are broken, *why*, and
-*what to do about it*.
+PilotCheck correlates Windows device identities across Microsoft Autopilot,
+Intune, and Entra ID, computes provisioning health with a transparent rule
+engine, and presents **problem-first** diagnostics — so an operator opening
+the app on a Monday morning can tell within seconds which devices are broken,
+*why*, and *what to do about it*.
 
-It's built for the small-but-real ops team running a fleet of a few hundred to
-a few thousand Windows endpoints — the band where SCCM is overkill, the Intune
-admin centre is too slow to triage from, and PowerShell scripts are how
-everyone is currently getting by.
+It's built for the small-but-real internal IT team running a fleet of a few
+hundred to a few thousand Windows endpoints — the band where SCCM is overkill,
+the Intune admin centre is too slow to triage from, and PowerShell scripts are
+how everyone is currently getting by.
+
+PilotCheck is intentionally **not** a full Intune replacement, **not** a
+multi-tenant tool, and does **not** attempt to manage iOS, Android, or macOS.
+Those are non-goals — the product is laser-focused on the Windows triage loop
+and stays honest about that scope.
 
 ---
 
@@ -28,7 +34,7 @@ everyone is currently getting by.
   *Autopilot record → group membership → assigned profile → effective
   deployment mode* and tells you exactly which link is broken.
 - **Drift history** — transition-only `device_state_history` table, plus a
-  14-day estate-wide health trend on the dashboard.
+  14-day fleet-wide health trend on the dashboard.
 - **Remote actions** (delegated auth) — sync, reboot, rename, rotate LAPS,
   Autopilot reset, retire, factory wipe — all logged to a cross-device action
   audit timeline.

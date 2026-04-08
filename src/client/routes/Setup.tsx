@@ -89,7 +89,7 @@ export function SetupPage() {
       <PageHeader
         eyebrow="Welcome"
         title="First-run Setup"
-        description="Walk through these steps to take PilotCheck from a fresh install to a working ingestion. You can skip ahead at any time and revisit Settings later."
+        description="Walk through these steps to take PilotCheck from a fresh install to a working ingestion of your Windows Autopilot, Intune, and Entra ID data. You can skip ahead at any time and revisit Settings later."
       />
 
       <StepShell

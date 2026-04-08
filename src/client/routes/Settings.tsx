@@ -144,7 +144,7 @@ export function SettingsPage() {
       <PageHeader
         eyebrow="System"
         title="Settings"
-        description="Configure how PilotCheck connects to Microsoft Graph and how it interprets your group tag conventions. Changes take effect on the next sync."
+        description="Configure how PilotCheck connects to Microsoft Graph for your Windows Autopilot, Intune, and Entra ID tenant, and how it interprets your group tag conventions. Changes take effect on the next sync."
       />
 
       {/* Section 1: Graph integration */}

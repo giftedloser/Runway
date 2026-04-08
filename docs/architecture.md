@@ -44,7 +44,7 @@ no external state — everything runs on one machine.
 3. **History** writes a row to `device_state_history` only when a device's
    health level *or* its set of active flags changes. This keeps history
    tiny while still letting the UI render transition timelines and the
-   14-day estate trend chart.
+   14-day fleet trend chart.
 4. **Read paths** in `src/server/db/queries/` are pure SQL — the API layer is
    a thin shell around them.
 
