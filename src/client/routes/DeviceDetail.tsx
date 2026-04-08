@@ -13,6 +13,7 @@ import { ActionHistory } from "../components/devices/ActionHistory.js";
 import { ActionsToolbar } from "../components/devices/ActionsToolbar.js";
 import { AssignmentPanel } from "../components/devices/AssignmentPanel.js";
 import { AssignmentPathPanel } from "../components/devices/AssignmentPathPanel.js";
+import { DeviceShortcuts } from "../components/devices/DeviceShortcuts.js";
 import { DiagnosticPanel } from "../components/devices/DiagnosticPanel.js";
 import { HistoryPanel } from "../components/devices/HistoryPanel.js";
 import { IdentityPanel } from "../components/devices/IdentityPanel.js";
@@ -197,21 +198,42 @@ export function DeviceDetailPage() {
 
   return (
     <div className="space-y-6">
+      <DeviceShortcuts
+        deviceKey={deviceKey}
+        deviceLabel={displayName}
+        onRefresh={() => device.refetch()}
+      />
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-1.5 text-[12px] text-[var(--pc-text-muted)]">
-        <Link
-          to="/devices"
-          search={DEVICES_DEFAULT_SEARCH}
-          className="inline-flex items-center gap-1.5 transition-colors hover:text-[var(--pc-text)]"
-        >
-          <ArrowLeft className="h-3 w-3" />
-          Devices
-        </Link>
-        <ChevronRight className="h-3 w-3" />
-        <span className="truncate text-[var(--pc-text-secondary)]" title={displayName}>
-          {displayName}
-        </span>
-      </nav>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <nav className="flex items-center gap-1.5 text-[12px] text-[var(--pc-text-muted)]">
+          <Link
+            to="/devices"
+            search={DEVICES_DEFAULT_SEARCH}
+            className="inline-flex items-center gap-1.5 transition-colors hover:text-[var(--pc-text)]"
+          >
+            <ArrowLeft className="h-3 w-3" />
+            Devices
+          </Link>
+          <ChevronRight className="h-3 w-3" />
+          <span className="truncate text-[var(--pc-text-secondary)]" title={displayName}>
+            {displayName}
+          </span>
+        </nav>
+        <div className="hidden items-center gap-2 text-[10.5px] text-[var(--pc-text-muted)] sm:flex">
+          <kbd className="rounded border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-1 py-px font-mono text-[10px]">
+            r
+          </kbd>
+          refresh
+          <kbd className="rounded border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-1 py-px font-mono text-[10px]">
+            s
+          </kbd>
+          sync
+          <kbd className="rounded border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-1 py-px font-mono text-[10px]">
+            b
+          </kbd>
+          back
+        </div>
+      </div>
 
       {/* Hero header */}
       <header className="rounded-xl border border-[var(--pc-border)] bg-[var(--pc-surface)] p-5">

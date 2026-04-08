@@ -123,9 +123,11 @@ export function KeyboardShortcuts() {
       }
     };
 
-    window.addEventListener("keydown", onKey);
+    // Capture phase so global sequences (e.g. `g s`) preempt page-local
+    // single-key handlers like DeviceShortcuts.
+    window.addEventListener("keydown", onKey, true);
     return () => {
-      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("keydown", onKey, true);
       if (goPendingRef.current !== null) {
         window.clearTimeout(goPendingRef.current);
       }
@@ -141,6 +143,14 @@ export function KeyboardShortcuts() {
         { keys: ["⌘", "K"], label: "Open command palette" },
         { keys: ["?"], label: "Toggle this shortcut overlay" },
         { keys: ["Esc"], label: "Close overlays" }
+      ]
+    },
+    {
+      label: "Device detail",
+      items: [
+        { keys: ["r"], label: "Refresh device data" },
+        { keys: ["s"], label: "Sync this device" },
+        { keys: ["b"], label: "Back to device queue" }
       ]
     },
     {
