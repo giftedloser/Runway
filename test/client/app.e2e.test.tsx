@@ -8,7 +8,17 @@ const dashboardPayload = {
   lastSync: "2026-04-06T00:00:00.000Z",
   counts: { critical: 2, warning: 1, info: 1, healthy: 10, unknown: 0 },
   failurePatterns: [{ flag: "no_profile_assigned", count: 2, severity: "critical" }],
-  driftCount: 1
+  driftCount: 1,
+  newlyUnhealthy24h: 0,
+  healthTrend: [],
+  recentTransitions: []
+};
+
+const settingsPayload = {
+  graph: { configured: true, missing: [] },
+  tagConfig: [
+    { groupTag: "Lodge", expectedProfileNames: ["Lodge-UD"], expectedGroupNames: [], propertyLabel: "Lodge" }
+  ]
 };
 
 const deviceListPayload = {
@@ -86,11 +96,17 @@ describe("client drilldown", () => {
       if (url.includes("/api/dashboard")) {
         return new Response(JSON.stringify(dashboardPayload), { status: 200 });
       }
-      if (url.includes("/api/devices?")) {
-        return new Response(JSON.stringify(deviceListPayload), { status: 200 });
+      if (url.includes("/api/settings")) {
+        return new Response(JSON.stringify(settingsPayload), { status: 200 });
+      }
+      if (url.includes("/api/devices/ap:auto-1/history")) {
+        return new Response(JSON.stringify({ entries: [] }), { status: 200 });
       }
       if (url.includes("/api/devices/ap:auto-1")) {
         return new Response(JSON.stringify(deviceDetailPayload), { status: 200 });
+      }
+      if (url.includes("/api/devices")) {
+        return new Response(JSON.stringify(deviceListPayload), { status: 200 });
       }
       return new Response(JSON.stringify({ message: "Not found" }), { status: 404 });
     }) as typeof fetch;
@@ -108,11 +124,14 @@ describe("client drilldown", () => {
       </QueryClientProvider>
     );
 
-    expect(await screen.findByText("Estate Command Deck")).toBeInTheDocument();
+    // Dashboard renders
+    expect(await screen.findByText("Estate Health")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByText("Critical queue"));
-    expect(await screen.findByText("Investigation Queue")).toBeInTheDocument();
+    // Drill into the Critical Devices quick-action link → device queue
+    fireEvent.click(screen.getByText("Critical Devices"));
+    expect(await screen.findByText("Device Queue")).toBeInTheDocument();
 
+    // Click into the seeded device row → device detail
     fireEvent.click(await screen.findByText("DESKTOP-Lodge-001"));
     await waitFor(() =>
       expect(screen.getByText("No Profile Assigned")).toBeInTheDocument()
