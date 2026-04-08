@@ -7,24 +7,44 @@ import { Button } from "../ui/button.js";
 import { Card } from "../ui/card.js";
 import { Input } from "../ui/input.js";
 
-const FIELD_OPTIONS = [
-  "deviceName",
-  "serialNumber",
-  "propertyLabel",
-  "groupTag",
-  "assignedProfileName",
-  "deploymentMode",
-  "trustType",
-  "complianceState",
-  "lastCheckinAt",
-  "osVersion",
-  "hasAutopilotRecord",
-  "hasIntuneRecord",
-  "hasEntraRecord",
-  "hybridJoinConfigured",
-  "assignmentChainComplete",
-  "flagCount"
-] as const;
+type FieldType = "string" | "boolean" | "number" | "timestamp";
+
+interface FieldOption {
+  id: string;
+  label: string;
+  type: FieldType;
+}
+
+/**
+ * Field registry for the rule authoring form. Each field declares the
+ * type of its underlying context value so `buildPayload` can coerce
+ * the form input to the right JavaScript primitive. This matters because
+ * `evaluateRules.normalize()` preserves boolean and number types — a
+ * `hasAutopilotRecord eq "true"` rule (string value against a boolean
+ * context field) would silently never match in production.
+ */
+const FIELD_OPTIONS: FieldOption[] = [
+  { id: "deviceName", label: "deviceName", type: "string" },
+  { id: "serialNumber", label: "serialNumber", type: "string" },
+  { id: "propertyLabel", label: "propertyLabel", type: "string" },
+  { id: "groupTag", label: "groupTag", type: "string" },
+  { id: "assignedProfileName", label: "assignedProfileName", type: "string" },
+  { id: "deploymentMode", label: "deploymentMode", type: "string" },
+  { id: "trustType", label: "trustType", type: "string" },
+  { id: "complianceState", label: "complianceState", type: "string" },
+  { id: "lastCheckinAt", label: "lastCheckinAt", type: "timestamp" },
+  { id: "osVersion", label: "osVersion", type: "string" },
+  { id: "hasAutopilotRecord", label: "hasAutopilotRecord", type: "boolean" },
+  { id: "hasIntuneRecord", label: "hasIntuneRecord", type: "boolean" },
+  { id: "hasEntraRecord", label: "hasEntraRecord", type: "boolean" },
+  { id: "hybridJoinConfigured", label: "hybridJoinConfigured", type: "boolean" },
+  { id: "assignmentChainComplete", label: "assignmentChainComplete", type: "boolean" },
+  { id: "flagCount", label: "flagCount", type: "number" }
+];
+
+function fieldType(fieldId: string): FieldType {
+  return FIELD_OPTIONS.find((f) => f.id === fieldId)?.type ?? "string";
+}
 
 const OP_OPTIONS: Array<{ value: RuleOp; label: string; needsValue: boolean }> = [
   { value: "eq", label: "equals", needsValue: true },
@@ -65,14 +85,32 @@ const EMPTY_FORM: FormState = {
   value: ""
 };
 
-function buildPayload(form: FormState): RuleInputPayload {
+export function buildPayload(form: FormState): RuleInputPayload {
   const opMeta = OP_OPTIONS.find((o) => o.value === form.op);
   let parsedValue: string | number | boolean | null = form.value;
+
   if (!opMeta?.needsValue) {
     parsedValue = null;
   } else if (form.op === "older_than_hours" || form.op === "newer_than_hours") {
+    // Staleness ops always take a numeric hours value regardless of field.
     parsedValue = Number(form.value);
+  } else if (form.op === "in" || form.op === "not_in") {
+    // CSV list ops keep the raw string; the engine splits on comma.
+    parsedValue = form.value;
+  } else {
+    // Coerce per the field's declared type so boolean/number context
+    // fields compare correctly against the value the operator typed.
+    // `evaluateRules.normalize()` preserves primitive types, so
+    // `true === "true"` would silently fail otherwise.
+    const type = fieldType(form.field);
+    if (type === "boolean") {
+      parsedValue = form.value === "true";
+    } else if (type === "number") {
+      const asNumber = Number(form.value);
+      parsedValue = Number.isFinite(asNumber) ? asNumber : form.value;
+    }
   }
+
   return {
     name: form.name.trim(),
     description: form.description.trim(),
@@ -90,12 +128,17 @@ function buildPayload(form: FormState): RuleInputPayload {
 }
 
 function describePredicate(rule: RuleDefinition): string {
-  if (rule.predicate.type !== "leaf") {
+  const predicate = rule.predicate;
+  if (predicate.type !== "leaf") {
     return "Compound rule";
   }
-  const opMeta = OP_OPTIONS.find((o) => o.value === rule.predicate.op);
-  const value = opMeta?.needsValue ? ` ${String(rule.predicate.value ?? "")}` : "";
-  return `${rule.predicate.field} ${opMeta?.label ?? rule.predicate.op}${value}`;
+  const opMeta = OP_OPTIONS.find((o) => o.value === predicate.op);
+  const rawValue = predicate.value;
+  const printedValue =
+    opMeta?.needsValue && rawValue !== null && rawValue !== undefined
+      ? ` ${typeof rawValue === "boolean" ? String(rawValue) : String(rawValue)}`
+      : "";
+  return `${predicate.field} ${opMeta?.label ?? predicate.op}${printedValue}`;
 }
 
 export function RulesSection() {
@@ -105,6 +148,17 @@ export function RulesSection() {
   const [showForm, setShowForm] = useState(false);
 
   const opMeta = OP_OPTIONS.find((o) => o.value === form.op);
+  const currentFieldType = fieldType(form.field);
+  const isHourOp = form.op === "older_than_hours" || form.op === "newer_than_hours";
+  const isBooleanValue = currentFieldType === "boolean" && !isHourOp;
+  const valuePlaceholder =
+    form.op === "in" || form.op === "not_in"
+      ? "comma,separated,values"
+      : isHourOp
+        ? "e.g. 24"
+        : currentFieldType === "number"
+          ? "numeric"
+          : "value";
 
   return (
     <section className="space-y-3">
@@ -179,14 +233,29 @@ export function RulesSection() {
               <label className="text-[11px] font-medium text-[var(--pc-text-muted)]">Field</label>
               <select
                 value={form.field}
-                onChange={(event) =>
-                  setForm((previous) => ({ ...previous, field: event.target.value }))
-                }
+                onChange={(event) => {
+                  const nextField = event.target.value;
+                  const nextType = fieldType(nextField);
+                  setForm((previous) => ({
+                    ...previous,
+                    field: nextField,
+                    // Reset the value when switching to a typed field so
+                    // a boolean field starts at "true" and a number field
+                    // doesn't carry over stale text.
+                    value:
+                      nextType === "boolean"
+                        ? "true"
+                        : nextType === "number"
+                          ? ""
+                          : previous.value
+                  }));
+                }}
                 className="mt-1 w-full rounded-md border border-[var(--pc-border)] bg-[var(--pc-surface)] px-2.5 py-1.5 text-[12px] text-[var(--pc-text)] focus:border-[var(--pc-accent)] focus:outline-none"
               >
                 {FIELD_OPTIONS.map((field) => (
-                  <option key={field} value={field}>
-                    {field}
+                  <option key={field.id} value={field.id}>
+                    {field.label}
+                    {field.type !== "string" ? ` (${field.type})` : ""}
                   </option>
                 ))}
               </select>
@@ -210,18 +279,30 @@ export function RulesSection() {
             {opMeta?.needsValue ? (
               <div className="sm:col-span-2">
                 <label className="text-[11px] font-medium text-[var(--pc-text-muted)]">Value</label>
-                <Input
-                  placeholder={
-                    form.op === "in" || form.op === "not_in"
-                      ? "comma,separated,values"
-                      : "value"
-                  }
-                  value={form.value}
-                  onChange={(event) =>
-                    setForm((previous) => ({ ...previous, value: event.target.value }))
-                  }
-                  className="mt-1"
-                />
+                {isBooleanValue ? (
+                  <select
+                    value={form.value === "true" ? "true" : "false"}
+                    onChange={(event) =>
+                      setForm((previous) => ({ ...previous, value: event.target.value }))
+                    }
+                    className="mt-1 w-full rounded-md border border-[var(--pc-border)] bg-[var(--pc-surface)] px-2.5 py-1.5 text-[12px] text-[var(--pc-text)] focus:border-[var(--pc-accent)] focus:outline-none"
+                  >
+                    <option value="true">true</option>
+                    <option value="false">false</option>
+                  </select>
+                ) : (
+                  <Input
+                    type={
+                      isHourOp || currentFieldType === "number" ? "number" : "text"
+                    }
+                    placeholder={valuePlaceholder}
+                    value={form.value}
+                    onChange={(event) =>
+                      setForm((previous) => ({ ...previous, value: event.target.value }))
+                    }
+                    className="mt-1"
+                  />
+                )}
               </div>
             ) : null}
             <div className="sm:col-span-2 flex items-center justify-between gap-2">

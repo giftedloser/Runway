@@ -6,6 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Rule authoring form silently dropped boolean and number rules.**
+  The settings → Custom Rules form sent every non-hour value as a raw
+  string, so a rule like `hasAutopilotRecord eq true` was serialized as
+  `eq "true"` and the engine's type-preserving `normalize()` would
+  compare `true === "true"` and never match. Field registry now
+  declares each field's type; boolean fields render a True/False
+  dropdown; number fields use `type="number"` and coerce via `Number()`;
+  CSV list ops stay raw. Covered by seven new client-side tests.
+
 ### Added
 - Device queue **column picker** — registry-driven popover lets operators
   toggle Primary User, Compliance, Property, and Deployment Mode columns
