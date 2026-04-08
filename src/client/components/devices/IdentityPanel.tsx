@@ -122,6 +122,22 @@ export function IdentityPanel({ device }: { device: DeviceDetailResponse }) {
           </div>
         </div>
       ) : null}
+
+      {identity.nameJoined ? (
+        <div
+          className="mt-4 flex items-start gap-2.5 rounded-lg border border-[var(--pc-warning)]/30 bg-[var(--pc-warning-muted)] px-3.5 py-2.5"
+          data-testid="name-only-correlation-warning"
+        >
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-[var(--pc-warning)]" />
+          <div className="text-[12px] leading-relaxed text-amber-100">
+            <span className="font-semibold">Name-only correlation.</span> PilotCheck could only
+            link these Autopilot, Intune, and Entra records by display name — no shared serial,
+            Entra device ID, or Intune device ID was found. This is the weakest possible
+            correlation signal. Verify the records really belong to the same physical device
+            before trusting cross-source fields or running remote actions.
+          </div>
+        </div>
+      ) : null}
     </Card>
   );
 }

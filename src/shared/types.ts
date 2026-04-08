@@ -85,6 +85,14 @@ export interface DeviceDetailResponse {
     matchConfidence: MatchConfidence;
     matchedOn: "serial" | "entra_device_id" | "device_id" | "device_name";
     identityConflict: boolean;
+    /**
+     * True when two or more source records were bundled for this device
+     * but the only link between them was a display-name match. Name-only
+     * joins are the weakest correlation signal and must never be shown
+     * as routine — the UI badges them explicitly and the operator is
+     * expected to verify before trusting the bundle.
+     */
+    nameJoined: boolean;
   };
   assignmentPath: AssignmentPath;
   diagnostics: FlagExplanation[];

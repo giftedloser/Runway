@@ -317,6 +317,16 @@ function getDeviceDetailWithRules(
     diagnostics: []
   });
 
+  // Name-only correlation: the weakest-link logic in correlateDevices
+  // already marks such bundles as low/device_name, but solo records also
+  // report matched_on = "device_name" when that is the only identifier
+  // they carry. We only want the warning when an actual cross-system
+  // claim is being made, so require at least two source records to be
+  // present before badging the bundle as name-joined.
+  const sourceRecordCount =
+    (row.autopilot_id ? 1 : 0) + (row.intune_id ? 1 : 0) + (row.entra_id ? 1 : 0);
+  const nameJoined = row.matched_on === "device_name" && sourceRecordCount >= 2;
+
   return {
     summary: parseDeviceListItem(row),
     identity: {
@@ -326,7 +336,8 @@ function getDeviceDetailWithRules(
       trustType: row.trust_type,
       matchConfidence: row.match_confidence,
       matchedOn: row.matched_on,
-      identityConflict: Boolean(row.identity_conflict)
+      identityConflict: Boolean(row.identity_conflict),
+      nameJoined
     },
     assignmentPath: {
       autopilotRecord: parsedAssignment.autopilotRecord,

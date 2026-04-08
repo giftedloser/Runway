@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { runMigrations } from "../../src/server/db/migrate.js";
 import {
   countNewlyUnhealthy,
+  getDeviceDetail,
   getRecentTransitions
 } from "../../src/server/db/queries/devices.js";
 import type { FlagCode, HealthLevel } from "../../src/shared/types.js";
@@ -181,5 +182,112 @@ describe("countNewlyUnhealthy", () => {
     insertHistory({ deviceKey: "dev-d", computedAt: isoMinutesAgo(5), health: "healthy" });
 
     expect(countNewlyUnhealthy(db, isoMinutesAgo(24 * 60))).toBe(2);
+  });
+});
+
+describe("getDeviceDetail — nameJoined flag", () => {
+  interface DetailedRow {
+    deviceKey: string;
+    autopilotId: string | null;
+    intuneId: string | null;
+    entraId: string | null;
+    matchedOn: "serial" | "entra_device_id" | "device_id" | "device_name";
+    matchConfidence: "high" | "medium" | "low";
+  }
+
+  function insertDeviceStateDetailed(row: DetailedRow) {
+    db.prepare(
+      `INSERT INTO device_state (
+         device_key, serial_number, autopilot_id, intune_id, entra_id, device_name, property_label,
+         group_tag, assigned_profile_name, autopilot_assigned_user_upn, intune_primary_user_upn,
+         last_checkin_at, trust_type, has_autopilot_record, has_intune_record, has_entra_record,
+         has_profile_assigned, profile_assignment_status, is_in_correct_group, deployment_mode,
+         deployment_mode_mismatch, hybrid_join_configured, hybrid_join_risk, user_assignment_match,
+         compliance_state, provisioning_stalled, tag_mismatch, assignment_path, assignment_chain_complete,
+         assignment_break_point, active_flags, flag_count, overall_health, diagnosis, match_confidence,
+         matched_on, identity_conflict, active_rule_ids, computed_at
+       ) VALUES (
+         ?, NULL, ?, ?, ?, 'HOSTNAME', NULL,
+         NULL, NULL, NULL, NULL,
+         NULL, NULL, ?, ?, ?,
+         0, NULL, 1, NULL,
+         0, 0, 0, NULL,
+         NULL, 0, 0, '{}', 1,
+         NULL, '[]', 0, 'healthy', '', ?,
+         ?, 0, '[]', ?
+       )`
+    ).run(
+      row.deviceKey,
+      row.autopilotId,
+      row.intuneId,
+      row.entraId,
+      row.autopilotId ? 1 : 0,
+      row.intuneId ? 1 : 0,
+      row.entraId ? 1 : 0,
+      row.matchConfidence,
+      row.matchedOn,
+      new Date().toISOString()
+    );
+  }
+
+  it("is true when ≥2 source records are present and the matched key is device_name", () => {
+    insertDeviceStateDetailed({
+      deviceKey: "dev-name-join",
+      autopilotId: "ap-1",
+      intuneId: "in-1",
+      entraId: "en-1",
+      matchedOn: "device_name",
+      matchConfidence: "low"
+    });
+
+    const detail = getDeviceDetail(db, "dev-name-join");
+    expect(detail).not.toBeNull();
+    expect(detail!.identity.nameJoined).toBe(true);
+    expect(detail!.identity.matchConfidence).toBe("low");
+  });
+
+  it("is false when only one source record is present, even if matched_on is device_name", () => {
+    // Solo records legitimately report matched_on = "device_name" as their
+    // strongest identifier. There is no cross-system claim to warn about.
+    insertDeviceStateDetailed({
+      deviceKey: "dev-solo",
+      autopilotId: null,
+      intuneId: "in-solo",
+      entraId: null,
+      matchedOn: "device_name",
+      matchConfidence: "high"
+    });
+
+    const detail = getDeviceDetail(db, "dev-solo");
+    expect(detail!.identity.nameJoined).toBe(false);
+    expect(detail!.identity.matchConfidence).toBe("high");
+  });
+
+  it("is false when multiple records are present but joined by a strong key", () => {
+    insertDeviceStateDetailed({
+      deviceKey: "dev-serial-join",
+      autopilotId: "ap-2",
+      intuneId: "in-2",
+      entraId: "en-2",
+      matchedOn: "serial",
+      matchConfidence: "high"
+    });
+
+    const detail = getDeviceDetail(db, "dev-serial-join");
+    expect(detail!.identity.nameJoined).toBe(false);
+  });
+
+  it("is true when exactly two records join by name (two-record bundle counts)", () => {
+    insertDeviceStateDetailed({
+      deviceKey: "dev-pair-name",
+      autopilotId: null,
+      intuneId: "in-3",
+      entraId: "en-3",
+      matchedOn: "device_name",
+      matchConfidence: "low"
+    });
+
+    const detail = getDeviceDetail(db, "dev-pair-name");
+    expect(detail!.identity.nameJoined).toBe(true);
   });
 });
