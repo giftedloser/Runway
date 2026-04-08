@@ -188,6 +188,66 @@ describe("correlation engine", () => {
     expect(results[0].matchedOn).toBe("device_name");
   });
 
+  // --- Workstream 2 slice 3: generalized identityConflict detection ---
+
+  it("flags identity conflict when AP and IN share entra_device_id but have different serials", () => {
+    // Casino re-image collision: same Entra object picked up by a
+    // freshly imaged machine whose serial differs from the old record.
+    // The old detector only checked AP↔IN entra_device_id disagreement
+    // (which this case does NOT have) so it silently passed.
+    const results = correlateDevices({
+      autopilotRows: [ap({ serial: "CZC111", entra: "entra-shared" })],
+      intuneRows: [
+        intune({ serial: "CZC222", entra: "entra-shared", name: "DESKTOP-X" })
+      ],
+      entraRows: []
+    });
+
+    expect(results).toHaveLength(1);
+    expect(results[0].identityConflict).toBe(true);
+  });
+
+  it("flags identity conflict when AP and Entra disagree on serial", () => {
+    // AP and Entra both have entra_device_id = "entra-9" (so they bundle
+    // together) but their serials contradict. Old detector missed this
+    // because it only compared entra_device_id across AP↔IN.
+    const results = correlateDevices({
+      autopilotRows: [ap({ serial: "CZC900", entra: "entra-9" })],
+      intuneRows: [],
+      entraRows: [entra({ id: "entra-9", serial: "CZC999", name: "WS-9" })]
+    });
+
+    expect(results).toHaveLength(1);
+    expect(results[0].identityConflict).toBe(true);
+  });
+
+  it("does NOT flag identity conflict when records only disagree on display name", () => {
+    // Same physical device showing up with different rendered names
+    // (DESKTOP-A vs desktop-a.corp.example) is legitimate, not a conflict.
+    const results = correlateDevices({
+      autopilotRows: [ap({ serial: "CZC300", entra: "entra-3" })],
+      intuneRows: [intune({ serial: "CZC300", entra: "entra-3", name: "POS-A" })],
+      entraRows: [entra({ id: "entra-3", name: "pos-a.corp.example" })]
+    });
+
+    expect(results).toHaveLength(1);
+    expect(results[0].identityConflict).toBe(false);
+  });
+
+  it("does NOT flag identity conflict when one side of a strong key is simply missing", () => {
+    // AP has no entra_device_id and no raw_json deviceId. IN has both.
+    // They share serial. No contradiction — AP just didn't record the
+    // other identifiers. Must not be flagged as a conflict.
+    const results = correlateDevices({
+      autopilotRows: [ap({ serial: "CZC400" })],
+      intuneRows: [intune({ serial: "CZC400", entra: "entra-4", deviceId: "dev-4", name: "POS-B" })],
+      entraRows: []
+    });
+
+    expect(results).toHaveLength(1);
+    expect(results[0].identityConflict).toBe(false);
+  });
+
   it("two-record bundle (AP+Entra) joined by entra_device_id reports medium, not high", () => {
     // Pre-fix bug: AP has a serial, so the old code reported high/serial
     // even though the AP↔Entra pair is actually joined by entra_device_id.

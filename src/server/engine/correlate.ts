@@ -107,6 +107,38 @@ function strongestSoloKey(
   return { matchedOn: "device_name", confidence: "high" };
 }
 
+// Strong keys that should never contradict across sources for the same
+// physical device. Display name is excluded — two legitimate records for
+// the same machine can render the device name differently (DESKTOP-A vs
+// desktop-a.corp.example) and that is not a conflict signal.
+const STRONG_CONFLICT_KEYS: Array<keyof JoinKeys> = [
+  "serial",
+  "entra_device_id",
+  "device_id"
+];
+
+/**
+ * Two records conflict when they share at least one strong identifier
+ * (serial / entra_device_id / device_id) *and* contradict on another
+ * strong identifier. A pair sharing only a name, or a pair where only
+ * one side has any given key, is not a conflict — it is either a legit
+ * link or simply missing data.
+ */
+function pairHasIdentityConflict(a: JoinKeys | null, b: JoinKeys | null): boolean {
+  if (!a || !b) return false;
+  let sharesAny = false;
+  let contradicts = false;
+  for (const key of STRONG_CONFLICT_KEYS) {
+    const av = a[key];
+    const bv = b[key];
+    if (av && bv) {
+      if (av === bv) sharesAny = true;
+      else contradicts = true;
+    }
+  }
+  return sharesAny && contradicts;
+}
+
 function newest<T extends { last_synced_at: string }>(rows: T[]) {
   return [...rows].sort((a, b) => b.last_synced_at.localeCompare(a.last_synced_at))[0] ?? null;
 }
@@ -250,11 +282,18 @@ export function correlateDevices(input: {
         ].some((count) => count > 1)
       : false;
 
-    const entraMismatch =
-      Boolean(seed.autopilotRecord?.entra_device_id) &&
-      Boolean(seed.intuneRecord?.entra_device_id) &&
-      normalizeString(seed.autopilotRecord?.entra_device_id) !==
-        normalizeString(seed.intuneRecord?.entra_device_id);
+    // Any two records in this bundle that share one strong identifier but
+    // contradict on another strong identifier → identity conflict. This
+    // catches real-world failure modes the old AP↔IN-only check missed:
+    //   - AP and IN agree on entra_device_id but disagree on serial
+    //     (casino re-image collision: same Entra object, new hardware)
+    //   - AP and Entra disagree on serial
+    //   - IN and Entra disagree on serial
+    //   - AP and IN agree on serial but disagree on device_id
+    const pairConflict =
+      pairHasIdentityConflict(apKeys, inKeys) ||
+      pairHasIdentityConflict(apKeys, enKeys) ||
+      pairHasIdentityConflict(inKeys, enKeys);
 
     const current = {
       autopilotRecord: seed.autopilotRecord,
@@ -268,7 +307,7 @@ export function correlateDevices(input: {
       deviceKey: buildDeviceKey(current),
       matchedOn,
       matchConfidence,
-      identityConflict: serialMatches || entraMismatch
+      identityConflict: serialMatches || pairConflict
     };
   };
 
