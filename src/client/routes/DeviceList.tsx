@@ -2,6 +2,7 @@ import { useNavigate, useSearch } from "@tanstack/react-router";
 import { Download, Loader2, RefreshCw, RotateCcw, Rows2, Rows3, X } from "lucide-react";
 import { useState } from "react";
 
+import { BulkActionConfirm } from "../components/devices/BulkActionConfirm.js";
 import { DeviceFilters } from "../components/devices/DeviceFilters.js";
 import { DeviceTable, type DeviceTableDensity } from "../components/devices/DeviceTable.js";
 import { SavedViews } from "../components/devices/SavedViews.js";
@@ -28,6 +29,7 @@ export function DeviceListPage() {
   const toast = useToast();
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
   const [bulkBusy, setBulkBusy] = useState<null | "sync" | "reboot">(null);
+  const [pendingBulk, setPendingBulk] = useState<null | "sync" | "reboot">(null);
 
   const toggleSelected = (deviceKey: string) => {
     setSelectedKeys((prev) => {
@@ -49,6 +51,11 @@ export function DeviceListPage() {
     });
   };
   const clearSelection = () => setSelectedKeys(new Set());
+
+  const requestBulk = (action: "sync" | "reboot") => {
+    if (selectedKeys.size === 0) return;
+    setPendingBulk(action);
+  };
 
   const runBulk = async (action: "sync" | "reboot") => {
     if (selectedKeys.size === 0) return;
@@ -90,6 +97,7 @@ export function DeviceListPage() {
       });
     } finally {
       setBulkBusy(null);
+      setPendingBulk(null);
     }
   };
 
@@ -205,6 +213,17 @@ export function DeviceListPage() {
         </>
       ) : null}
 
+      {pendingBulk && (
+        <BulkActionConfirm
+          action={pendingBulk}
+          selectedKeys={selectedKeys}
+          visibleDevices={devices.data?.items ?? []}
+          busy={bulkBusy !== null}
+          onCancel={() => setPendingBulk(null)}
+          onConfirm={() => runBulk(pendingBulk)}
+        />
+      )}
+
       {/* Floating bulk action bar */}
       {selectedKeys.size > 0 && (
         <div className="pointer-events-none fixed inset-x-0 bottom-6 z-40 flex justify-center px-4">
@@ -215,7 +234,7 @@ export function DeviceListPage() {
             <span className="h-4 w-px bg-[var(--pc-border)]" />
             <Button
               variant="secondary"
-              onClick={() => runBulk("sync")}
+              onClick={() => requestBulk("sync")}
               disabled={bulkBusy !== null}
               className="h-7 px-2.5 text-[11px]"
             >
@@ -228,7 +247,7 @@ export function DeviceListPage() {
             </Button>
             <Button
               variant="secondary"
-              onClick={() => runBulk("reboot")}
+              onClick={() => requestBulk("reboot")}
               disabled={bulkBusy !== null}
               className="h-7 px-2.5 text-[11px]"
             >
