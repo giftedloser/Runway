@@ -2,15 +2,109 @@ import type { MatchConfidence } from "../../shared/types.js";
 import type { AutopilotRow, EntraRow, IntuneRow } from "../db/types.js";
 import { extractRawDeviceId, normalizeName, normalizeSerial, normalizeString } from "./normalize.js";
 
+export type MatchedOnKey = "serial" | "entra_device_id" | "device_id" | "device_name";
+
 export interface CorrelationBundle {
   deviceKey: string;
   serialNumber: string | null;
   autopilotRecord: AutopilotRow | null;
   intuneRecord: IntuneRow | null;
   entraRecord: EntraRow | null;
-  matchedOn: "serial" | "entra_device_id" | "device_id" | "device_name";
+  /**
+   * The weakest joining key actually shared between joined records in this
+   * bundle. For single-record bundles, the strongest identifier the lone
+   * record carries (no cross-system claim is being made).
+   */
+  matchedOn: MatchedOnKey;
+  /**
+   * Honest confidence in the cross-system correlation. Computed as the
+   * weakest pair: a three-way bundle whose AP↔IN link is by serial but
+   * whose IN↔Entra link is name-only is reported as `low`, never `high`.
+   * Single-record bundles are `high` because there is no claim to weaken.
+   */
   matchConfidence: MatchConfidence;
   identityConflict: boolean;
+}
+
+interface JoinKeys {
+  serial: string | null;
+  entra_device_id: string | null;
+  device_id: string | null;
+  /** Null for Autopilot rows — AP has no real display name field. */
+  device_name: string | null;
+}
+
+const KEY_ORDER: Array<{
+  field: keyof JoinKeys;
+  matchedOn: MatchedOnKey;
+  confidence: MatchConfidence;
+}> = [
+  { field: "serial", matchedOn: "serial", confidence: "high" },
+  { field: "entra_device_id", matchedOn: "entra_device_id", confidence: "medium" },
+  { field: "device_id", matchedOn: "device_id", confidence: "medium" },
+  { field: "device_name", matchedOn: "device_name", confidence: "low" }
+];
+
+const CONFIDENCE_RANK: Record<MatchConfidence, number> = { high: 3, medium: 2, low: 1 };
+
+function autopilotKeys(row: AutopilotRow | null): JoinKeys | null {
+  if (!row) return null;
+  return {
+    serial: normalizeSerial(row.serial_number),
+    entra_device_id: normalizeString(row.entra_device_id),
+    device_id: extractRawDeviceId(row.raw_json),
+    device_name: null
+  };
+}
+
+function intuneKeys(row: IntuneRow | null): JoinKeys | null {
+  if (!row) return null;
+  return {
+    serial: normalizeSerial(row.serial_number),
+    entra_device_id: normalizeString(row.entra_device_id),
+    device_id: extractRawDeviceId(row.raw_json),
+    device_name: normalizeName(row.device_name)
+  };
+}
+
+function entraKeys(row: EntraRow | null): JoinKeys | null {
+  if (!row) return null;
+  return {
+    serial: normalizeSerial(row.serial_number),
+    entra_device_id: normalizeString(row.id),
+    device_id: normalizeString(row.device_id),
+    device_name: normalizeName(row.display_name)
+  };
+}
+
+function strongestSharedKey(
+  a: JoinKeys | null,
+  b: JoinKeys | null
+): { matchedOn: MatchedOnKey; confidence: MatchConfidence } | null {
+  if (!a || !b) return null;
+  for (const { field, matchedOn, confidence } of KEY_ORDER) {
+    if (a[field] && b[field] && a[field] === b[field]) {
+      return { matchedOn, confidence };
+    }
+  }
+  // The records ended up in the same bundle but share no key — this is the
+  // weakest possible signal and should never be hidden behind a stronger one
+  // contributed by a different record.
+  return { matchedOn: "device_name", confidence: "low" };
+}
+
+function strongestSoloKey(
+  keys: JoinKeys
+): { matchedOn: MatchedOnKey; confidence: MatchConfidence } {
+  for (const { field, matchedOn } of KEY_ORDER) {
+    if (keys[field]) {
+      // Solo records make no cross-system claim — surface the strongest
+      // identifier the record carries and call it "high" because there is
+      // nothing to weaken.
+      return { matchedOn, confidence: "high" };
+    }
+  }
+  return { matchedOn: "device_name", confidence: "high" };
 }
 
 function newest<T extends { last_synced_at: string }>(rows: T[]) {
@@ -110,30 +204,42 @@ export function correlateDevices(input: {
       normalizeSerial(seed.entraRecord?.serial_number) ??
       null;
 
-    const entraObjectId =
-      normalizeString(seed.autopilotRecord?.entra_device_id) ??
-      normalizeString(seed.intuneRecord?.entra_device_id) ??
-      normalizeString(seed.entraRecord?.id) ??
-      null;
+    // Per-record join keys, then per-pair confidence. The bundle confidence
+    // is the *weakest* pair (chain-is-as-strong-as-its-weakest-link), never
+    // the strongest seed identifier. This prevents a serial-keyed AP↔IN
+    // link from masking a name-only IN↔Entra link.
+    const apKeys = autopilotKeys(seed.autopilotRecord);
+    const inKeys = intuneKeys(seed.intuneRecord);
+    const enKeys = entraKeys(seed.entraRecord);
 
-    const deviceId =
-      extractRawDeviceId(seed.autopilotRecord?.raw_json) ??
-      extractRawDeviceId(seed.intuneRecord?.raw_json) ??
-      normalizeString(seed.entraRecord?.device_id) ??
-      null;
+    const pairResults = [
+      strongestSharedKey(apKeys, inKeys),
+      strongestSharedKey(apKeys, enKeys),
+      strongestSharedKey(inKeys, enKeys)
+    ].filter(
+      (result): result is { matchedOn: MatchedOnKey; confidence: MatchConfidence } =>
+        result !== null
+    );
 
-    let matchedOn: CorrelationBundle["matchedOn"] = "device_name";
-    let matchConfidence: MatchConfidence = "low";
+    let matchedOn: MatchedOnKey;
+    let matchConfidence: MatchConfidence;
 
-    if (serial) {
-      matchedOn = "serial";
-      matchConfidence = "high";
-    } else if (entraObjectId) {
-      matchedOn = "entra_device_id";
-      matchConfidence = "medium";
-    } else if (deviceId) {
-      matchedOn = "device_id";
-      matchConfidence = "medium";
+    if (pairResults.length === 0) {
+      // Single-record bundle: no cross-system claim, so report the strongest
+      // identifier the lone record carries at high confidence.
+      const onlyKeys = apKeys ?? inKeys ?? enKeys;
+      const solo = onlyKeys
+        ? strongestSoloKey(onlyKeys)
+        : { matchedOn: "device_name" as const, confidence: "high" as const };
+      matchedOn = solo.matchedOn;
+      matchConfidence = solo.confidence;
+    } else {
+      // Sort ascending by confidence rank — element [0] is the weakest pair.
+      pairResults.sort(
+        (a, b) => CONFIDENCE_RANK[a.confidence] - CONFIDENCE_RANK[b.confidence]
+      );
+      matchedOn = pairResults[0].matchedOn;
+      matchConfidence = pairResults[0].confidence;
     }
 
     const serialMatches = serial

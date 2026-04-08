@@ -72,4 +72,136 @@ describe("correlation engine", () => {
     expect(results[0].matchConfidence).toBe("high");
     expect(results[0].identityConflict).toBe(false);
   });
+
+  // --- Workstream 2: per-pair (weakest-link) confidence ---
+
+  const ap = (overrides: Partial<{ id: string; serial: string | null; entra: string | null; deviceId: string | null }> = {}) => ({
+    id: overrides.id ?? "ap-1",
+    serial_number: overrides.serial ?? null,
+    model: null,
+    manufacturer: null,
+    group_tag: null,
+    assigned_user_upn: null,
+    deployment_profile_id: null,
+    deployment_profile_name: null,
+    profile_assignment_status: null,
+    deployment_mode: null,
+    entra_device_id: overrides.entra ?? null,
+    first_seen_at: null,
+    first_profile_assigned_at: null,
+    last_synced_at: "2026-04-08T00:00:00.000Z",
+    raw_json: overrides.deviceId ? JSON.stringify({ deviceId: overrides.deviceId }) : "{}"
+  });
+
+  const intune = (overrides: Partial<{ id: string; name: string | null; serial: string | null; entra: string | null; deviceId: string | null }> = {}) => ({
+    id: overrides.id ?? "in-1",
+    device_name: overrides.name ?? null,
+    serial_number: overrides.serial ?? null,
+    entra_device_id: overrides.entra ?? null,
+    os_version: null,
+    compliance_state: null,
+    enrollment_type: null,
+    managed_device_owner_type: null,
+    last_sync_datetime: null,
+    primary_user_upn: null,
+    enrollment_profile_name: null,
+    autopilot_enrolled: 1,
+    last_synced_at: "2026-04-08T00:00:00.000Z",
+    raw_json: overrides.deviceId ? JSON.stringify({ deviceId: overrides.deviceId }) : "{}"
+  });
+
+  const entra = (overrides: Partial<{ id: string; name: string | null; serial: string | null; deviceId: string | null }> = {}) => ({
+    id: overrides.id ?? "en-1",
+    device_id: overrides.deviceId ?? null,
+    display_name: overrides.name ?? null,
+    serial_number: overrides.serial ?? null,
+    trust_type: "ServerAd",
+    is_managed: 1,
+    mdm_app_id: null,
+    registration_datetime: null,
+    device_physical_ids: JSON.stringify([]),
+    last_synced_at: "2026-04-08T00:00:00.000Z",
+    raw_json: "{}"
+  });
+
+  it("reports weakest pair when AP↔IN match by serial but IN↔Entra only by name", () => {
+    // AP and IN share serial. AP and Entra share entra_device_id (so the
+    // seed-from-AP traversal can pull in all three records). IN and Entra
+    // however share NO key except their display name. Old code would have
+    // reported high/serial because some record had a serial; the new code
+    // must report low/device_name because the IN↔Entra pair is name-only
+    // and that is the weakest link in the chain.
+    const results = correlateDevices({
+      autopilotRows: [ap({ serial: "CZC500", entra: "entra-1" })],
+      intuneRows: [intune({ serial: "CZC500", name: "KIOSK-A" })],
+      entraRows: [entra({ id: "entra-1", name: "KIOSK-A" })]
+    });
+
+    expect(results).toHaveLength(1);
+    expect(results[0].matchConfidence).toBe("low");
+    expect(results[0].matchedOn).toBe("device_name");
+    expect(results[0].autopilotRecord).not.toBeNull();
+    expect(results[0].intuneRecord).not.toBeNull();
+    expect(results[0].entraRecord).not.toBeNull();
+  });
+
+  it("reports medium when the only joining key is entra_device_id", () => {
+    // AP and IN share entra_device_id E1 but have different serials. They
+    // should join via entra id (medium) rather than overclaim "high via
+    // serial" just because one of the records has a serial of its own.
+    const results = correlateDevices({
+      autopilotRows: [ap({ serial: "CZC111", entra: "entra-E1" })],
+      intuneRows: [intune({ serial: "CZC222", entra: "entra-E1", name: "DESKTOP-02" })],
+      entraRows: []
+    });
+
+    expect(results).toHaveLength(1);
+    expect(results[0].matchConfidence).toBe("medium");
+    expect(results[0].matchedOn).toBe("entra_device_id");
+  });
+
+  it("treats single-record bundles as high (no cross-system claim being made)", () => {
+    const results = correlateDevices({
+      autopilotRows: [ap({ id: "ap-only", serial: "CZC999" })],
+      intuneRows: [],
+      entraRows: []
+    });
+
+    expect(results).toHaveLength(1);
+    expect(results[0].matchConfidence).toBe("high");
+    expect(results[0].matchedOn).toBe("serial");
+    expect(results[0].intuneRecord).toBeNull();
+    expect(results[0].entraRecord).toBeNull();
+  });
+
+  it("name-only single record is still high (the lone record is honest about itself)", () => {
+    const results = correlateDevices({
+      autopilotRows: [],
+      intuneRows: [intune({ id: "in-only", name: "DESKTOP-03" })],
+      entraRows: []
+    });
+
+    expect(results).toHaveLength(1);
+    // No cross-system pair exists, so confidence is high but matchedOn
+    // surfaces the weakest identifier the lone record carries — name.
+    expect(results[0].matchConfidence).toBe("high");
+    expect(results[0].matchedOn).toBe("device_name");
+  });
+
+  it("two-record bundle (AP+Entra) joined by entra_device_id reports medium, not high", () => {
+    // Pre-fix bug: AP has a serial, so the old code reported high/serial
+    // even though the AP↔Entra pair is actually joined by entra_device_id.
+    // The new code must surface medium/entra_device_id — the truth.
+    const results = correlateDevices({
+      autopilotRows: [ap({ serial: "CZC700", entra: "entra-7" })],
+      intuneRows: [],
+      entraRows: [entra({ id: "entra-7", name: "WS-7" })]
+    });
+
+    expect(results).toHaveLength(1);
+    expect(results[0].matchConfidence).toBe("medium");
+    expect(results[0].matchedOn).toBe("entra_device_id");
+    expect(results[0].autopilotRecord).not.toBeNull();
+    expect(results[0].entraRecord).not.toBeNull();
+  });
 });
