@@ -1,12 +1,48 @@
 import { describe, expect, it } from "vitest";
 
-import { normalizeSerial } from "../../src/server/engine/normalize.js";
+import { normalizeSerial, normalizeString, normalizeName, safeJsonParse, extractRawDeviceId } from "../../src/server/engine/normalize.js";
 import { correlateDevices } from "../../src/server/engine/correlate.js";
 
 describe("state engine normalization", () => {
   it("treats placeholder serials as unusable", () => {
     expect(normalizeSerial("TO BE FILLED BY O.E.M.")).toBeNull();
     expect(normalizeSerial("  czc123 ")).toBe("CZC123");
+  });
+
+  it("treats null, undefined, empty string as null serial", () => {
+    expect(normalizeSerial(null)).toBeNull();
+    expect(normalizeSerial(undefined)).toBeNull();
+    expect(normalizeSerial("")).toBeNull();
+    expect(normalizeSerial("   ")).toBeNull();
+  });
+
+  it("rejects DEFAULT STRING and UNKNOWN as placeholder serials", () => {
+    expect(normalizeSerial("Default String")).toBeNull();
+    expect(normalizeSerial("UNKNOWN")).toBeNull();
+  });
+
+  it("normalizeString uppercases and trims", () => {
+    expect(normalizeString("  hello world  ")).toBe("HELLO WORLD");
+    expect(normalizeString(null)).toBeNull();
+    expect(normalizeString("")).toBeNull();
+  });
+
+  it("normalizeName uppercases and trims", () => {
+    expect(normalizeName("  Desktop-01  ")).toBe("DESKTOP-01");
+    expect(normalizeName(null)).toBeNull();
+  });
+
+  it("safeJsonParse returns parsed value or fallback", () => {
+    expect(safeJsonParse('{"a":1}', {})).toEqual({ a: 1 });
+    expect(safeJsonParse("not json", "fallback")).toBe("fallback");
+    expect(safeJsonParse(null, [])).toEqual([]);
+  });
+
+  it("extractRawDeviceId pulls deviceId from raw JSON", () => {
+    expect(extractRawDeviceId('{"deviceId":"abc-123"}')).toBe("ABC-123");
+    expect(extractRawDeviceId('{"deviceId":""}')).toBeNull();
+    expect(extractRawDeviceId('{"other":"val"}')).toBeNull();
+    expect(extractRawDeviceId(null)).toBeNull();
   });
 });
 
