@@ -39,7 +39,8 @@ const deviceListPayload = {
       autopilotAssignedUserUpn: "user1@bhwk.com",
       intunePrimaryUserUpn: null,
       diagnosis: "Autopilot identity exists, but no deployment profile is assigned.",
-      matchConfidence: "high"
+      matchConfidence: "high",
+      activeRules: []
     }
   ],
   total: 1,

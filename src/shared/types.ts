@@ -80,6 +80,8 @@ export interface DeviceListItem {
   intunePrimaryUserUpn: string | null;
   diagnosis: string;
   matchConfidence: MatchConfidence;
+  /** Custom rule violations active on this device (empty if none). */
+  activeRules: Array<{ ruleId: string; ruleName: string; severity: RuleSeverity }>;
 }
 
 export interface DeviceDetailResponse {

@@ -88,18 +88,41 @@ export const DEVICE_COLUMNS: DeviceColumnDef[] = [
     id: "flags",
     label: "Flags",
     defaultVisible: true,
-    render: (device) => (
-      <div className="flex flex-wrap gap-1">
-        {device.flags.slice(0, 2).map((flag) => (
-          <FlagChip key={flag} flag={flag} />
-        ))}
-        {device.flags.length > 2 && (
-          <span className="rounded-md bg-white/[0.04] px-1.5 py-0.5 text-[10px] text-[var(--pc-text-muted)]">
-            +{device.flags.length - 2}
-          </span>
-        )}
-      </div>
-    )
+    render: (device) => {
+      const RULE_SEVERITY_STYLE: Record<string, string> = {
+        critical: "bg-[var(--pc-critical-muted)] text-red-200 ring-1 ring-[var(--pc-critical)]/40",
+        warning: "bg-[var(--pc-warning-muted)] text-amber-200 ring-1 ring-[var(--pc-warning)]/40",
+        info: "bg-[var(--pc-info-muted)] text-blue-200 ring-1 ring-[var(--pc-info)]/40"
+      };
+      return (
+        <div className="flex flex-wrap gap-1">
+          {device.flags.slice(0, 2).map((flag) => (
+            <FlagChip key={flag} flag={flag} />
+          ))}
+          {device.activeRules.slice(0, 2).map((rule) => (
+            <span
+              key={rule.ruleId}
+              className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium ${RULE_SEVERITY_STYLE[rule.severity] ?? RULE_SEVERITY_STYLE.info}`}
+              title={rule.ruleName}
+            >
+              {rule.ruleName.length > 18
+                ? `${rule.ruleName.slice(0, 16)}…`
+                : rule.ruleName}
+            </span>
+          ))}
+          {device.flags.length + device.activeRules.length > 4 && (
+            <span className="rounded-md bg-white/[0.04] px-1.5 py-0.5 text-[10px] text-[var(--pc-text-muted)]">
+              +{device.flags.length + device.activeRules.length - 4}
+            </span>
+          )}
+          {device.flags.length > 2 && device.activeRules.length === 0 && (
+            <span className="rounded-md bg-white/[0.04] px-1.5 py-0.5 text-[10px] text-[var(--pc-text-muted)]">
+              +{device.flags.length - 2}
+            </span>
+          )}
+        </div>
+      );
+    }
   },
   {
     id: "profile",

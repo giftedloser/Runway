@@ -156,7 +156,24 @@ export function replaceDeviceStates(
   transaction(rows);
 }
 
-function parseDeviceListItem(row: DeviceStateRow): DeviceListItem {
+type RuleLookup = Map<string, { id: string; name: string; severity: string }>;
+
+function parseDeviceListItem(row: DeviceStateRow, ruleLookup?: RuleLookup): DeviceListItem {
+  const ruleIds = safeJsonParse<string[]>(row.active_rule_ids ?? "[]", []);
+  const activeRules = ruleLookup
+    ? ruleIds
+        .map((ruleId) => {
+          const rule = ruleLookup.get(ruleId);
+          if (!rule) return null;
+          return {
+            ruleId: rule.id,
+            ruleName: rule.name,
+            severity: (rule.severity as "info" | "warning" | "critical") ?? "warning"
+          };
+        })
+        .filter((r): r is NonNullable<typeof r> => r !== null)
+    : [];
+
   return {
     deviceKey: row.device_key,
     deviceName: row.device_name,
@@ -172,8 +189,19 @@ function parseDeviceListItem(row: DeviceStateRow): DeviceListItem {
     autopilotAssignedUserUpn: row.autopilot_assigned_user_upn,
     intunePrimaryUserUpn: row.intune_primary_user_upn,
     diagnosis: row.diagnosis,
-    matchConfidence: row.match_confidence
+    matchConfidence: row.match_confidence,
+    activeRules
   };
+}
+
+function buildRuleLookup(db: Database.Database): RuleLookup {
+  return new Map(
+    (
+      db
+        .prepare("SELECT id, name, severity FROM rule_definitions")
+        .all() as Array<{ id: string; name: string; severity: string }>
+    ).map((row) => [row.id, row])
+  );
 }
 
 export function listDeviceStates(
@@ -249,8 +277,9 @@ export function listDeviceStates(
     .prepare(`SELECT COUNT(*) as count FROM device_state ${whereClause}`)
     .get(params) as { count: number };
 
+  const ruleLookup = buildRuleLookup(db);
   return {
-    items: rows.map(parseDeviceListItem),
+    items: rows.map((row) => parseDeviceListItem(row, ruleLookup)),
     total: total.count,
     page,
     pageSize
@@ -328,7 +357,7 @@ function getDeviceDetailWithRules(
   const nameJoined = row.matched_on === "device_name" && sourceRecordCount >= 2;
 
   return {
-    summary: parseDeviceListItem(row),
+    summary: parseDeviceListItem(row, ruleLookup),
     identity: {
       autopilotId: row.autopilot_id,
       intuneId: row.intune_id,
