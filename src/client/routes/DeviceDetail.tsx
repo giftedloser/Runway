@@ -13,7 +13,7 @@ import { ActionHistory } from "../components/devices/ActionHistory.js";
 import { ActionsToolbar } from "../components/devices/ActionsToolbar.js";
 import { AssignmentPanel } from "../components/devices/AssignmentPanel.js";
 import { AssignmentPathPanel } from "../components/devices/AssignmentPathPanel.js";
-import { CopySummaryButton } from "../components/devices/CopySummaryButton.js";
+import { buildSummaryText, CopySummaryButton } from "../components/devices/CopySummaryButton.js";
 import { DeviceShortcuts } from "../components/devices/DeviceShortcuts.js";
 import { DiagnosticPanel } from "../components/devices/DiagnosticPanel.js";
 import { HistoryPanel } from "../components/devices/HistoryPanel.js";
@@ -22,6 +22,7 @@ import { LapsWidget } from "../components/devices/LapsWidget.js";
 import { RuleViolationsPanel } from "../components/devices/RuleViolationsPanel.js";
 import { SourceJsonPanel } from "../components/devices/SourceJsonPanel.js";
 import { ErrorState, LoadingState } from "../components/shared/ErrorState.js";
+import { useToast } from "../components/shared/toast.js";
 import { StatusBadge } from "../components/shared/StatusBadge.js";
 import { useDevice } from "../hooks/useDevices.js";
 import type { FlagCode, FlagExplanation, HealthLevel } from "../lib/types.js";
@@ -207,6 +208,25 @@ export function DeviceDetailPage() {
   const data = device.data;
   const displayName = data.summary.deviceName ?? data.summary.serialNumber ?? deviceKey;
   const breakpoints = bucketDiagnostics(data.diagnostics);
+  const toast = useToast();
+
+  const handleCopySummary = async () => {
+    try {
+      await navigator.clipboard.writeText(buildSummaryText(data));
+      toast.push({
+        variant: "success",
+        title: "Summary copied",
+        description: "Device summary copied to clipboard.",
+        durationMs: 2000
+      });
+    } catch {
+      toast.push({
+        variant: "error",
+        title: "Could not copy",
+        description: "Clipboard access denied."
+      });
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -214,6 +234,7 @@ export function DeviceDetailPage() {
         deviceKey={deviceKey}
         deviceLabel={displayName}
         onRefresh={() => device.refetch()}
+        onCopy={handleCopySummary}
       />
       {/* Breadcrumb */}
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -242,6 +263,10 @@ export function DeviceDetailPage() {
               s
             </kbd>
             sync
+            <kbd className="rounded border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-1 py-px font-mono text-[10px]">
+              c
+            </kbd>
+            copy
             <kbd className="rounded border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-1 py-px font-mono text-[10px]">
               b
             </kbd>

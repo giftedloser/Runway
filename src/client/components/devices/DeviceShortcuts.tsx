@@ -9,6 +9,8 @@ interface DeviceShortcutsProps {
   deviceKey: string;
   deviceLabel: string;
   onRefresh: () => void;
+  /** Called when the user presses `c` to copy the device summary. */
+  onCopy?: () => void;
 }
 
 const DEVICES_DEFAULT_SEARCH = {
@@ -30,7 +32,7 @@ const DEVICES_DEFAULT_SEARCH = {
  * Suppressed when focus is in an input/textarea/contenteditable, or when
  * any modifier is held (so palette/system shortcuts are unaffected).
  */
-export function DeviceShortcuts({ deviceKey, deviceLabel, onRefresh }: DeviceShortcutsProps) {
+export function DeviceShortcuts({ deviceKey, deviceLabel, onRefresh, onCopy }: DeviceShortcutsProps) {
   const navigate = useNavigate();
   const action = useRemoteAction();
   const auth = useAuthStatus();
@@ -68,6 +70,12 @@ export function DeviceShortcuts({ deviceKey, deviceLabel, onRefresh }: DeviceSho
         return;
       }
 
+      if (event.key === "c" && onCopy) {
+        event.preventDefault();
+        onCopy();
+        return;
+      }
+
       if (event.key === "s") {
         event.preventDefault();
         if (!auth.data?.authenticated) {
@@ -99,7 +107,7 @@ export function DeviceShortcuts({ deviceKey, deviceLabel, onRefresh }: DeviceSho
     };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
-  }, [action, auth.data?.authenticated, deviceKey, deviceLabel, navigate, onRefresh, toast]);
+  }, [action, auth.data?.authenticated, deviceKey, deviceLabel, navigate, onCopy, onRefresh, toast]);
 
   return null;
 }

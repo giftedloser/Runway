@@ -8,7 +8,7 @@ interface CopySummaryButtonProps {
   device: DeviceDetailResponse;
 }
 
-function buildSummaryText(d: DeviceDetailResponse): string {
+export function buildSummaryText(d: DeviceDetailResponse): string {
   const lines: string[] = [];
   const s = d.summary;
 
