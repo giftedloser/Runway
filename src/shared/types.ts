@@ -126,6 +126,18 @@ export interface DashboardResponse {
    * per device — the latest transition that fell into the window.
    */
   recentTransitions: RecentTransition[];
+  /**
+   * Quick-glance counters so the operator can answer "can I trust this
+   * snapshot?" without drilling into individual devices.
+   */
+  correlationQuality: {
+    /** Devices where two or more source records joined only by display name. */
+    nameJoinedCount: number;
+    /** Devices whose source records carry conflicting strong identifiers. */
+    identityConflictCount: number;
+    /** Devices rated low confidence (name-only join is the leading cause). */
+    lowConfidenceCount: number;
+  };
 }
 
 export type TransitionDirection = "regression" | "recovery" | "lateral";

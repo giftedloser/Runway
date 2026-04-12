@@ -11,7 +11,8 @@ const dashboardPayload = {
   driftCount: 1,
   newlyUnhealthy24h: 0,
   healthTrend: [],
-  recentTransitions: []
+  recentTransitions: [],
+  correlationQuality: { nameJoinedCount: 0, identityConflictCount: 0, lowConfidenceCount: 0 }
 };
 
 const settingsPayload = {
@@ -55,7 +56,8 @@ const deviceDetailPayload = {
     trustType: "ServerAd",
     matchConfidence: "high",
     matchedOn: "serial",
-    identityConflict: false
+    identityConflict: false,
+    nameJoined: false
   },
   assignmentPath: {
     autopilotRecord: {
@@ -81,6 +83,7 @@ const deviceDetailPayload = {
       rawData: ["groupTag=Lodge"]
     }
   ],
+  ruleViolations: [],
   sourceRefs: {
     autopilotRawJson: "{}",
     intuneRawJson: null,

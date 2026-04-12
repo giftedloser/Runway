@@ -3,6 +3,7 @@ import {
   AlertTriangle,
   ArrowRight,
   ChevronRight,
+  Fingerprint,
   RefreshCcw,
   ShieldCheck,
   TrendingDown
@@ -130,7 +131,7 @@ export function DashboardPage() {
       />
 
       {/* Top KPI row */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
         <Card className="px-5 py-4">
           <div className="text-[12px] font-medium text-[var(--pc-text-muted)]">Total Devices</div>
           <div className="mt-1 text-3xl font-semibold tabular-nums text-white">{totalDevices}</div>
@@ -173,6 +174,40 @@ export function DashboardPage() {
               ? `${topPattern.count} devices affected`
               : "Fleet looks healthy"}
           </div>
+        </Card>
+        <Card className="px-5 py-4">
+          <div className="flex items-center gap-1.5 text-[12px] font-medium text-[var(--pc-text-muted)]">
+            <Fingerprint className="h-3 w-3" />
+            Correlation
+          </div>
+          {(() => {
+            const cq = dashboard.data.correlationQuality;
+            const issues = cq.nameJoinedCount + cq.identityConflictCount;
+            return (
+              <>
+                <div className="mt-1 text-3xl font-semibold tabular-nums text-white">
+                  {issues}
+                </div>
+                <div className="mt-1 text-[11px] text-[var(--pc-text-muted)]">
+                  {issues === 0 ? (
+                    "All joins verified"
+                  ) : (
+                    <>
+                      {cq.nameJoinedCount > 0
+                        ? `${cq.nameJoinedCount} name-only`
+                        : null}
+                      {cq.nameJoinedCount > 0 && cq.identityConflictCount > 0
+                        ? " · "
+                        : null}
+                      {cq.identityConflictCount > 0
+                        ? `${cq.identityConflictCount} conflicts`
+                        : null}
+                    </>
+                  )}
+                </div>
+              </>
+            );
+          })()}
         </Card>
       </div>
 

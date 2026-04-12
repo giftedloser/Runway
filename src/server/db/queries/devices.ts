@@ -612,9 +612,15 @@ export function getRecentTransitions(
 }
 
 export function getDashboard(db: Database.Database): DashboardResponse {
-  const rows = db.prepare("SELECT overall_health, active_flags FROM device_state").all() as Array<{
+  const rows = db.prepare("SELECT overall_health, active_flags, match_confidence, matched_on, identity_conflict, autopilot_id, intune_id, entra_id FROM device_state").all() as Array<{
     overall_health: DashboardResponse["counts"][keyof DashboardResponse["counts"]];
     active_flags: string;
+    match_confidence: string;
+    matched_on: string;
+    identity_conflict: number;
+    autopilot_id: string | null;
+    intune_id: string | null;
+    entra_id: string | null;
   }>;
 
   const counts: DashboardResponse["counts"] = {
@@ -627,6 +633,9 @@ export function getDashboard(db: Database.Database): DashboardResponse {
 
   const flagCounts = new Map<FlagCode, number>();
   let driftCount = 0;
+  let nameJoinedCount = 0;
+  let identityConflictCount = 0;
+  let lowConfidenceCount = 0;
 
   for (const row of rows) {
     const health = row.overall_health as keyof typeof counts;
@@ -637,6 +646,18 @@ export function getDashboard(db: Database.Database): DashboardResponse {
     }
     for (const flag of flags) {
       flagCounts.set(flag, (flagCounts.get(flag) ?? 0) + 1);
+    }
+    // Correlation quality counters
+    const sourceCount =
+      (row.autopilot_id ? 1 : 0) + (row.intune_id ? 1 : 0) + (row.entra_id ? 1 : 0);
+    if (row.matched_on === "device_name" && sourceCount >= 2) {
+      nameJoinedCount += 1;
+    }
+    if (row.identity_conflict) {
+      identityConflictCount += 1;
+    }
+    if (row.match_confidence === "low") {
+      lowConfidenceCount += 1;
     }
   }
 
@@ -670,6 +691,11 @@ export function getDashboard(db: Database.Database): DashboardResponse {
     driftCount,
     newlyUnhealthy24h,
     healthTrend,
-    recentTransitions
+    recentTransitions,
+    correlationQuality: {
+      nameJoinedCount,
+      identityConflictCount,
+      lowConfidenceCount
+    }
   };
 }
