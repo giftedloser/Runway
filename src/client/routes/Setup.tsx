@@ -7,7 +7,8 @@ import {
   Database,
   KeyRound,
   RefreshCcw,
-  Tag
+  Tag,
+  Trash2
 } from "lucide-react";
 
 import { PageHeader } from "../components/layout/PageHeader.js";
@@ -91,6 +92,9 @@ export function SetupPage() {
         title="First-run Setup"
         description="Walk through these steps to take PilotCheck from a fresh install to a working ingestion of your Windows Autopilot, Intune, and Entra ID data. You can skip ahead at any time and revisit Settings later."
       />
+
+      {/* Progress stepper */}
+      <SetupStepper activeStep={activeStep} />
 
       <StepShell
         number={1}
@@ -245,6 +249,39 @@ export function SetupPage() {
             </span>
           ) : null}
         </div>
+        {hasMappings && (
+          <div className="mt-4 space-y-2">
+            <div className="text-[11px] font-medium text-[var(--pc-text-muted)]">
+              Existing mappings
+            </div>
+            {settings.data.tagConfig.map((tc) => (
+              <div
+                key={tc.groupTag}
+                className="flex items-center gap-3 rounded-lg border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-3 py-2"
+              >
+                <Tag className="h-3 w-3 shrink-0 text-[var(--pc-accent)]" />
+                <div className="min-w-0 flex-1 text-[12px]">
+                  <span className="font-mono font-medium text-white">{tc.groupTag}</span>
+                  <span className="mx-1.5 text-[var(--pc-text-muted)]">→</span>
+                  <span className="text-[var(--pc-text-secondary)]">{tc.propertyLabel}</span>
+                </div>
+                <div className="hidden text-[11px] text-[var(--pc-text-muted)] sm:block">
+                  {tc.expectedProfileNames.length} profile{tc.expectedProfileNames.length === 1 ? "" : "s"},{" "}
+                  {tc.expectedGroupNames.length} group{tc.expectedGroupNames.length === 1 ? "" : "s"}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => mutations.remove.mutate(tc.groupTag)}
+                  disabled={mutations.remove.isPending}
+                  className="rounded p-1 text-[var(--pc-text-muted)] transition-colors hover:bg-white/[0.06] hover:text-[var(--pc-critical)]"
+                  title={`Remove ${tc.groupTag} mapping`}
+                >
+                  <Trash2 className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </StepShell>
 
       <StepShell
@@ -269,6 +306,46 @@ export function SetupPage() {
           ) : null}
         </div>
       </StepShell>
+    </div>
+  );
+}
+
+const STEPPER_LABELS = ["Credentials", "First sync", "Tag mapping", "Ready"];
+
+function SetupStepper({ activeStep }: { activeStep: number }) {
+  return (
+    <div className="flex items-center gap-1" role="list" aria-label="Setup progress">
+      {STEPPER_LABELS.map((label, index) => {
+        const step = index + 1;
+        const done = step < activeStep;
+        const current = step === activeStep;
+        return (
+          <div key={label} className="flex flex-1 items-center gap-1" role="listitem">
+            <div className="flex flex-1 flex-col items-center gap-1.5">
+              <div
+                className={`h-1.5 w-full rounded-full transition-colors ${
+                  done
+                    ? "bg-[var(--pc-healthy)]"
+                    : current
+                      ? "bg-[var(--pc-accent)]"
+                      : "bg-white/[0.06]"
+                }`}
+              />
+              <span
+                className={`text-[10px] font-medium ${
+                  done
+                    ? "text-[var(--pc-healthy)]"
+                    : current
+                      ? "text-[var(--pc-accent-hover)]"
+                      : "text-[var(--pc-text-muted)]"
+                }`}
+              >
+                {label}
+              </span>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
