@@ -37,3 +37,20 @@ export function useDeviceHistory(deviceKey: string) {
       apiRequest<DeviceHistoryResponse>(`/api/devices/${deviceKey}/history`)
   });
 }
+
+export interface RelatedDevice {
+  deviceKey: string;
+  deviceName: string | null;
+  serialNumber: string | null;
+  health: string;
+  assignedProfileName: string | null;
+  flagCount: number;
+}
+
+export function useRelatedDevices(deviceKey: string) {
+  return useQuery({
+    queryKey: ["related-devices", deviceKey],
+    queryFn: () =>
+      apiRequest<RelatedDevice[]>(`/api/devices/${deviceKey}/related-devices`)
+  });
+}

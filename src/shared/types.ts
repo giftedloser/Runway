@@ -348,7 +348,8 @@ export type RemoteActionType =
   | "autopilot-reset"
   | "retire"
   | "wipe"
-  | "rotate-laps";
+  | "rotate-laps"
+  | "change-primary-user";
 
 export interface ActionResult {
   success: boolean;

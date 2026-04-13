@@ -488,6 +488,47 @@ export function getDeviceHistory(
   };
 }
 
+export interface RelatedDevice {
+  deviceKey: string;
+  deviceName: string | null;
+  serialNumber: string | null;
+  health: HealthLevel;
+  assignedProfileName: string | null;
+  flagCount: number;
+}
+
+export function getRelatedDevices(
+  db: Database.Database,
+  userUpn: string,
+  excludeDeviceKey: string
+): RelatedDevice[] {
+  const rows = db
+    .prepare(
+      `SELECT device_key, device_name, serial_number, overall_health, assigned_profile_name, flag_count
+       FROM device_state
+       WHERE (intune_primary_user_upn = ? OR autopilot_assigned_user_upn = ?)
+         AND device_key != ?
+       ORDER BY device_name`
+    )
+    .all(userUpn, userUpn, excludeDeviceKey) as Array<{
+    device_key: string;
+    device_name: string | null;
+    serial_number: string | null;
+    overall_health: HealthLevel;
+    assigned_profile_name: string | null;
+    flag_count: number;
+  }>;
+
+  return rows.map((r) => ({
+    deviceKey: r.device_key,
+    deviceName: r.device_name,
+    serialNumber: r.serial_number,
+    health: r.overall_health,
+    assignedProfileName: r.assigned_profile_name,
+    flagCount: r.flag_count
+  }));
+}
+
 /**
  * Count of devices that became unhealthy (warning/critical) within the last
  * 24 hours, based on the most recent two history transitions per device.

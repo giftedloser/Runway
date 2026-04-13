@@ -126,6 +126,9 @@ describe("client drilldown", () => {
       if (url.includes("/api/settings")) {
         return new Response(JSON.stringify(settingsPayload), { status: 200 });
       }
+      if (url.includes("/api/devices/ap:auto-1/related-devices")) {
+        return new Response(JSON.stringify([]), { status: 200 });
+      }
       if (url.includes("/api/devices/ap:auto-1/history")) {
         return new Response(JSON.stringify({ entries: [] }), { status: 200 });
       }

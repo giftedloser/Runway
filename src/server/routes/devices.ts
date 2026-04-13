@@ -5,6 +5,7 @@ import type Database from "better-sqlite3";
 import {
   getDeviceDetail,
   getDeviceHistory,
+  getRelatedDevices,
   listDeviceStates
 } from "../db/queries/devices.js";
 
@@ -37,6 +38,20 @@ export function devicesRouter(db: Database.Database) {
 
   router.get("/:deviceKey/history", (request, response) => {
     response.json(getDeviceHistory(db, request.params.deviceKey));
+  });
+
+  router.get("/:deviceKey/related-devices", (request, response) => {
+    const device = getDeviceDetail(db, request.params.deviceKey);
+    if (!device) {
+      response.status(404).json({ message: "Device not found." });
+      return;
+    }
+    const userUpn = device.summary.intunePrimaryUserUpn ?? device.summary.autopilotAssignedUserUpn;
+    if (!userUpn) {
+      response.json([]);
+      return;
+    }
+    response.json(getRelatedDevices(db, userUpn, request.params.deviceKey));
   });
 
   return router;

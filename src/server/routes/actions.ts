@@ -10,7 +10,8 @@ import {
   autopilotReset,
   retireDevice,
   wipeDevice,
-  rotateLapsPassword
+  rotateLapsPassword,
+  changePrimaryUser
 } from "../actions/remote-actions.js";
 import { listActionLogs, listDeviceActionLogs, logAction } from "../db/queries/actions.js";
 
@@ -21,7 +22,8 @@ const VALID_ACTIONS: ReadonlySet<RemoteActionType> = new Set([
   "autopilot-reset",
   "retire",
   "wipe",
-  "rotate-laps"
+  "rotate-laps",
+  "change-primary-user"
 ]);
 
 // Windows NetBIOS device names: 1-15 chars, letters/digits/hyphens only.
@@ -211,6 +213,17 @@ export function actionsRouter(db: Database.Database) {
         case "rotate-laps":
           result = await rotateLapsPassword(token, device.intune_id);
           break;
+        case "change-primary-user": {
+          const userId = request.body?.userId;
+          if (typeof userId !== "string" || !userId.trim()) {
+            response.status(400).json({
+              message: "userId is required (Entra user object ID or UPN)."
+            });
+            return;
+          }
+          result = await changePrimaryUser(token, device.intune_id, userId.trim());
+          break;
+        }
       }
     } catch (error) {
       result = {

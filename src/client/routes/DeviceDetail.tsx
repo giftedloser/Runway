@@ -22,6 +22,7 @@ import { HistoryPanel } from "../components/devices/HistoryPanel.js";
 import { IdentityPanel } from "../components/devices/IdentityPanel.js";
 import { LapsWidget } from "../components/devices/LapsWidget.js";
 import { ProvisioningTimeline } from "../components/devices/ProvisioningTimeline.js";
+import { RelatedDevicesPanel } from "../components/devices/RelatedDevicesPanel.js";
 import { RuleViolationsPanel } from "../components/devices/RuleViolationsPanel.js";
 import { SourceJsonPanel } from "../components/devices/SourceJsonPanel.js";
 import { ErrorState, LoadingState } from "../components/shared/ErrorState.js";
@@ -416,6 +417,7 @@ export function DeviceDetailPage() {
         />
         <ActionsToolbar device={data} />
         <LapsWidget device={data} />
+        <RelatedDevicesPanel device={data} />
         <ActionHistory device={data} />
       </section>
 

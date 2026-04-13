@@ -127,3 +127,43 @@ export async function rotateLapsPassword(
     message: status === 204 ? "LAPS rotation initiated. New password after next check-in." : `LAPS rotation failed with status ${status}.`
   };
 }
+
+export async function changePrimaryUser(
+  token: string,
+  intuneId: string,
+  userId: string
+): Promise<ActionResult> {
+  // Step 1: Remove existing primary user reference
+  const deleteResult = await requestWithDelegatedToken(
+    token,
+    `/deviceManagement/managedDevices/${intuneId}/users/$ref`,
+    { method: "DELETE" }
+  );
+  // 204 = removed, 404 = no user was assigned — both are acceptable before re-assigning
+  if (deleteResult.status !== 204 && deleteResult.status !== 404) {
+    return {
+      success: false,
+      status: deleteResult.status,
+      message: `Failed to clear existing primary user (status ${deleteResult.status}).`
+    };
+  }
+
+  // Step 2: Assign the new primary user
+  const { status } = await requestWithDelegatedToken(
+    token,
+    `/deviceManagement/managedDevices/${intuneId}/users/$ref`,
+    {
+      method: "POST",
+      body: {
+        "@odata.id": `https://graph.microsoft.com/v1.0/users/${userId}`
+      }
+    }
+  );
+  return {
+    success: status === 204,
+    status,
+    message: status === 204
+      ? "Primary user updated. Change takes effect after next sync."
+      : `Failed to assign primary user (status ${status}).`
+  };
+}
