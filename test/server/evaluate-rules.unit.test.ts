@@ -178,6 +178,88 @@ describe("evaluateRules — operators", () => {
   });
 });
 
+describe("evaluateRules — operator edge cases", () => {
+  it("starts_with is case-insensitive", () => {
+    const result = evaluateRules(
+      [rule({ type: "leaf", field: "serialNumber", op: "starts_with", value: "czc" })],
+      baseContext
+    );
+    expect(result).toHaveLength(1);
+  });
+
+  it("ends_with is case-insensitive", () => {
+    const result = evaluateRules(
+      [rule({ type: "leaf", field: "deviceName", op: "ends_with", value: "001" })],
+      baseContext
+    );
+    expect(result).toHaveLength(1);
+  });
+
+  it("neq returns false when values match (case-insensitive)", () => {
+    const result = evaluateRules(
+      [rule({ type: "leaf", field: "propertyLabel", op: "neq", value: "lodge" })],
+      baseContext
+    );
+    expect(result).toHaveLength(0);
+  });
+
+  it("neq returns true when values differ", () => {
+    const result = evaluateRules(
+      [rule({ type: "leaf", field: "propertyLabel", op: "neq", value: "Kiosk" })],
+      baseContext
+    );
+    expect(result).toHaveLength(1);
+  });
+
+  it("in returns false when the field is null", () => {
+    const result = evaluateRules(
+      [rule({ type: "leaf", field: "propertyLabel", op: "in", value: "lodge,bhk" })],
+      { ...baseContext, propertyLabel: null }
+    );
+    expect(result).toHaveLength(0);
+  });
+
+  it("not_in returns true when the field is null (null is not in any list)", () => {
+    const result = evaluateRules(
+      [rule({ type: "leaf", field: "propertyLabel", op: "not_in", value: "lodge,bhk" })],
+      { ...baseContext, propertyLabel: null }
+    );
+    expect(result).toHaveLength(1);
+  });
+
+  it("contains returns false when field is not a string (e.g. boolean)", () => {
+    const result = evaluateRules(
+      [rule({ type: "leaf", field: "hasAutopilotRecord", op: "contains", value: "true" })],
+      baseContext
+    );
+    expect(result).toHaveLength(0);
+  });
+
+  it("not_contains returns true when field is not a string", () => {
+    const result = evaluateRules(
+      [rule({ type: "leaf", field: "hasAutopilotRecord", op: "not_contains", value: "true" })],
+      baseContext
+    );
+    expect(result).toHaveLength(1);
+  });
+
+  it("eq treats null field and null value as equal", () => {
+    const result = evaluateRules(
+      [rule({ type: "leaf", field: "missingField", op: "eq", value: null })],
+      baseContext
+    );
+    expect(result).toHaveLength(1);
+  });
+
+  it("older_than_hours returns false when field is not a string", () => {
+    const result = evaluateRules(
+      [rule({ type: "leaf", field: "flagCount", op: "older_than_hours", value: 24 })],
+      baseContext
+    );
+    expect(result).toHaveLength(0);
+  });
+});
+
 describe("evaluateRules — compound predicates", () => {
   it("and short-circuits to false when any child fails", () => {
     const result = evaluateRules(
@@ -250,6 +332,32 @@ describe("evaluateRules — scope filtering", () => {
       baseContext
     );
     expect(result).toHaveLength(1);
+  });
+
+  it("evaluates rules whose profile scope matches", () => {
+    const result = evaluateRules(
+      [
+        rule(
+          { type: "leaf", field: "deviceName", op: "exists", value: null },
+          { scope: "profile", scopeValue: "AP-Lodge-UserDriven" }
+        )
+      ],
+      baseContext
+    );
+    expect(result).toHaveLength(1);
+  });
+
+  it("ignores rules whose profile scope does not match", () => {
+    const result = evaluateRules(
+      [
+        rule(
+          { type: "leaf", field: "deviceName", op: "exists", value: null },
+          { scope: "profile", scopeValue: "AP-Kiosk-SelfDeploying" }
+        )
+      ],
+      baseContext
+    );
+    expect(result).toHaveLength(0);
   });
 
   it("treats global scope with no scopeValue as 'always evaluate'", () => {
