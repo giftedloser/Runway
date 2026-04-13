@@ -106,6 +106,31 @@ export interface DeviceDetailResponse {
   assignmentPath: AssignmentPath;
   diagnostics: FlagExplanation[];
   ruleViolations: RuleViolation[];
+  hardware: {
+    model: string | null;
+    manufacturer: string | null;
+    osVersion: string | null;
+    enrollmentType: string | null;
+    ownershipType: string | null;
+  };
+  enrollment: {
+    enrollmentProfileName: string | null;
+    managedDeviceOwnerType: string | null;
+    registrationDate: string | null;
+    firstSeenAt: string | null;
+    firstProfileAssignedAt: string | null;
+  };
+  groupMemberships: Array<{
+    groupId: string;
+    groupName: string;
+    membershipType: string;
+  }>;
+  provisioningTimeline: {
+    firstSeenAt: string | null;
+    firstProfileAssignedAt: string | null;
+    enrollmentDate: string | null;
+    lastCheckinAt: string | null;
+  };
   sourceRefs: {
     autopilotRawJson: string | null;
     intuneRawJson: string | null;

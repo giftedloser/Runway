@@ -85,6 +85,29 @@ const deviceDetailPayload = {
     }
   ],
   ruleViolations: [],
+  hardware: {
+    model: "EliteBook 840 G8",
+    manufacturer: "HP",
+    osVersion: "Windows 11 24H2",
+    enrollmentType: "windowsBulkUserless",
+    ownershipType: "corporate"
+  },
+  enrollment: {
+    enrollmentProfileName: "AP-Lodge-UserDriven",
+    managedDeviceOwnerType: "company",
+    registrationDate: "2026-01-15T00:00:00.000Z",
+    firstSeenAt: "2026-01-10T00:00:00.000Z",
+    firstProfileAssignedAt: "2026-01-12T00:00:00.000Z"
+  },
+  groupMemberships: [
+    { groupId: "grp-1", groupName: "AP-Lodge-Devices", membershipType: "dynamic" }
+  ],
+  provisioningTimeline: {
+    firstSeenAt: "2026-01-10T00:00:00.000Z",
+    firstProfileAssignedAt: "2026-01-12T00:00:00.000Z",
+    enrollmentDate: "2026-01-15T00:00:00.000Z",
+    lastCheckinAt: "2026-04-12T08:00:00.000Z"
+  },
   sourceRefs: {
     autopilotRawJson: "{}",
     intuneRawJson: null,

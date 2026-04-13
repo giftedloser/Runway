@@ -16,9 +16,12 @@ import { AssignmentPathPanel } from "../components/devices/AssignmentPathPanel.j
 import { buildSummaryText, CopySummaryButton } from "../components/devices/CopySummaryButton.js";
 import { DeviceShortcuts } from "../components/devices/DeviceShortcuts.js";
 import { DiagnosticPanel } from "../components/devices/DiagnosticPanel.js";
+import { GroupMembershipsPanel } from "../components/devices/GroupMembershipsPanel.js";
+import { HardwarePanel } from "../components/devices/HardwarePanel.js";
 import { HistoryPanel } from "../components/devices/HistoryPanel.js";
 import { IdentityPanel } from "../components/devices/IdentityPanel.js";
 import { LapsWidget } from "../components/devices/LapsWidget.js";
+import { ProvisioningTimeline } from "../components/devices/ProvisioningTimeline.js";
 import { RuleViolationsPanel } from "../components/devices/RuleViolationsPanel.js";
 import { SourceJsonPanel } from "../components/devices/SourceJsonPanel.js";
 import { ErrorState, LoadingState } from "../components/shared/ErrorState.js";
@@ -370,10 +373,22 @@ export function DeviceDetailPage() {
         <IdentityPanel device={data} />
       </section>
 
-      {/* Section 2: Configuration — what it's meant to be */}
-      <section id="section-targeting" className="scroll-mt-4 space-y-3">
+      {/* Section 2: Hardware & Enrollment + Group Memberships + Provisioning */}
+      <section id="section-hardware" className="scroll-mt-4 space-y-3">
         <SectionHeading
           number={2}
+          title="Hardware & Provisioning"
+          description="Physical device details, group memberships, and provisioning progress"
+        />
+        <HardwarePanel device={data} />
+        <ProvisioningTimeline device={data} />
+        <GroupMembershipsPanel device={data} />
+      </section>
+
+      {/* Section 3: Configuration — what it's meant to be */}
+      <section id="section-targeting" className="scroll-mt-4 space-y-3">
+        <SectionHeading
+          number={3}
           title="Expected Configuration"
           description="The provisioning chain that determines this device's intended state"
         />
@@ -381,10 +396,10 @@ export function DeviceDetailPage() {
         <AssignmentPanel device={data} />
       </section>
 
-      {/* Section 3: Diagnostics — why it's not what it should be */}
+      {/* Section 4: Diagnostics — why it's not what it should be */}
       <section id="section-diagnostics" className="scroll-mt-4 space-y-3">
         <SectionHeading
-          number={3}
+          number={4}
           title="Diagnostics"
           description="What the state engine found and why it matters"
         />
@@ -392,10 +407,10 @@ export function DeviceDetailPage() {
         <RuleViolationsPanel device={data} />
       </section>
 
-      {/* Section 4: Operate — admin tools */}
+      {/* Section 5: Operate — admin tools */}
       <section id="section-operate" className="scroll-mt-4 space-y-3">
         <SectionHeading
-          number={4}
+          number={5}
           title="Operate"
           description="Remote actions, secrets, and audit history (delegated sign-in required)"
         />
@@ -404,20 +419,20 @@ export function DeviceDetailPage() {
         <ActionHistory device={data} />
       </section>
 
-      {/* Section 5: History — when did this device's state actually change */}
+      {/* Section 6: History — when did this device's state actually change */}
       <section id="section-history" className="scroll-mt-4 space-y-3">
         <SectionHeading
-          number={5}
+          number={6}
           title="History"
           description="State transitions over time — when this device changed and what flipped"
         />
         <HistoryPanel device={data} />
       </section>
 
-      {/* Section 6: Source Data — raw Graph JSON for verification */}
+      {/* Section 7: Source Data — raw Graph JSON for verification */}
       <section id="section-source" className="scroll-mt-4 space-y-3">
         <SectionHeading
-          number={6}
+          number={7}
           title="Source Data"
           description="Raw JSON from Microsoft Graph — verify what the engine is working with"
         />

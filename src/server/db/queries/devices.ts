@@ -318,21 +318,37 @@ function getDeviceDetailWithRules(
     return null;
   }
 
-  const autopilotRaw = row.autopilot_id
-    ? ((db.prepare("SELECT raw_json FROM autopilot_devices WHERE id = ?").get(row.autopilot_id) as
-        | { raw_json: string | null }
-        | undefined)?.raw_json ?? null)
+  // Fetch full source rows for raw JSON and hardware/enrollment fields
+  const autopilotSource = row.autopilot_id
+    ? (db.prepare("SELECT raw_json, model, manufacturer, first_seen_at, first_profile_assigned_at FROM autopilot_devices WHERE id = ?").get(row.autopilot_id) as
+        | { raw_json: string | null; model: string | null; manufacturer: string | null; first_seen_at: string | null; first_profile_assigned_at: string | null }
+        | undefined) ?? null
     : null;
-  const intuneRaw = row.intune_id
-    ? ((db.prepare("SELECT raw_json FROM intune_devices WHERE id = ?").get(row.intune_id) as
-        | { raw_json: string | null }
-        | undefined)?.raw_json ?? null)
+  const intuneSource = row.intune_id
+    ? (db.prepare("SELECT raw_json, os_version, enrollment_type, managed_device_owner_type, enrollment_profile_name, last_sync_datetime FROM intune_devices WHERE id = ?").get(row.intune_id) as
+        | { raw_json: string | null; os_version: string | null; enrollment_type: string | null; managed_device_owner_type: string | null; enrollment_profile_name: string | null; last_sync_datetime: string | null }
+        | undefined) ?? null
     : null;
-  const entraRaw = row.entra_id
-    ? ((db.prepare("SELECT raw_json FROM entra_devices WHERE id = ?").get(row.entra_id) as
-        | { raw_json: string | null }
-        | undefined)?.raw_json ?? null)
+  const entraSource = row.entra_id
+    ? (db.prepare("SELECT raw_json, registration_datetime FROM entra_devices WHERE id = ?").get(row.entra_id) as
+        | { raw_json: string | null; registration_datetime: string | null }
+        | undefined) ?? null
     : null;
+
+  const autopilotRaw = autopilotSource?.raw_json ?? null;
+  const intuneRaw = intuneSource?.raw_json ?? null;
+  const entraRaw = entraSource?.raw_json ?? null;
+
+  // Group memberships for this device
+  const groupMemberships = row.entra_id
+    ? (db.prepare(
+        `SELECT g.id AS group_id, g.display_name, g.membership_type
+         FROM group_memberships gm
+         JOIN groups g ON g.id = gm.group_id
+         WHERE gm.member_device_id = ?
+         ORDER BY g.display_name`
+      ).all(row.entra_id) as Array<{ group_id: string; display_name: string; membership_type: string }>)
+    : [];
 
   const parsedAssignment = safeJsonParse<
     AssignmentPath & { diagnostics?: DeviceDetailResponse["diagnostics"] }
@@ -389,6 +405,31 @@ function getDeviceDetailWithRules(
         };
       })
       .filter((v): v is NonNullable<typeof v> => v !== null),
+    hardware: {
+      model: autopilotSource?.model ?? null,
+      manufacturer: autopilotSource?.manufacturer ?? null,
+      osVersion: intuneSource?.os_version ?? null,
+      enrollmentType: intuneSource?.enrollment_type ?? null,
+      ownershipType: intuneSource?.managed_device_owner_type ?? null
+    },
+    enrollment: {
+      enrollmentProfileName: intuneSource?.enrollment_profile_name ?? null,
+      managedDeviceOwnerType: intuneSource?.managed_device_owner_type ?? null,
+      registrationDate: entraSource?.registration_datetime ?? null,
+      firstSeenAt: autopilotSource?.first_seen_at ?? null,
+      firstProfileAssignedAt: autopilotSource?.first_profile_assigned_at ?? null
+    },
+    groupMemberships: groupMemberships.map((g) => ({
+      groupId: g.group_id,
+      groupName: g.display_name,
+      membershipType: g.membership_type
+    })),
+    provisioningTimeline: {
+      firstSeenAt: autopilotSource?.first_seen_at ?? null,
+      firstProfileAssignedAt: autopilotSource?.first_profile_assigned_at ?? null,
+      enrollmentDate: entraSource?.registration_datetime ?? null,
+      lastCheckinAt: intuneSource?.last_sync_datetime ?? null
+    },
     sourceRefs: {
       autopilotRawJson: autopilotRaw,
       intuneRawJson: intuneRaw,
