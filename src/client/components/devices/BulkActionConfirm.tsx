@@ -68,7 +68,7 @@ export function BulkActionConfirm({
         aria-label="Close"
         className="pc-overlay-enter absolute inset-0 bg-black/60 backdrop-blur-sm"
       />
-      <div className="pc-drawer-enter relative w-full max-w-[560px] overflow-hidden rounded-xl border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] shadow-2xl">
+      <div role="dialog" aria-modal="true" aria-label={title} className="pc-drawer-enter relative w-full max-w-[560px] overflow-hidden rounded-xl border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] shadow-2xl">
         <div className="flex items-start justify-between gap-4 border-b border-[var(--pc-border)] px-5 py-4">
           <div className="flex items-start gap-3">
             <div

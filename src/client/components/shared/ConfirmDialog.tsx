@@ -1,5 +1,5 @@
 import { AlertTriangle, X } from "lucide-react";
-import { useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 import { Button } from "../ui/button.js";
 
@@ -32,14 +32,44 @@ export function ConfirmDialog({
   onCancel,
   isLoading
 }: ConfirmDialogProps) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  // Focus trap: keep Tab cycling within the dialog
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onCancel();
+        return;
+      }
+      if (event.key === "Tab" && dialogRef.current) {
+        const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      }
+    },
+    [onCancel]
+  );
+
   useEffect(() => {
     if (!open) return;
-    const handler = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onCancel();
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [open, onCancel]);
+    window.addEventListener("keydown", handleKeyDown);
+    // Auto-focus the dialog when it opens (if no autoFocus input)
+    if (!requireTyped && dialogRef.current) {
+      const firstButton = dialogRef.current.querySelector<HTMLElement>("button");
+      firstButton?.focus();
+    }
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [open, handleKeyDown, requireTyped]);
 
   if (!open) return null;
 
@@ -50,8 +80,13 @@ export function ConfirmDialog({
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
       onClick={onCancel}
+      aria-hidden="true"
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
         className="w-full max-w-md rounded-xl border border-[var(--pc-border)] bg-[var(--pc-surface)] shadow-2xl"
         onClick={(event) => event.stopPropagation()}
       >
@@ -69,6 +104,7 @@ export function ConfirmDialog({
           <button
             type="button"
             onClick={onCancel}
+            aria-label="Close dialog"
             className="rounded p-1 text-[var(--pc-text-muted)] transition-colors hover:bg-white/[0.05] hover:text-[var(--pc-text)]"
           >
             <X className="h-4 w-4" />

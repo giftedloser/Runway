@@ -71,15 +71,23 @@ export function rulesRouter(db: Database.Database) {
   });
 
   router.post("/", requireDelegatedAuth, (request, response) => {
-    const parsed = ruleInputSchema.parse(request.body) as RuleInput;
-    const created = createRule(db, parsed);
+    const result = ruleInputSchema.safeParse(request.body);
+    if (!result.success) {
+      response.status(400).json({ message: "Invalid rule.", errors: result.error.flatten().fieldErrors });
+      return;
+    }
+    const created = createRule(db, result.data as RuleInput);
     computeAllDeviceStates(db);
     response.status(201).json(created);
   });
 
   router.put("/:id", requireDelegatedAuth, (request, response) => {
-    const parsed = ruleInputSchema.partial().parse(request.body) as Partial<RuleInput>;
-    const updated = updateRule(db, request.params.id, parsed);
+    const result = ruleInputSchema.partial().safeParse(request.body);
+    if (!result.success) {
+      response.status(400).json({ message: "Invalid rule.", errors: result.error.flatten().fieldErrors });
+      return;
+    }
+    const updated = updateRule(db, request.params.id, result.data as Partial<RuleInput>);
     if (!updated) {
       response.status(404).json({ message: "Rule not found." });
       return;

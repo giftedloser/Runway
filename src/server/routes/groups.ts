@@ -184,20 +184,24 @@ export function groupsRouter(db: Database.Database) {
       return;
     }
 
-    const result = await createGroup(token, displayName, membershipType, membershipRule);
+    try {
+      const result = await createGroup(token, displayName, membershipType, membershipRule);
 
-    logAction(db, {
-      deviceSerial: null,
-      deviceName: null,
-      intuneId: null,
-      actionType: "create_group",
-      triggeredBy: user,
-      triggeredAt: new Date().toISOString(),
-      graphResponseStatus: result.status,
-      notes: `${displayName} (${membershipType}) — ${result.message}`
-    });
+      logAction(db, {
+        deviceSerial: null,
+        deviceName: null,
+        intuneId: null,
+        actionType: "create_group",
+        triggeredBy: user,
+        triggeredAt: new Date().toISOString(),
+        graphResponseStatus: result.status,
+        notes: `${displayName} (${membershipType}) — ${result.message}`
+      });
 
-    response.status(result.success ? 201 : result.status).json(result);
+      response.status(result.success ? 201 : result.status).json(result);
+    } catch (error) {
+      response.status(500).json({ message: error instanceof Error ? error.message : "Failed to create group." });
+    }
   });
 
   // PATCH /api/groups/:groupId — update membership rule
@@ -212,20 +216,24 @@ export function groupsRouter(db: Database.Database) {
       return;
     }
 
-    const result = await updateMembershipRule(token, groupId, membershipRule);
+    try {
+      const result = await updateMembershipRule(token, groupId, membershipRule);
 
-    logAction(db, {
-      deviceSerial: null,
-      deviceName: null,
-      intuneId: null,
-      actionType: "update_group_rule",
-      triggeredBy: user,
-      triggeredAt: new Date().toISOString(),
-      graphResponseStatus: result.status,
-      notes: `Group ${groupId} — ${result.message}`
-    });
+      logAction(db, {
+        deviceSerial: null,
+        deviceName: null,
+        intuneId: null,
+        actionType: "update_group_rule",
+        triggeredBy: user,
+        triggeredAt: new Date().toISOString(),
+        graphResponseStatus: result.status,
+        notes: `Group ${groupId} — ${result.message}`
+      });
 
-    response.status(result.success ? 200 : result.status).json(result);
+      response.status(result.success ? 200 : result.status).json(result);
+    } catch (error) {
+      response.status(500).json({ message: error instanceof Error ? error.message : "Failed to update rule." });
+    }
   });
 
   // POST /api/groups/:groupId/members — add device to group
@@ -253,20 +261,24 @@ export function groupsRouter(db: Database.Database) {
       return;
     }
 
-    const result = await addDeviceToGroup(token, groupId, device.entra_id);
+    try {
+      const result = await addDeviceToGroup(token, groupId, device.entra_id);
 
-    logAction(db, {
-      deviceSerial: device.serial_number,
-      deviceName: device.device_name,
-      intuneId: null,
-      actionType: "add_to_group",
-      triggeredBy: user,
-      triggeredAt: new Date().toISOString(),
-      graphResponseStatus: result.status,
-      notes: `Group ${groupId} — ${result.message}`
-    });
+      logAction(db, {
+        deviceSerial: device.serial_number,
+        deviceName: device.device_name,
+        intuneId: null,
+        actionType: "add_to_group",
+        triggeredBy: user,
+        triggeredAt: new Date().toISOString(),
+        graphResponseStatus: result.status,
+        notes: `Group ${groupId} — ${result.message}`
+      });
 
-    response.status(result.success ? 200 : result.status).json(result);
+      response.status(result.success ? 200 : result.status).json(result);
+    } catch (error) {
+      response.status(500).json({ message: error instanceof Error ? error.message : "Failed to add device to group." });
+    }
   });
 
   // DELETE /api/groups/:groupId/members/:deviceKey — remove device from group
@@ -288,20 +300,24 @@ export function groupsRouter(db: Database.Database) {
       return;
     }
 
-    const result = await removeDeviceFromGroup(token, groupId, device.entra_id);
+    try {
+      const result = await removeDeviceFromGroup(token, groupId, device.entra_id);
 
-    logAction(db, {
-      deviceSerial: device.serial_number,
-      deviceName: device.device_name,
-      intuneId: null,
-      actionType: "remove_from_group",
-      triggeredBy: user,
-      triggeredAt: new Date().toISOString(),
-      graphResponseStatus: result.status,
-      notes: `Group ${groupId} — ${result.message}`
-    });
+      logAction(db, {
+        deviceSerial: device.serial_number,
+        deviceName: device.device_name,
+        intuneId: null,
+        actionType: "remove_from_group",
+        triggeredBy: user,
+        triggeredAt: new Date().toISOString(),
+        graphResponseStatus: result.status,
+        notes: `Group ${groupId} — ${result.message}`
+      });
 
-    response.status(result.success ? 200 : result.status).json(result);
+      response.status(result.success ? 200 : result.status).json(result);
+    } catch (error) {
+      response.status(500).json({ message: error instanceof Error ? error.message : "Failed to remove device from group." });
+    }
   });
 
   return router;

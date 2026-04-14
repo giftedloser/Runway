@@ -65,6 +65,8 @@ export function DeviceFilters() {
                     health: previous.health === health ? undefined : health
                   }))
                 }
+                aria-label={`Filter by ${health} health`}
+                aria-pressed={active}
                 className={cn(
                   "rounded-md px-3 py-1.5 text-[12px] font-medium capitalize transition-colors",
                   active
@@ -83,6 +85,7 @@ export function DeviceFilters() {
           onChange={(event) =>
             setSearch(() => ({ flag: event.target.value || undefined }))
           }
+          aria-label="Filter by flag"
           className="rounded-md border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-2.5 py-1.5 text-[12px] text-[var(--pc-text)] focus:border-[var(--pc-accent)] focus:outline-none"
         >
           <option value="">All flags</option>

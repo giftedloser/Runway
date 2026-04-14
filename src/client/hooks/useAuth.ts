@@ -17,7 +17,10 @@ export function useLogin() {
     mutationFn: async () => {
       const { loginUrl } = await apiRequest<{ loginUrl: string }>("/api/auth/login");
       // Open Microsoft login in default browser
-      window.open(loginUrl, "_blank", "width=600,height=700");
+      const popup = window.open(loginUrl, "_blank", "width=600,height=700");
+      if (!popup) {
+        throw new Error("Browser blocked the login popup. Please allow popups for this site and try again.");
+      }
       return loginUrl;
     }
   });

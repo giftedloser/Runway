@@ -21,18 +21,26 @@ export function settingsRouter(db: Database.Database) {
   });
 
   router.post("/tag-config", (request, response) => {
-    const record = tagConfigSchema.parse(request.body);
-    upsertTagConfig(db, record);
+    const result = tagConfigSchema.safeParse(request.body);
+    if (!result.success) {
+      response.status(400).json({ message: "Invalid tag config.", errors: result.error.flatten().fieldErrors });
+      return;
+    }
+    upsertTagConfig(db, result.data);
     computeAllDeviceStates(db);
     response.status(201).json(getSettings(db).tagConfig);
   });
 
   router.put("/tag-config/:groupTag", (request, response) => {
-    const record = tagConfigSchema.parse({
+    const result = tagConfigSchema.safeParse({
       ...request.body,
       groupTag: request.params.groupTag
     });
-    upsertTagConfig(db, record);
+    if (!result.success) {
+      response.status(400).json({ message: "Invalid tag config.", errors: result.error.flatten().fieldErrors });
+      return;
+    }
+    upsertTagConfig(db, result.data);
     computeAllDeviceStates(db);
     response.json(getSettings(db).tagConfig);
   });

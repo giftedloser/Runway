@@ -92,8 +92,21 @@ export function provisioningRouter(db: Database.Database) {
   // POST /api/provisioning/validate — validate a complete provisioning chain
   router.post("/validate", (request, response) => {
     const { groupTag, groupId, profileId } = request.body ?? {};
+
+    if (!groupTag && !groupId && !profileId) {
+      response.status(400).json({ message: "At least one of groupTag, groupId, or profileId is required." });
+      return;
+    }
+
     const errors: string[] = [];
     const warnings: string[] = [];
+
+    if (!groupId) {
+      warnings.push("No group selected — cannot validate group→profile assignment.");
+    }
+    if (!profileId) {
+      warnings.push("No profile selected — cannot validate profile→group assignment.");
+    }
 
     // Check group tag has devices
     if (groupTag) {

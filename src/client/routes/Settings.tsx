@@ -52,6 +52,7 @@ export function SettingsPage() {
     expectedProfileNames: "",
     expectedGroupNames: ""
   });
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   if (settings.isLoading) return <LoadingState label="Loading settings…" />;
   if (settings.isError || !settings.data) {
@@ -389,8 +390,13 @@ export function SettingsPage() {
                 onChange={(event) =>
                   setForm((previous) => ({ ...previous, groupTag: event.target.value }))
                 }
+                onBlur={() => setTouched((p) => ({ ...p, groupTag: true }))}
+                aria-invalid={touched.groupTag && !form.groupTag.trim()}
                 className="mt-1"
               />
+              {touched.groupTag && !form.groupTag.trim() && (
+                <p className="mt-1 text-[11px] text-[var(--pc-critical)]">Group tag is required.</p>
+              )}
             </div>
             <div>
               <label className="text-[11px] font-medium text-[var(--pc-text-muted)]">
@@ -402,8 +408,13 @@ export function SettingsPage() {
                 onChange={(event) =>
                   setForm((previous) => ({ ...previous, propertyLabel: event.target.value }))
                 }
+                onBlur={() => setTouched((p) => ({ ...p, propertyLabel: true }))}
+                aria-invalid={touched.propertyLabel && !form.propertyLabel.trim()}
                 className="mt-1"
               />
+              {touched.propertyLabel && !form.propertyLabel.trim() && (
+                <p className="mt-1 text-[11px] text-[var(--pc-critical)]">Property label is required.</p>
+              )}
             </div>
             <div>
               <label className="text-[11px] font-medium text-[var(--pc-text-muted)]">
@@ -456,13 +467,15 @@ export function SettingsPage() {
                       .filter(Boolean)
                   },
                   {
-                    onSuccess: () =>
+                    onSuccess: () => {
                       setForm({
                         groupTag: "",
                         propertyLabel: "",
                         expectedProfileNames: "",
                         expectedGroupNames: ""
-                      })
+                      });
+                      setTouched({});
+                    }
                   }
                 )
               }
