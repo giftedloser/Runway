@@ -1,11 +1,24 @@
 import type { GroupMembershipRow, GroupRow } from "../db/types.js";
 import { GraphClient } from "./graph-client.js";
 
+interface GraphGroup {
+  id: string;
+  displayName: string;
+  membershipRule?: string | null;
+  membershipRuleProcessingState?: string | null;
+  groupTypes?: string[] | null;
+}
+
+interface GraphGroupMember {
+  id: string;
+  deviceId?: string | null;
+}
+
 export async function syncGroups(client: GraphClient): Promise<{
   groups: GroupRow[];
   memberships: GroupMembershipRow[];
 }> {
-  const rows = await client.getAllPages<any>(
+  const rows = await client.getAllPages<GraphGroup>(
     "/groups?$filter=startswith(displayName,'Autopilot') or startswith(displayName,'AP-')&$select=id,displayName,membershipRule,membershipRuleProcessingState,groupTypes"
   );
   const now = new Date().toISOString();
@@ -24,7 +37,9 @@ export async function syncGroups(client: GraphClient): Promise<{
   const memberships: GroupMembershipRow[] = [];
 
   for (const group of groups) {
-    const members = await client.getAllPages<any>(`/groups/${group.id}/members?$select=id,deviceId`);
+    const members = await client.getAllPages<GraphGroupMember>(
+      `/groups/${group.id}/members?$select=id,deviceId`
+    );
     for (const member of members) {
       memberships.push({
         group_id: group.id,

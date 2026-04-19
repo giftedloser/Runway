@@ -1,8 +1,23 @@
 import type { IntuneRow } from "../db/types.js";
 import { GraphClient } from "./graph-client.js";
 
+interface GraphManagedDevice {
+  id: string;
+  deviceName?: string | null;
+  serialNumber?: string | null;
+  azureADDeviceId?: string | null;
+  complianceState?: string | null;
+  osVersion?: string | null;
+  enrollmentType?: string | null;
+  managedDeviceOwnerType?: string | null;
+  lastSyncDateTime?: string | null;
+  userPrincipalName?: string | null;
+  enrollmentProfileName?: string | null;
+  autopilotEnrolled?: boolean | null;
+}
+
 export async function syncIntuneDevices(client: GraphClient): Promise<IntuneRow[]> {
-  const rows = await client.getAllPages<any>(
+  const rows = await client.getAllPages<GraphManagedDevice>(
     "/deviceManagement/managedDevices?$filter=operatingSystem eq 'Windows'&$select=id,deviceName,serialNumber,azureADDeviceId,complianceState,osVersion,enrollmentType,managedDeviceOwnerType,lastSyncDateTime,userPrincipalName,enrollmentProfileName,autopilotEnrolled"
   );
   const now = new Date().toISOString();

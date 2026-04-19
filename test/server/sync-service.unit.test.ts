@@ -1,0 +1,193 @@
+import Database from "better-sqlite3";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+// Force Graph-configured mode so fullSync takes the real-sync path, not the
+// mock-seed path. We swap in a deterministic config before the service loads.
+vi.mock("../../src/server/config.js", () => ({
+  config: {
+    AZURE_TENANT_ID: "tenant",
+    AZURE_CLIENT_ID: "client",
+    AZURE_CLIENT_SECRET: "secret",
+    AZURE_REDIRECT_URI: "http://localhost/cb",
+    HOST: "127.0.0.1",
+    SESSION_SECRET: "x",
+    PORT: 3001,
+    CLIENT_PORT: 5173,
+    DATABASE_PATH: ":memory:",
+    SYNC_INTERVAL_MINUTES: 15,
+    PROFILE_ASSIGNED_NOT_ENROLLED_HOURS: 2,
+    PROVISIONING_STALLED_HOURS: 8,
+    SEED_MODE: "mock",
+    isGraphConfigured: true,
+    graphMissing: []
+  }
+}));
+
+// Stub the Graph client so no auth / network happens.
+vi.mock("../../src/server/sync/graph-client.js", () => ({
+  GraphClient: class {}
+}));
+
+// Per-module sync stubs — default happy-path; individual tests override.
+const autopilotMock = vi.fn();
+const intuneMock = vi.fn();
+const entraMock = vi.fn();
+const groupMock = vi.fn();
+const profileMock = vi.fn();
+const complianceMock = vi.fn();
+const configProfileMock = vi.fn();
+const appMock = vi.fn();
+const caMock = vi.fn();
+
+vi.mock("../../src/server/sync/autopilot-sync.js", () => ({
+  syncAutopilotDevices: autopilotMock
+}));
+vi.mock("../../src/server/sync/intune-sync.js", () => ({
+  syncIntuneDevices: intuneMock
+}));
+vi.mock("../../src/server/sync/entra-sync.js", () => ({
+  syncEntraDevices: entraMock
+}));
+vi.mock("../../src/server/sync/group-sync.js", () => ({
+  syncGroups: groupMock
+}));
+vi.mock("../../src/server/sync/profile-sync.js", () => ({
+  syncProfiles: profileMock
+}));
+vi.mock("../../src/server/sync/compliance-sync.js", () => ({
+  syncCompliancePolicies: complianceMock
+}));
+vi.mock("../../src/server/sync/config-profile-sync.js", () => ({
+  syncConfigProfiles: configProfileMock
+}));
+vi.mock("../../src/server/sync/app-sync.js", () => ({
+  syncAppAssignments: appMock
+}));
+vi.mock("../../src/server/sync/conditional-access-sync.js", () => ({
+  syncConditionalAccessPolicies: caMock
+}));
+
+// Persist + compute are exercised with real DB; keep them real so the sync
+// log / device_state tables update as they would in production.
+const { fullSync, getSyncState } = await import("../../src/server/sync/sync-service.js");
+const { runMigrations } = await import("../../src/server/db/migrate.js");
+const { listSyncLogs } = await import("../../src/server/db/queries/sync.js");
+
+let db: Database.Database;
+
+beforeEach(() => {
+  db = new Database(":memory:");
+  runMigrations(db);
+
+  // Default: every sync returns an empty but valid payload.
+  autopilotMock.mockReset().mockResolvedValue([]);
+  intuneMock.mockReset().mockResolvedValue([]);
+  entraMock.mockReset().mockResolvedValue([]);
+  groupMock.mockReset().mockResolvedValue({ groups: [], memberships: [] });
+  profileMock.mockReset().mockResolvedValue({ profiles: [], assignments: [] });
+  complianceMock.mockReset().mockResolvedValue({ policies: [], deviceStates: [] });
+  configProfileMock.mockReset().mockResolvedValue({ profiles: [], deviceStates: [] });
+  appMock.mockReset().mockResolvedValue({ apps: [], deviceStates: [] });
+  caMock.mockReset().mockResolvedValue({ policies: [] });
+
+  // Reset the module-level sync state between tests (it leaks otherwise).
+  const state = getSyncState();
+  state.inProgress = false;
+  state.currentSyncType = null;
+  state.startedAt = null;
+  state.lastError = null;
+});
+
+describe("fullSync — partial failure handling", () => {
+  it("records the error in sync_log and rethrows when Intune sync fails (Entra succeeds)", async () => {
+    entraMock.mockResolvedValue([
+      {
+        id: "e1",
+        device_id: "d1",
+        display_name: "POS-01",
+        serial_number: null,
+        trust_type: "AzureAd",
+        is_managed: 1,
+        mdm_app_id: null,
+        registration_datetime: null,
+        device_physical_ids: "[]",
+        last_synced_at: new Date().toISOString(),
+        raw_json: "{}"
+      }
+    ]);
+    intuneMock.mockRejectedValue(new Error("Intune Graph 503"));
+
+    await expect(fullSync(db, "manual")).rejects.toThrow("Intune Graph 503");
+
+    const logs = listSyncLogs(db);
+    expect(logs.length).toBe(1);
+    expect(logs[0]!.errors).toContain("Intune Graph 503");
+    expect(logs[0]!.devicesSynced).toBe(0);
+    expect(logs[0]!.completedAt).not.toBeNull();
+
+    // Entra ran, Intune ran (and rejected), downstream did NOT run.
+    expect(entraMock).toHaveBeenCalled();
+    expect(intuneMock).toHaveBeenCalled();
+    expect(complianceMock).not.toHaveBeenCalled();
+    expect(configProfileMock).not.toHaveBeenCalled();
+    expect(appMock).not.toHaveBeenCalled();
+  });
+
+  it("resets inProgress state even when a sync rejects", async () => {
+    entraMock.mockRejectedValue(new Error("Entra failed"));
+
+    await expect(fullSync(db, "manual")).rejects.toThrow("Entra failed");
+
+    const state = getSyncState();
+    expect(state.inProgress).toBe(false);
+    expect(state.currentSyncType).toBeNull();
+    expect(state.startedAt).toBeNull();
+    expect(state.lastError).toBe("Entra failed");
+  });
+
+  it("continues the sync when conditional-access fails (it is best-effort)", async () => {
+    caMock.mockRejectedValue(new Error("CA 403"));
+
+    await fullSync(db, "manual");
+
+    const logs = listSyncLogs(db);
+    expect(logs.length).toBe(1);
+    // CA failure is swallowed → no errors recorded, completedAt populated.
+    expect(logs[0]!.errors).toEqual([]);
+    expect(logs[0]!.completedAt).not.toBeNull();
+    expect(getSyncState().lastError).toBeNull();
+  });
+
+  it("records compliance-sync failure and rethrows (compliance runs after initial batch)", async () => {
+    complianceMock.mockRejectedValue(new Error("Compliance 500"));
+
+    await expect(fullSync(db, "full")).rejects.toThrow("Compliance 500");
+
+    const logs = listSyncLogs(db);
+    expect(logs[0]!.errors).toContain("Compliance 500");
+
+    // The first batch of 5 must have run, and CA (which is between batches) too.
+    expect(autopilotMock).toHaveBeenCalled();
+    expect(intuneMock).toHaveBeenCalled();
+    expect(entraMock).toHaveBeenCalled();
+    expect(groupMock).toHaveBeenCalled();
+    expect(profileMock).toHaveBeenCalled();
+    expect(caMock).toHaveBeenCalled();
+  });
+
+  it("refuses to start a second sync while one is already in progress", async () => {
+    // Make one sync hang so we can test the lock behavior.
+    let releaseFirst!: () => void;
+    entraMock.mockReturnValue(
+      new Promise((resolve) => {
+        releaseFirst = () => resolve([]);
+      })
+    );
+
+    const firstRun = fullSync(db, "full");
+    await expect(fullSync(db, "manual")).rejects.toThrow(/already in progress/);
+
+    releaseFirst();
+    await firstRun;
+  });
+});

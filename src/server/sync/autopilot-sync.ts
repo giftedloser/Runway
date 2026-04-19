@@ -2,8 +2,24 @@ import type { AutopilotRow } from "../db/types.js";
 import type { SnapshotPayload } from "./types.js";
 import { GraphClient } from "./graph-client.js";
 
+interface GraphAutopilotDevice {
+  id: string;
+  serialNumber?: string | null;
+  model?: string | null;
+  manufacturer?: string | null;
+  groupTag?: string | null;
+  userPrincipalName?: string | null;
+  azureActiveDirectoryDeviceId?: string | null;
+  deploymentProfileAssignmentStatus?: string | null;
+  deploymentProfile?: {
+    id?: string | null;
+    displayName?: string | null;
+    deploymentMode?: string | null;
+  } | null;
+}
+
 export async function syncAutopilotDevices(client: GraphClient): Promise<SnapshotPayload["autopilotRows"]> {
-  const rows = await client.getAllPages<any>(
+  const rows = await client.getAllPages<GraphAutopilotDevice>(
     "/deviceManagement/windowsAutopilotDeviceIdentities?$select=id,serialNumber,model,manufacturer,groupTag,userPrincipalName,azureActiveDirectoryDeviceId,deploymentProfileAssignmentStatus,deploymentProfile"
   );
   const now = new Date().toISOString();

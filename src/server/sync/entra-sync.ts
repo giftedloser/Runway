@@ -1,8 +1,20 @@
 import type { EntraRow } from "../db/types.js";
 import { GraphClient } from "./graph-client.js";
 
+interface GraphEntraDevice {
+  id: string;
+  deviceId?: string | null;
+  displayName?: string | null;
+  serialNumber?: string | null;
+  trustType?: string | null;
+  isManaged?: boolean | null;
+  mdmAppId?: string | null;
+  registrationDateTime?: string | null;
+  physicalIds?: string[] | null;
+}
+
 export async function syncEntraDevices(client: GraphClient): Promise<EntraRow[]> {
-  const rows = await client.getAllPages<any>(
+  const rows = await client.getAllPages<GraphEntraDevice>(
     "/devices?$filter=operatingSystem eq 'Windows'&$select=id,deviceId,displayName,physicalIds,trustType,isManaged,mdmAppId,registrationDateTime"
   );
   const now = new Date().toISOString();
