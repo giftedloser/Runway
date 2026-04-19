@@ -1,5 +1,15 @@
 const DESKTOP_API_ORIGIN = "http://localhost:3001";
 
+// Emitted whenever the server rejects a request with 401. UnauthenticatedListener
+// subscribes so that the auth query is invalidated and the user is prompted to
+// sign in again, even if the error originates from a background query.
+export const UNAUTHENTICATED_EVENT = "pilotcheck:unauthenticated";
+
+export interface UnauthenticatedEventDetail {
+  path: string;
+  message: string;
+}
+
 function resolveRequestUrl(path: string) {
   if (/^https?:\/\//.test(path)) {
     return path;
@@ -26,6 +36,15 @@ async function readErrorMessage(response: Response) {
   return text.trim() || response.statusText;
 }
 
+function emitUnauthenticated(path: string, message: string) {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(
+    new CustomEvent<UnauthenticatedEventDetail>(UNAUTHENTICATED_EVENT, {
+      detail: { path, message }
+    })
+  );
+}
+
 export async function apiRequest<T>(path: string, init?: RequestInit) {
   const requestUrl = resolveRequestUrl(path);
 
@@ -43,7 +62,11 @@ export async function apiRequest<T>(path: string, init?: RequestInit) {
   }
 
   if (!response.ok) {
-    throw new Error((await readErrorMessage(response)) ?? "Request failed.");
+    const message = (await readErrorMessage(response)) ?? "Request failed.";
+    if (response.status === 401) {
+      emitUnauthenticated(path, message);
+    }
+    throw new Error(message);
   }
 
   if (response.status === 204) {

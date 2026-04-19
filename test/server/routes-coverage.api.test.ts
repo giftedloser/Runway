@@ -1,6 +1,15 @@
 import Database from "better-sqlite3";
 import request from "supertest";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+// Stub requireDelegatedAuth so settings / sync / rules write paths can be
+// exercised end-to-end without wiring up a real delegated session. 401-path
+// assertions for these routes live in provisioning-groups.api.test.ts instead.
+vi.mock("../../src/server/auth/auth-middleware.js", () => ({
+  requireDelegatedAuth: (_req: unknown, _res: unknown, next: () => void) => next(),
+  getDelegatedToken: () => "test-token",
+  getDelegatedUser: () => "test-user"
+}));
 
 import { createApp } from "../../src/server/app.js";
 import { runMigrations } from "../../src/server/db/migrate.js";

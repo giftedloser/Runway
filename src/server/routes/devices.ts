@@ -8,6 +8,7 @@ import {
   getRelatedDevices,
   listDeviceStates
 } from "../db/queries/devices.js";
+import { logger } from "../logger.js";
 
 export function devicesRouter(db: Database.Database) {
   const router = Router();
@@ -27,8 +28,8 @@ export function devicesRouter(db: Database.Database) {
         })
       );
     } catch (error) {
-      console.error('Failed to list devices:', error);
-      response.status(500).json({ error: 'Failed to list devices.' });
+      logger.error({ err: error }, "Failed to list devices");
+      response.status(500).json({ error: "Failed to list devices." });
     }
   });
 
@@ -41,8 +42,8 @@ export function devicesRouter(db: Database.Database) {
       }
       response.json(device);
     } catch (error) {
-      console.error('Failed to get device detail:', error);
-      response.status(500).json({ error: 'Failed to get device detail.' });
+      logger.error({ err: error, deviceKey: request.params.deviceKey }, "Failed to get device detail");
+      response.status(500).json({ error: "Failed to get device detail." });
     }
   });
 
@@ -50,8 +51,8 @@ export function devicesRouter(db: Database.Database) {
     try {
       response.json(getDeviceHistory(db, request.params.deviceKey));
     } catch (error) {
-      console.error('Failed to get device history:', error);
-      response.status(500).json({ error: 'Failed to get device history.' });
+      logger.error({ err: error, deviceKey: request.params.deviceKey }, "Failed to get device history");
+      response.status(500).json({ error: "Failed to get device history." });
     }
   });
 
@@ -69,8 +70,8 @@ export function devicesRouter(db: Database.Database) {
       }
       response.json(getRelatedDevices(db, userUpn, request.params.deviceKey));
     } catch (error) {
-      console.error('Failed to get related devices:', error);
-      response.status(500).json({ error: 'Failed to get related devices.' });
+      logger.error({ err: error, deviceKey: request.params.deviceKey }, "Failed to get related devices");
+      response.status(500).json({ error: "Failed to get related devices." });
     }
   });
 

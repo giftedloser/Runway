@@ -2,6 +2,7 @@ import type Database from "better-sqlite3";
 
 import type { SettingsResponse, TagConfigRecord } from "../../../shared/types.js";
 import { config } from "../../config.js";
+import { asArray } from "../../engine/normalize.js";
 
 export function listTagConfig(db: Database.Database): TagConfigRecord[] {
   return (
@@ -13,8 +14,8 @@ export function listTagConfig(db: Database.Database): TagConfigRecord[] {
     }>
   ).map((row) => ({
     groupTag: row.group_tag,
-    expectedProfileNames: JSON.parse(row.expected_profile_names),
-    expectedGroupNames: JSON.parse(row.expected_group_names),
+    expectedProfileNames: asArray(row.expected_profile_names),
+    expectedGroupNames: asArray(row.expected_group_names),
     propertyLabel: row.property_label
   }));
 }

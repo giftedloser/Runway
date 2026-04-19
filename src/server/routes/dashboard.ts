@@ -3,6 +3,7 @@ import { Router } from "express";
 import type Database from "better-sqlite3";
 
 import { getDashboard } from "../db/queries/devices.js";
+import { logger } from "../logger.js";
 
 export function dashboardRouter(db: Database.Database) {
   const router = Router();
@@ -11,8 +12,8 @@ export function dashboardRouter(db: Database.Database) {
     try {
       response.json(getDashboard(db));
     } catch (error) {
-      console.error('Failed to load dashboard:', error);
-      response.status(500).json({ error: 'Failed to load dashboard.' });
+      logger.error({ err: error }, "Failed to load dashboard");
+      response.status(500).json({ error: "Failed to load dashboard." });
     }
   });
 

@@ -4,13 +4,15 @@ import { loadPilotCheckEnv } from "./load-env.js";
 
 loadPilotCheckEnv();
 
+const DEFAULT_SESSION_SECRET = "pilotcheck-dev-session-secret";
+
 const envSchema = z.object({
   AZURE_TENANT_ID: z.string().optional(),
   AZURE_CLIENT_ID: z.string().optional(),
   AZURE_CLIENT_SECRET: z.string().optional(),
   AZURE_REDIRECT_URI: z.string().default("http://localhost:3001/api/auth/callback"),
   HOST: z.string().default("127.0.0.1"),
-  SESSION_SECRET: z.string().default("pilotcheck-dev-session-secret"),
+  SESSION_SECRET: z.string().default(DEFAULT_SESSION_SECRET),
   PORT: z.coerce.number().default(3001),
   CLIENT_PORT: z.coerce.number().default(5173),
   DATABASE_PATH: z.string().default("./data/pilotcheck.sqlite"),
@@ -21,6 +23,19 @@ const envSchema = z.object({
 });
 
 const parsed = envSchema.parse(process.env);
+
+// Fail fast if running outside dev/test with the built-in default session secret.
+// With the default, anyone who knows the string can forge session cookies and
+// bypass delegated-auth on every desktop installation.
+const nodeEnv = process.env.NODE_ENV;
+const isDevOrTest = nodeEnv === "development" || nodeEnv === "test";
+if (!isDevOrTest && parsed.SESSION_SECRET === DEFAULT_SESSION_SECRET) {
+  throw new Error(
+    "SESSION_SECRET is set to the built-in development default. " +
+      "Set SESSION_SECRET to a long random value in the PilotCheck .env before starting the server. " +
+      "(Set NODE_ENV=development to bypass this check in local development.)"
+  );
+}
 
 export const config = {
   ...parsed,

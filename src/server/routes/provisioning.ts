@@ -1,6 +1,8 @@
 import { Router } from "express";
 import type Database from "better-sqlite3";
 
+import { asArray } from "../engine/normalize.js";
+
 export function provisioningRouter(db: Database.Database) {
   const router = Router();
 
@@ -82,8 +84,8 @@ export function provisioningRouter(db: Database.Database) {
         ? {
             groupTag: existingConfig.group_tag,
             propertyLabel: existingConfig.property_label,
-            expectedProfileNames: JSON.parse(existingConfig.expected_profile_names || "[]"),
-            expectedGroupNames: JSON.parse(existingConfig.expected_group_names || "[]")
+            expectedProfileNames: asArray(existingConfig.expected_profile_names),
+            expectedGroupNames: asArray(existingConfig.expected_group_names)
           }
         : null
     });

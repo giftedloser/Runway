@@ -1,10 +1,16 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { Search, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 import { FLAG_INFO } from "../../lib/flags.js";
 import type { FlagCode, HealthLevel } from "../../lib/types.js";
 import { cn } from "../../lib/utils.js";
 import { Input } from "../ui/input.js";
+
+// Debounce router writes while typing so every keystroke doesn't push a new
+// history entry / retrigger the devices query. Click-driven filters (health
+// pills, flag dropdown, clear-filters) stay immediate.
+const SEARCH_DEBOUNCE_MS = 250;
 
 const HEALTH_OPTIONS: Array<Exclude<HealthLevel, "unknown">> = [
   "critical",
@@ -38,6 +44,34 @@ export function DeviceFilters() {
       search: (previous) => ({ ...previous, ...updater(previous), page: 1 })
     });
 
+  // Local mirror of the URL search param so typing stays responsive while the
+  // actual router write is debounced. Re-sync whenever the URL param changes
+  // externally (clear-filters button, back/forward nav, command-palette jump).
+  const [searchInput, setSearchInput] = useState(search.search ?? "");
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    setSearchInput(search.search ?? "");
+  }, [search.search]);
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, []);
+
+  const handleSearchChange = (value: string) => {
+    setSearchInput(value);
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    debounceRef.current = setTimeout(() => {
+      setSearch(() => ({ search: value || undefined }));
+    }, SEARCH_DEBOUNCE_MS);
+  };
+
   return (
     <div className="space-y-3">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
@@ -46,10 +80,8 @@ export function DeviceFilters() {
           <Input
             className="w-full pl-9"
             placeholder="Search by name, serial, or UPN..."
-            value={search.search ?? ""}
-            onChange={(event) =>
-              setSearch(() => ({ search: event.target.value || undefined }))
-            }
+            value={searchInput}
+            onChange={(event) => handleSearchChange(event.target.value)}
           />
         </div>
 

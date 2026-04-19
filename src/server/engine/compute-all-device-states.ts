@@ -57,8 +57,8 @@ export function computeAllDeviceStates(db: Database.Database) {
       row.group_tag,
       {
         groupTag: row.group_tag,
-        expectedProfileNames: JSON.parse(row.expected_profile_names),
-        expectedGroupNames: JSON.parse(row.expected_group_names),
+        expectedProfileNames: asArray(row.expected_profile_names),
+        expectedGroupNames: asArray(row.expected_group_names),
         propertyLabel: row.property_label
       }
     ])

@@ -1,6 +1,7 @@
 import type Database from "better-sqlite3";
 
 import type { HealthLevel, ProfileAuditDetail, ProfileAuditSummary } from "../../../shared/types.js";
+import { safeJsonParse } from "../../engine/normalize.js";
 import type { GroupRow, ProfileAssignmentRow, ProfileRow } from "../types.js";
 import { listDeviceStates } from "./devices.js";
 
@@ -79,7 +80,7 @@ export function listProfiles(db: Database.Database): ProfileAuditSummary[] {
       profileName: profile.display_name,
       deploymentMode: profile.deployment_mode,
       hybridJoinConfigured: Boolean(profile.hybrid_join_config),
-      oobeSummary: Object.keys(JSON.parse(profile.out_of_box_experience ?? "{}")),
+      oobeSummary: Object.keys(safeJsonParse<Record<string, unknown>>(profile.out_of_box_experience, {})),
       targetingGroups,
       counts,
       assignedDevices: deviceBreakdown.length,

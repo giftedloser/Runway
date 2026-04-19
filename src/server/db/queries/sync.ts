@@ -2,6 +2,7 @@ import type Database from "better-sqlite3";
 
 import type { SyncLogEntry, SyncStatusResponse } from "../../../shared/types.js";
 import { config } from "../../config.js";
+import { asArray } from "../../engine/normalize.js";
 
 export function createSyncLog(db: Database.Database, syncType: "full" | "manual") {
   const startedAt = new Date().toISOString();
@@ -47,7 +48,7 @@ export function listSyncLogs(db: Database.Database, limit = 20): SyncLogEntry[] 
     startedAt: row.started_at,
     completedAt: row.completed_at,
     devicesSynced: row.devices_synced,
-    errors: JSON.parse(row.errors)
+    errors: asArray(row.errors)
   }));
 }
 

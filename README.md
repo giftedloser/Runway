@@ -99,6 +99,13 @@ npm run tauri:build    # production installer
 
 ## Configuration
 
+PilotCheck is **self-hosted, bring-your-own-Entra-app-registration**. The
+installer never contains Microsoft Graph credentials — each operator
+registers PilotCheck as an application in their own tenant and places the
+credentials in their per-user app data folder. See
+[`docs/graph-auth.md`](docs/graph-auth.md) for the full design and the
+planned migration to a PKCE public-client model.
+
 For local development, copy `.env.example` to `.env` at the repo root and fill in:
 
 For the installed desktop app, place the same `.env` file in the app data folder:
@@ -113,6 +120,8 @@ AZURE_CLIENT_SECRET=
 AZURE_REDIRECT_URI=http://localhost:3001/api/auth/callback
 
 # Session signing for delegated auth
+# Required in production. The server refuses to start outside
+# NODE_ENV=development|test if this is left at the built-in default.
 SESSION_SECRET=change-me-in-production
 
 # Server

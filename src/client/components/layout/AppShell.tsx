@@ -5,12 +5,14 @@ import { KeyboardShortcuts } from "../command/KeyboardShortcuts.js";
 import { ToastProvider } from "../shared/toast.js";
 import { MockModeBanner } from "./MockModeBanner.js";
 import { Sidebar } from "./Sidebar.js";
+import { UnauthenticatedListener } from "./UnauthenticatedListener.js";
 
 export function AppShell() {
   // Note: the window is the scroll container (not an inner <main>) so that
   // TanStack Router's built-in scroll restoration works on back/forward nav.
   return (
     <ToastProvider>
+      <UnauthenticatedListener />
       <div className="flex min-h-screen flex-col bg-[var(--pc-bg)]">
         <MockModeBanner />
         <div className="flex flex-1">

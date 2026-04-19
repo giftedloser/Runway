@@ -180,31 +180,12 @@ describe("POST /api/provisioning/validate", () => {
 });
 
 // ──────────────────────────────────────────────
-// Settings — safeParse validation
+// Settings / Sync — delegated-auth guards
+// (happy-path schema + CRUD coverage lives in routes-coverage.api.test.ts,
+// which vi.mocks the auth middleware. Here we only verify the guard fires.)
 // ──────────────────────────────────────────────
-describe("Settings safeParse validation", () => {
-  it("POST /api/settings/tag-config returns 400 with field errors for empty body", async () => {
-    const app = createApp(db);
-    const res = await request(app)
-      .post("/api/settings/tag-config")
-      .send({})
-      .expect(400);
-
-    expect(res.body.message).toMatch(/invalid/i);
-    expect(res.body.errors).toBeDefined();
-  });
-
-  it("PUT /api/settings/tag-config/:tag returns 400 for invalid payload", async () => {
-    const app = createApp(db);
-    const res = await request(app)
-      .put("/api/settings/tag-config/Lodge")
-      .send({ propertyLabel: "" }) // missing required fields
-      .expect(400);
-
-    expect(res.body.message).toMatch(/invalid/i);
-  });
-
-  it("POST /api/settings/tag-config returns 201 for valid payload", async () => {
+describe("Settings tag-config auth guard", () => {
+  it("POST /api/settings/tag-config returns 401 without auth", async () => {
     const app = createApp(db);
     await request(app)
       .post("/api/settings/tag-config")
@@ -214,7 +195,42 @@ describe("Settings safeParse validation", () => {
         expectedProfileNames: ["Profile-A"],
         expectedGroupNames: ["Group-A"]
       })
-      .expect(201);
+      .expect(401);
+  });
+
+  it("PUT /api/settings/tag-config/:tag returns 401 without auth", async () => {
+    const app = createApp(db);
+    await request(app)
+      .put("/api/settings/tag-config/Lodge")
+      .send({
+        groupTag: "Lodge",
+        propertyLabel: "Lodge Updated",
+        expectedProfileNames: [],
+        expectedGroupNames: []
+      })
+      .expect(401);
+  });
+
+  it("DELETE /api/settings/tag-config/:tag returns 401 without auth", async () => {
+    const app = createApp(db);
+    await request(app).delete("/api/settings/tag-config/Lodge").expect(401);
+  });
+
+  it("GET /api/settings/tag-config remains accessible without auth (read-only)", async () => {
+    const app = createApp(db);
+    await request(app).get("/api/settings/tag-config").expect(200);
+  });
+});
+
+describe("Sync auth guard", () => {
+  it("POST /api/sync returns 401 without auth", async () => {
+    const app = createApp(db);
+    await request(app).post("/api/sync").expect(401);
+  });
+
+  it("GET /api/sync/status remains accessible without auth (read-only)", async () => {
+    const app = createApp(db);
+    await request(app).get("/api/sync/status").expect(200);
   });
 });
 
