@@ -105,10 +105,11 @@ export function ActionAuditPage() {
           <button
             type="button"
             onClick={() => login.mutate()}
-            disabled={login.isPending}
+            disabled={login.isPending || !login.canStart}
+            title={login.blockedReason ?? undefined}
             className="rounded-md border border-[var(--pc-border)] bg-[var(--pc-accent)] px-3 py-1.5 text-[12px] font-medium text-[var(--pc-text)] transition-colors hover:bg-[var(--pc-accent-hover)] disabled:opacity-60"
           >
-            {login.isPending ? "Opening…" : "Sign in"}
+            {!login.canStart ? "Unavailable" : login.isPending ? "Opening…" : "Sign in"}
           </button>
         </Card>
       </div>

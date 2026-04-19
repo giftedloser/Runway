@@ -99,7 +99,11 @@ npm run tauri:build    # production installer
 
 ## Configuration
 
-Copy `.env.example` to `.env` at the repo root and fill in:
+For local development, copy `.env.example` to `.env` at the repo root and fill in:
+
+For the installed desktop app, place the same `.env` file in the app data folder:
+
+- Windows: `%LOCALAPPDATA%\com.giftedloser.pilotcheck\.env`
 
 ```ini
 # Microsoft Graph (read-only ingestion)

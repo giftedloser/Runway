@@ -8,6 +8,7 @@ import {
   RotateCcw,
   Shield,
   Terminal,
+  Trash2,
   Type
 } from "lucide-react";
 
@@ -82,6 +83,30 @@ const ACTIONS: ActionSpec[] = [
       "Perform a full factory reset. ALL data will be erased and the device will be unenrolled.",
     destructive: true,
     requireTyped: true
+  },
+  {
+    type: "delete-intune",
+    label: "Delete from Intune",
+    icon: Trash2,
+    description: "Permanently delete this device's Intune managed device record. This cannot be undone.",
+    destructive: true,
+    requireTyped: true
+  },
+  {
+    type: "delete-entra",
+    label: "Delete from Entra",
+    icon: Trash2,
+    description: "Permanently delete this device's Entra ID device object. This will break any Azure AD join. Cannot be undone.",
+    destructive: true,
+    requireTyped: true
+  },
+  {
+    type: "delete-autopilot",
+    label: "Delete from Autopilot",
+    icon: Trash2,
+    description: "Remove this device's Windows Autopilot registration. The hardware hash will need to be re-imported to re-register. Cannot be undone.",
+    destructive: true,
+    requireTyped: true
   }
 ];
 
@@ -150,10 +175,11 @@ export function ActionsToolbar({ device }: { device: DeviceDetailResponse }) {
           </div>
           <Button
             onClick={() => login.mutate()}
-            disabled={login.isPending}
+            disabled={login.isPending || !login.canStart}
+            title={login.blockedReason ?? undefined}
             className="shrink-0"
           >
-            {login.isPending ? "Opening..." : "Sign in"}
+            {!login.canStart ? "Unavailable" : login.isPending ? "Opening..." : "Sign in"}
           </Button>
         </div>
       </Card>

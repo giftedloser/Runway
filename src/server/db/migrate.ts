@@ -3,9 +3,21 @@ import path from "node:path";
 
 import type Database from "better-sqlite3";
 
-const migrationsDir = path.resolve(process.cwd(), "src/server/db/migrations");
+const migrationsDirCandidates = [
+  path.resolve(process.cwd(), "src/server/db/migrations"),
+  path.resolve(process.cwd(), "dist/server/migrations")
+];
+
+function getMigrationsDir() {
+  const existing = migrationsDirCandidates.find((candidate) => fs.existsSync(candidate));
+  if (!existing) {
+    throw new Error(`Could not locate SQL migrations. Checked: ${migrationsDirCandidates.join(", ")}`);
+  }
+  return existing;
+}
 
 export function runMigrations(db: Database.Database) {
+  const migrationsDir = getMigrationsDir();
   const applied = new Set(
     db
       .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'schema_migrations'")

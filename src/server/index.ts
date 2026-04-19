@@ -26,8 +26,8 @@ async function bootstrap() {
   startBackgroundSync(db);
 
   const app = createApp(db);
-  app.listen(config.PORT, () => {
-    logger.info(`PilotCheck API listening on http://localhost:${config.PORT}`);
+  app.listen(config.PORT, config.HOST, () => {
+    logger.info(`PilotCheck API listening on http://${config.HOST}:${config.PORT}`);
   });
 }
 

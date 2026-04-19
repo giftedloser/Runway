@@ -21,7 +21,8 @@ export function AuthIndicator() {
       <button
         type="button"
         onClick={() => login.mutate()}
-        disabled={login.isPending}
+        disabled={login.isPending || !login.canStart}
+        title={login.blockedReason ?? undefined}
         className="flex w-full items-center justify-between rounded-lg border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-2.5 py-2 text-[11.5px] font-medium text-[var(--pc-text-secondary)] transition-colors hover:border-[var(--pc-accent)]/40 hover:text-[var(--pc-accent-hover)] disabled:opacity-50"
       >
         <span className="flex items-center gap-2">

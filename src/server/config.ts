@@ -1,10 +1,15 @@
 import { z } from "zod";
 
+import { loadPilotCheckEnv } from "./load-env.js";
+
+loadPilotCheckEnv();
+
 const envSchema = z.object({
   AZURE_TENANT_ID: z.string().optional(),
   AZURE_CLIENT_ID: z.string().optional(),
   AZURE_CLIENT_SECRET: z.string().optional(),
   AZURE_REDIRECT_URI: z.string().default("http://localhost:3001/api/auth/callback"),
+  HOST: z.string().default("127.0.0.1"),
   SESSION_SECRET: z.string().default("pilotcheck-dev-session-secret"),
   PORT: z.coerce.number().default(3001),
   CLIENT_PORT: z.coerce.number().default(5173),

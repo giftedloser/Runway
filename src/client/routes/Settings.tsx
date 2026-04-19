@@ -215,9 +215,10 @@ export function SettingsPage() {
 
           {!graphConfigured ? (
             <div className="mt-4 rounded-lg border border-[var(--pc-warning)]/30 bg-[var(--pc-warning-muted)] px-3.5 py-2.5 text-[12px] leading-relaxed text-[var(--pc-warning)]">
-              Set the variables above in the server's environment (or a <code>.env</code> file at
-              the repo root), then restart the host process. PilotCheck will pick them up on the next
-              start.
+              Set the variables above in the server's environment. For local development, use a{" "}
+              <code>.env</code> file at the repo root. For the installed desktop app, use a{" "}
+              <code>.env</code> file in <code>%LOCALAPPDATA%\com.giftedloser.pilotcheck</code>,
+              then restart PilotCheck.
             </div>
           ) : null}
         </Card>
@@ -291,8 +292,12 @@ export function SettingsPage() {
                   Sign out
                 </Button>
               ) : (
-                <Button onClick={() => login.mutate()} disabled={login.isPending}>
-                  {login.isPending ? "Opening…" : "Sign in"}
+                <Button
+                  onClick={() => login.mutate()}
+                  disabled={login.isPending || !login.canStart}
+                  title={login.blockedReason ?? undefined}
+                >
+                  {!login.canStart ? "Unavailable" : login.isPending ? "Opening…" : "Sign in"}
                 </Button>
               )}
             </div>
