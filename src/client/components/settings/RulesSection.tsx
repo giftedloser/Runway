@@ -231,7 +231,7 @@ export function RulesSection() {
                 onChange={(event) =>
                   setForm((previous) => ({ ...previous, name: event.target.value }))
                 }
-                className="mt-1"
+                className="mt-1 w-full"
               />
             </div>
             <div>
@@ -244,7 +244,7 @@ export function RulesSection() {
                     severity: event.target.value as RuleSeverity
                   }))
                 }
-                className="mt-1 w-full rounded-md border border-[var(--pc-border)] bg-[var(--pc-surface)] px-2.5 py-1.5 text-[12px] text-[var(--pc-text)] focus:border-[var(--pc-accent)] focus:outline-none"
+                className="mt-1 h-9 w-full rounded-lg border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-3 text-[13px] text-[var(--pc-text)] outline-none hover:border-[var(--pc-border-hover)] focus:border-[var(--pc-accent)] focus:ring-1 focus:ring-[var(--pc-accent)]/30 transition-all duration-150"
               >
                 <option value="info">Info</option>
                 <option value="warning">Warning</option>
@@ -261,7 +261,7 @@ export function RulesSection() {
                 onChange={(event) =>
                   setForm((previous) => ({ ...previous, description: event.target.value }))
                 }
-                className="mt-1"
+                className="mt-1 w-full"
               />
             </div>
             <div>
@@ -285,7 +285,7 @@ export function RulesSection() {
                           : previous.value
                   }));
                 }}
-                className="mt-1 w-full rounded-md border border-[var(--pc-border)] bg-[var(--pc-surface)] px-2.5 py-1.5 text-[12px] text-[var(--pc-text)] focus:border-[var(--pc-accent)] focus:outline-none"
+                className="mt-1 h-9 w-full rounded-lg border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-3 text-[13px] text-[var(--pc-text)] outline-none hover:border-[var(--pc-border-hover)] focus:border-[var(--pc-accent)] focus:ring-1 focus:ring-[var(--pc-accent)]/30 transition-all duration-150"
               >
                 {FIELD_OPTIONS.map((field) => (
                   <option key={field.id} value={field.id}>
@@ -302,7 +302,7 @@ export function RulesSection() {
                 onChange={(event) =>
                   setForm((previous) => ({ ...previous, op: event.target.value as RuleOp }))
                 }
-                className="mt-1 w-full rounded-md border border-[var(--pc-border)] bg-[var(--pc-surface)] px-2.5 py-1.5 text-[12px] text-[var(--pc-text)] focus:border-[var(--pc-accent)] focus:outline-none"
+                className="mt-1 h-9 w-full rounded-lg border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-3 text-[13px] text-[var(--pc-text)] outline-none hover:border-[var(--pc-border-hover)] focus:border-[var(--pc-accent)] focus:ring-1 focus:ring-[var(--pc-accent)]/30 transition-all duration-150"
               >
                 {OP_OPTIONS.map((op) => (
                   <option key={op.value} value={op.value}>
@@ -320,7 +320,7 @@ export function RulesSection() {
                     onChange={(event) =>
                       setForm((previous) => ({ ...previous, value: event.target.value }))
                     }
-                    className="mt-1 w-full rounded-md border border-[var(--pc-border)] bg-[var(--pc-surface)] px-2.5 py-1.5 text-[12px] text-[var(--pc-text)] focus:border-[var(--pc-accent)] focus:outline-none"
+                    className="mt-1 h-9 w-full rounded-lg border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-3 text-[13px] text-[var(--pc-text)] outline-none hover:border-[var(--pc-border-hover)] focus:border-[var(--pc-accent)] focus:ring-1 focus:ring-[var(--pc-accent)]/30 transition-all duration-150"
                   >
                     <option value="true">true</option>
                     <option value="false">false</option>
@@ -335,7 +335,7 @@ export function RulesSection() {
                     onChange={(event) =>
                       setForm((previous) => ({ ...previous, value: event.target.value }))
                     }
-                    className="mt-1"
+                    className="mt-1 w-full"
                   />
                 )}
               </div>

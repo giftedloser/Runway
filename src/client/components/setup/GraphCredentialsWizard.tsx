@@ -157,7 +157,7 @@ export function GraphCredentialsWizard({ onDismissRestart }: Props) {
             onChange={(event) => update("tenantId", event.target.value)}
             onBlur={() => setTouched((p) => ({ ...p, tenantId: true }))}
             aria-invalid={touched.tenantId && Boolean(errors.tenantId)}
-            className="mt-1 font-mono text-[12px]"
+            className="mt-1 w-full font-mono text-[12px]"
           />
           {touched.tenantId && errors.tenantId && (
             <p className="mt-1 text-[11px] text-[var(--pc-critical)]">{errors.tenantId}</p>
@@ -175,7 +175,7 @@ export function GraphCredentialsWizard({ onDismissRestart }: Props) {
             onChange={(event) => update("clientId", event.target.value)}
             onBlur={() => setTouched((p) => ({ ...p, clientId: true }))}
             aria-invalid={touched.clientId && Boolean(errors.clientId)}
-            className="mt-1 font-mono text-[12px]"
+            className="mt-1 w-full font-mono text-[12px]"
           />
           {touched.clientId && errors.clientId && (
             <p className="mt-1 text-[11px] text-[var(--pc-critical)]">{errors.clientId}</p>
@@ -194,7 +194,7 @@ export function GraphCredentialsWizard({ onDismissRestart }: Props) {
             onChange={(event) => update("clientSecret", event.target.value)}
             onBlur={() => setTouched((p) => ({ ...p, clientSecret: true }))}
             aria-invalid={touched.clientSecret && Boolean(errors.clientSecret)}
-            className="mt-1 font-mono text-[12px]"
+            className="mt-1 w-full font-mono text-[12px]"
           />
           {touched.clientSecret && errors.clientSecret && (
             <p className="mt-1 text-[11px] text-[var(--pc-critical)]">{errors.clientSecret}</p>
@@ -212,7 +212,7 @@ export function GraphCredentialsWizard({ onDismissRestart }: Props) {
             onChange={(event) => update("redirectUri", event.target.value)}
             onBlur={() => setTouched((p) => ({ ...p, redirectUri: true }))}
             aria-invalid={touched.redirectUri && Boolean(errors.redirectUri)}
-            className="mt-1 font-mono text-[12px]"
+            className="mt-1 w-full font-mono text-[12px]"
           />
           {touched.redirectUri && errors.redirectUri && (
             <p className="mt-1 text-[11px] text-[var(--pc-critical)]">{errors.redirectUri}</p>
