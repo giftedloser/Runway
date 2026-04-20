@@ -5,12 +5,12 @@ import {
   CheckCircle2,
   CircleDashed,
   Database,
-  KeyRound,
   RefreshCcw,
   Tag,
   Trash2
 } from "lucide-react";
 
+import { GraphCredentialsWizard } from "../components/setup/GraphCredentialsWizard.js";
 import { PageHeader } from "../components/layout/PageHeader.js";
 import { ErrorState, LoadingState } from "../components/shared/ErrorState.js";
 import { Button } from "../components/ui/button.js";
@@ -100,24 +100,13 @@ export function SetupPage() {
       <StepShell
         number={1}
         title="Graph credentials"
-        description="PilotCheck reads from Microsoft Graph using a read-only app registration."
+        description="PilotCheck reads from Microsoft Graph using a read-only app registration. Paste your tenant ID, app (client) ID, and client secret value below — we'll write them to the server's .env so the next start picks them up."
         done={graphConfigured}
         active={activeStep === 1}
       >
-        <div className="flex items-center gap-3 rounded-lg border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] p-3">
-          <KeyRound className="h-4 w-4 text-[var(--pc-accent)]" />
-          <div className="flex-1 text-[12px] text-[var(--pc-text-secondary)]">
-            {graphConfigured
-              ? "Server-side credentials detected. PilotCheck can ingest live data."
-              : `Missing: ${settings.data.graph.missing.join(", ")}. Set these in the server's environment and restart.`}
-          </div>
-          <Link
-            to="/settings"
-            className="text-[12px] font-medium text-[var(--pc-accent)] hover:text-[var(--pc-accent-hover)]"
-          >
-            Open Settings
-          </Link>
-        </div>
+        <GraphCredentialsWizard
+          onDismissRestart={() => settings.refetch()}
+        />
       </StepShell>
 
       <StepShell

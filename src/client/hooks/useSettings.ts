@@ -3,10 +3,51 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { SettingsResponse, TagConfigRecord } from "../lib/types.js";
 import { apiRequest } from "../lib/api.js";
 
+export interface GraphCredentialsInput {
+  tenantId: string;
+  clientId: string;
+  clientSecret: string;
+  redirectUri?: string;
+}
+
+export interface GraphEnvInfo {
+  envPath: string;
+  configured: boolean;
+  missing: string[];
+}
+
+export interface GraphSaveResult {
+  message: string;
+  envPath: string;
+  restartRequired: boolean;
+}
+
 export function useSettings() {
   return useQuery({
     queryKey: ["settings"],
     queryFn: () => apiRequest<SettingsResponse>("/api/settings")
+  });
+}
+
+export function useGraphEnvInfo() {
+  return useQuery({
+    queryKey: ["graph-env"],
+    queryFn: () => apiRequest<GraphEnvInfo>("/api/settings/graph/env")
+  });
+}
+
+export function useSaveGraphCredentials() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: GraphCredentialsInput) =>
+      apiRequest<GraphSaveResult>("/api/settings/graph", {
+        method: "POST",
+        body: JSON.stringify(input)
+      }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["graph-env"] });
+      void queryClient.invalidateQueries({ queryKey: ["settings"] });
+    }
   });
 }
 
