@@ -399,6 +399,37 @@ export interface LapsCredential {
   passwordExpirationDateTime: string | null;
 }
 
+// --- Saved Views ---
+
+/**
+ * User-defined shortcut over the device queue. All fields match the
+ * `/devices` search params so recalling a view just writes them into the
+ * URL. Nulls mean "leave that filter off".
+ */
+export interface SavedView {
+  id: string;
+  name: string;
+  search: string | null;
+  health: HealthLevel | null;
+  flag: FlagCode | null;
+  property: string | null;
+  profile: string | null;
+  pageSize: number | null;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SavedViewInput {
+  name: string;
+  search?: string | null;
+  health?: HealthLevel | null;
+  flag?: FlagCode | null;
+  property?: string | null;
+  profile?: string | null;
+  pageSize?: number | null;
+}
+
 // --- Groups ---
 
 export interface GroupSummary {

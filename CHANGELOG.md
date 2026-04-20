@@ -4,7 +4,42 @@ All notable changes to PilotCheck will be documented in this file. The
 format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+> PilotCheck is pre-release. No versioned tags have been cut yet — every
+> change below lives on `main`. Once the first public release is cut, the
+> Unreleased section will be split and the `[0.1.0]` link activated.
+
 ## [Unreleased]
+
+### Added
+- **Persistent Saved Views** on the device queue — operators can now save
+  the current filter set as a named view (`user_views` table), reorder
+  them, rename, delete, and one-click recall. The five built-in presets
+  (All, Critical, No profile, User mismatch, Provisioning stalled) remain
+  as locked defaults.
+- **Rule preview / dry-run** in Settings → Custom Rules — before enabling
+  a rule, click "Preview matches" to see the count and a sample of up to
+  25 devices that would flag, evaluated against the current snapshot with
+  the same engine code the live run uses.
+- **Device Detail tab navigation** — the 15 stacked panels are now
+  organized into six named tabs (Identity, Targeting, Enrollment, Drift,
+  Operate, History) with deep-linkable `?tab=` search params so tickets
+  can reference a specific section. The default tab auto-selects the
+  highest-severity failing subsystem when none is specified.
+- **Expanded bulk actions** — `retire` and `rotate-laps` join `sync` and
+  `reboot` on `/api/actions/bulk`, gated behind the existing delegated-
+  auth check and 200-device cap. The confirmation modal now has three
+  phases (confirming → running → results) with per-device pass/fail
+  status and Graph response codes after the run completes.
+- Typed Graph response interfaces replace `any` across the four core
+  sync modules (Autopilot, Intune, Entra, Groups) so TypeScript surfaces
+  shape drift at build time instead of runtime.
+- LAPS delegated-token unit tests (base64 decode, UTF-8, token refresh,
+  404/403 error paths).
+- Partial sync failure tests covering Intune-fails-while-Entra-succeeds,
+  the best-effort conditional access swallow, and the in-progress lock.
+- `docs/troubleshooting.md` — Graph permissions matrix (app-only +
+  delegated), env setup keys, and the three-wave sync failure model with
+  symptom→fix tables.
 
 ### Fixed
 - **Rule authoring form silently dropped boolean and number rules.**
@@ -14,86 +49,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   compare `true === "true"` and never match. Field registry now
   declares each field's type; boolean fields render a True/False
   dropdown; number fields use `type="number"` and coerce via `Number()`;
-  CSV list ops stay raw. Covered by seven new client-side tests.
-
-### Added
-- Device queue **column picker** — registry-driven popover lets operators
-  toggle Primary User, Compliance, Property, and Deployment Mode columns
-  on or off. Choices persist via `usePreference` and the Device column
-  is locked on so the queue can never be rendered headerless.
-- Per-flag **diagnostic playbooks** on Device Detail — each flag now
-  ships templated portal links, Graph PowerShell, Graph REST URLs, and
-  doc links so techs can act in one click instead of context-switching.
-- **End-to-end engine tests** for `computeAllDeviceStates` (15 tests)
-  feeding crafted Autopilot/Intune/Entra fixtures through
-  `persistSnapshot` and asserting which flags fire — including a
-  word-boundary regression guard for `hybrid_join_risk` and a
-  case-insensitive UPN match for `user_mismatch`.
-- Profile inspector drawer on the Profile Audit page — segmented health
-  bar, click-through queue filters, targeting groups, common-problems
-  grid, and a 25-row device breakdown without losing page context.
-- Bulk action confirmation modal — sync/reboot from the queue now opens a
-  preview dialog with health-distribution chips, a scrollable device list,
-  and a destructive warning banner before any action fires.
-- Device detail single-key shortcuts: `r` refetches device data, `s`
-  dispatches a sync, `b` returns to the queue. Hint chips render in the
-  breadcrumb row and the global shortcut overlay learns the new section.
-- **Test suite expansion** — 32 new tests covering the rule DSL evaluator
-  (every operator, scope filter, and malformed-predicate safety net), the
-  recent-transitions and newly-unhealthy queries against a real sqlite
-  schema, and remote action route guardrails (allowlist enforcement, 200
-  device cap, NetBIOS rename validation, audit log writes). Total suite
-  now 37 tests.
+  CSV list ops stay raw.
+- Settings page listed env vars as `GRAPH_*` but the server actually reads
+  `AZURE_*` — labels and the missing-vars list now match the server.
+- Auth hardening, resilient parsing, and Tier 1 polish (see commit
+  `a6ba23e` for the full audit sweep).
 
 ### Changed
 - Global keyboard shortcut listener now attaches in capture phase so
   Vim-style two-key sequences (`g s`) preempt page-local single-key
-  handlers like the new device detail shortcuts.
+  handlers like the device detail shortcuts.
 
-### Added (earlier)
-- Dashboard "What changed in 24h" feed — surfaces the most recent state
-  transition per device in the last 24 hours, classified as regression /
-  recovery / lateral with the added/removed flag diff and a click-through
-  to the device. Built on a single windowed query against
-  `device_state_history`.
+### Earlier on main (pre-audit)
+- Device queue **column picker** — registry-driven popover lets operators
+  toggle Primary User, Compliance, Property, and Deployment Mode columns
+  on or off. Choices persist via `usePreference` and the Device column is
+  locked on so the queue can never be rendered headerless.
+- Per-flag **diagnostic playbooks** on Device Detail — each flag ships
+  templated portal links, Graph PowerShell, Graph REST URLs, and doc
+  links so techs can act in one click instead of context-switching.
+- Profile inspector drawer on the Profile Audit page — segmented health
+  bar, click-through queue filters, targeting groups, common-problems
+  grid, and a 25-row device breakdown without losing page context.
+- Bulk action confirmation modal, device detail single-key shortcuts
+  (`r` refetch, `s` sync, `b` back).
+- Dashboard "What changed in 24h" feed classified as regression /
+  recovery / lateral, with added/removed flag diffs.
 - Keyboard shortcut overlay (`?`) and Vim-style two-key navigation
-  (`g d` Dashboard, `g v` deVices, `g c` Critical, `g p` Profiles,
-  `g g` Groups, `g s` Sync, `g a` Audit, `g ,` Settings). Sequences
+  (`g d`, `g v`, `g c`, `g p`, `g g`, `g s`, `g a`, `g ,`). Sequences
   time out after 1.2s and are suppressed while typing in form fields.
-  Sidebar footer shows the `?` and `⌘K` hint chips.
-- Device Detail header now shows four at-a-glance "breakpoint" chips
-  (Identity / Targeting / Enrollment / Drift), colored by the worst severity
-  in each subsystem so operators can triage in under a second.
-- Settings → Tag Mapping supports JSON import (upserts via the existing
-  POST endpoint) and one-click export, so the casino-tag dictionary can be
-  versioned and shared across environments.
-- Group Inspector now has health filter chips and a member search box for
-  large groups.
+- Device Detail header shows four at-a-glance "breakpoint" chips
+  (Identity / Targeting / Enrollment / Drift) colored by the worst
+  severity in each subsystem.
+- Settings → Tag Mapping JSON import/export.
+- Group Inspector health filter chips and member search.
 - Cross-device Action Audit page (`/actions`) with success-rate stats,
-  status / action-type filters, expandable error details, and 30-second
-  polling.
-- Dashboard 14-day estate health trend chart, computed from
-  `device_state_history` transitions.
-- Quick "Saved Views" chips on the device queue (All, Critical, No profile,
-  User mismatch, Provisioning stalled).
-- Global toast hub (no third-party dependency) wired into sync, bulk
-  actions, CSV export, and tag mapping import.
-- Sidebar property quick-jumps generated from the tag dictionary.
-- Profile health breakdown tiles are now click-throughs to the device
-  queue scoped to that profile + health.
+  filters, expandable error details, 30-second polling.
+- Dashboard 14-day estate health trend chart from `device_state_history`.
+- Global toast hub (no third-party dependency).
+- Sidebar property quick-jumps from the tag dictionary.
+- Profile health breakdown click-throughs to the device queue scoped to
+  that profile + health.
 - Sync status detail: per-row status icons, expandable error lists,
-  human-readable durations, and a summary card.
-- README, CONTRIBUTING, SECURITY, CHANGELOG, and `docs/` (architecture,
-  engine, graph-setup) for the public release.
-- MIT LICENSE.
+  human-readable durations, summary card.
+- README, CONTRIBUTING, SECURITY, `docs/` (architecture, engine,
+  graph-setup), MIT LICENSE.
 
-### Fixed
-- Settings page listed env vars as `GRAPH_*` but the server actually reads
-  `AZURE_*` — labels and the missing-vars list now match the server.
-
-## [0.1.0] - 2026-04-07
-
-Initial public release.
-
-[Unreleased]: https://github.com/giftedloser/PilotCheck/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/giftedloser/PilotCheck/releases/tag/v0.1.0
+[Unreleased]: https://github.com/giftedloser/PilotCheck/commits/main

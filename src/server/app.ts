@@ -24,6 +24,7 @@ import { profilesRouter } from "./routes/profiles.js";
 import { rulesRouter } from "./routes/rules.js";
 import { settingsRouter } from "./routes/settings.js";
 import { syncRouter } from "./routes/sync.js";
+import { userViewsRouter } from "./routes/user-views.js";
 
 function isLoopbackHost(host: string) {
   return host === "127.0.0.1" || host === "::1" || host === "localhost";
@@ -67,6 +68,7 @@ export function createApp(db: Database.Database) {
   app.use("/api/sync", syncRouter(db));
   app.use("/api/settings", settingsRouter(db));
   app.use("/api/rules", rulesRouter(db));
+  app.use("/api/user-views", userViewsRouter(db));
   app.use("/api/actions", actionsRouter(db));
   app.use("/api/laps", lapsRouter(db));
   app.use("/api/bitlocker", bitlockerRouter(db));

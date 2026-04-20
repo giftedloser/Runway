@@ -1,9 +1,22 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import type { RuleDefinition } from "../lib/types.js";
+import type { DeviceListItem, RuleDefinition, RulePredicate, RuleScope, RuleSeverity } from "../lib/types.js";
 import { apiRequest } from "../lib/api.js";
 
 export type RuleInputPayload = Omit<RuleDefinition, "id" | "createdAt" | "updatedAt">;
+
+export interface RulePreviewPayload {
+  predicate: RulePredicate;
+  scope?: RuleScope;
+  scopeValue?: string | null;
+  severity?: RuleSeverity;
+}
+
+export interface RulePreviewResult {
+  count: number;
+  total: number;
+  sampleDevices: DeviceListItem[];
+}
 
 export function useRules() {
   return useQuery({
@@ -44,4 +57,14 @@ export function useRuleMutations() {
       onSuccess: invalidate
     })
   };
+}
+
+export function useRulePreview() {
+  return useMutation({
+    mutationFn: (input: RulePreviewPayload) =>
+      apiRequest<RulePreviewResult>("/api/rules/preview", {
+        method: "POST",
+        body: JSON.stringify(input)
+      })
+  });
 }

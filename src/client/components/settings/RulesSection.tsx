@@ -1,7 +1,13 @@
 import { useState } from "react";
-import { Plus, ScrollText, ToggleLeft, ToggleRight, Trash2 } from "lucide-react";
+import { Eye, Plus, ScrollText, ToggleLeft, ToggleRight, Trash2 } from "lucide-react";
 
-import { useRuleMutations, useRules, type RuleInputPayload } from "../../hooks/useRules.js";
+import {
+  useRuleMutations,
+  useRulePreview,
+  useRules,
+  type RuleInputPayload,
+  type RulePreviewResult
+} from "../../hooks/useRules.js";
 import type { RuleDefinition, RuleOp, RuleSeverity } from "../../lib/types.js";
 import { ConfirmDialog } from "../shared/ConfirmDialog.js";
 import { Button } from "../ui/button.js";
@@ -145,9 +151,36 @@ function describePredicate(rule: RuleDefinition): string {
 export function RulesSection() {
   const rules = useRules();
   const mutations = useRuleMutations();
+  const preview = useRulePreview();
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [showForm, setShowForm] = useState(false);
+  const [previewResult, setPreviewResult] = useState<RulePreviewResult | null>(null);
+  const [previewError, setPreviewError] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<RuleDefinition | null>(null);
+
+  const resetPreview = () => {
+    setPreviewResult(null);
+    setPreviewError(null);
+  };
+
+  const runPreview = () => {
+    if (!form.name && form.op !== "exists" && form.op !== "missing" && !form.value) return;
+    resetPreview();
+    const payload = buildPayload(form);
+    preview.mutate(
+      {
+        predicate: payload.predicate,
+        scope: payload.scope,
+        scopeValue: payload.scopeValue,
+        severity: payload.severity
+      },
+      {
+        onSuccess: (data) => setPreviewResult(data),
+        onError: (error) =>
+          setPreviewError(error instanceof Error ? error.message : "Preview failed")
+      }
+    );
+  };
 
   const opMeta = OP_OPTIONS.find((o) => o.value === form.op);
   const currentFieldType = fieldType(form.field);
@@ -311,20 +344,75 @@ export function RulesSection() {
               <div className="text-[11px] text-[var(--pc-text-muted)]">
                 Admin sign-in required to save rules.
               </div>
-              <Button
-                disabled={!form.name || mutations.create.isPending}
-                onClick={() =>
-                  mutations.create.mutate(buildPayload(form), {
-                    onSuccess: () => {
-                      setForm(EMPTY_FORM);
-                      setShowForm(false);
-                    }
-                  })
-                }
-              >
-                {mutations.create.isPending ? "Saving…" : "Save rule"}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="secondary"
+                  onClick={runPreview}
+                  disabled={preview.isPending}
+                  title="Evaluate this predicate against the current device snapshot"
+                >
+                  <Eye className="h-3.5 w-3.5" />
+                  {preview.isPending ? "Previewing…" : "Preview matches"}
+                </Button>
+                <Button
+                  disabled={!form.name || mutations.create.isPending}
+                  onClick={() =>
+                    mutations.create.mutate(buildPayload(form), {
+                      onSuccess: () => {
+                        setForm(EMPTY_FORM);
+                        setShowForm(false);
+                        resetPreview();
+                      }
+                    })
+                  }
+                >
+                  {mutations.create.isPending ? "Saving…" : "Save rule"}
+                </Button>
+              </div>
             </div>
+            {previewError ? (
+              <div className="sm:col-span-2 rounded-md border border-[var(--pc-critical)]/40 bg-[var(--pc-critical-muted)] px-3 py-2 text-[11px] text-[var(--pc-critical)]">
+                {previewError}
+              </div>
+            ) : null}
+            {previewResult ? (
+              <div className="sm:col-span-2 rounded-md border border-[var(--pc-border)] bg-[var(--pc-surface)] px-3 py-2.5">
+                <div className="flex items-baseline justify-between gap-2">
+                  <div className="text-[12px] font-semibold text-[var(--pc-text)]">
+                    {previewResult.count === 0
+                      ? "No devices match"
+                      : previewResult.count === 1
+                        ? "1 device would match"
+                        : `${previewResult.count} devices would match`}
+                  </div>
+                  <div className="text-[11px] text-[var(--pc-text-muted)]">
+                    of {previewResult.total} in snapshot
+                  </div>
+                </div>
+                {previewResult.sampleDevices.length > 0 ? (
+                  <ul className="mt-2 space-y-0.5 text-[11px] text-[var(--pc-text-secondary)]">
+                    {previewResult.sampleDevices.map((device) => (
+                      <li key={device.deviceKey} className="flex items-center gap-2">
+                        <span className="font-mono text-[var(--pc-text-muted)]">
+                          {device.serialNumber ?? "—"}
+                        </span>
+                        <span className="truncate">{device.deviceName ?? "(unnamed)"}</span>
+                        {device.assignedProfileName ? (
+                          <span className="text-[var(--pc-text-muted)]">
+                            · {device.assignedProfileName}
+                          </span>
+                        ) : null}
+                      </li>
+                    ))}
+                    {previewResult.count > previewResult.sampleDevices.length ? (
+                      <li className="pt-1 text-[var(--pc-text-muted)]">
+                        …and {previewResult.count - previewResult.sampleDevices.length} more
+                      </li>
+                    ) : null}
+                  </ul>
+                ) : null}
+              </div>
+            ) : null}
           </div>
         ) : null}
 

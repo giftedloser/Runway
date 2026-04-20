@@ -82,20 +82,45 @@ beforeEach(() => {
 });
 
 describe("POST /api/actions/bulk — guardrails", () => {
-  it("rejects destructive actions in bulk mode (only sync and reboot allowed)", async () => {
+  it("rejects the still-destructive actions in bulk mode (wipe, autopilot-reset, rename, delete-*)", async () => {
     const app = createApp(db);
     seedDevice(db, { deviceKey: "dev-1", intuneId: "intune-1" });
 
-    for (const action of ["wipe", "retire", "autopilot-reset", "rename", "rotate-laps"]) {
+    for (const action of [
+      "wipe",
+      "autopilot-reset",
+      "rename",
+      "delete-intune",
+      "delete-entra",
+      "delete-autopilot"
+    ]) {
       const response = await request(app)
         .post("/api/actions/bulk")
         .send({ action, deviceKeys: ["dev-1"] });
       expect(response.status).toBe(400);
-      expect(response.body.message).toMatch(/sync|reboot/i);
+      expect(response.body.message).toMatch(/sync|reboot|retire|rotate-laps/i);
     }
     expect(remoteActionMocks.wipeDevice).not.toHaveBeenCalled();
-    expect(remoteActionMocks.retireDevice).not.toHaveBeenCalled();
     expect(remoteActionMocks.autopilotReset).not.toHaveBeenCalled();
+  });
+
+  it("allows retire and rotate-laps in bulk mode (high-value fleet ops)", async () => {
+    const app = createApp(db);
+    seedDevice(db, { deviceKey: "dev-1", intuneId: "intune-1" });
+
+    const retire = await request(app)
+      .post("/api/actions/bulk")
+      .send({ action: "retire", deviceKeys: ["dev-1"] });
+    expect(retire.status).toBe(200);
+    expect(retire.body.successCount).toBe(1);
+    expect(remoteActionMocks.retireDevice).toHaveBeenCalledTimes(1);
+
+    const laps = await request(app)
+      .post("/api/actions/bulk")
+      .send({ action: "rotate-laps", deviceKeys: ["dev-1"] });
+    expect(laps.status).toBe(200);
+    expect(laps.body.successCount).toBe(1);
+    expect(remoteActionMocks.rotateLapsPassword).toHaveBeenCalledTimes(1);
   });
 
   it("rejects empty or missing deviceKeys", async () => {

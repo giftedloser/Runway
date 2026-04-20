@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import type Database from "better-sqlite3";
 
+import type { RulePredicate } from "../../shared/types.js";
 import { requireDelegatedAuth } from "../auth/auth-middleware.js";
 import {
   createRule,
@@ -12,6 +13,7 @@ import {
   type RuleInput
 } from "../db/queries/rules.js";
 import { computeAllDeviceStates } from "../engine/compute-all-device-states.js";
+import { previewRule } from "../engine/preview-rule.js";
 import { logger } from "../logger.js";
 
 const opSchema = z.enum([
@@ -69,6 +71,42 @@ export function rulesRouter(db: Database.Database) {
 
   router.get("/", (_request, response) => {
     response.json(listRules(db));
+  });
+
+  // Dry-run: evaluate a predicate against the current device_state snapshot
+  // and return (count, sample). Does not persist anything. Unauthenticated
+  // on purpose — it operates on already-synced data and helps rule authors
+  // validate a predicate before saving.
+  router.post("/preview", (request, response) => {
+    const schema = z.object({
+      predicate: predicateSchema,
+      scope: z.enum(["global", "property", "profile"]).optional(),
+      scopeValue: z.string().nullable().optional(),
+      severity: z.enum(["info", "warning", "critical"]).optional()
+    });
+    const result = schema.safeParse(request.body);
+    if (!result.success) {
+      response.status(400).json({
+        message: "Invalid preview payload.",
+        errors: result.error.flatten().fieldErrors
+      });
+      return;
+    }
+    try {
+      const preview = previewRule(
+        db,
+        result.data.predicate as RulePredicate,
+        result.data.scope ?? "global",
+        result.data.scopeValue ?? null,
+        result.data.severity ?? "warning"
+      );
+      response.json(preview);
+    } catch (error) {
+      logger.error({ err: error }, "Rule preview failed");
+      response.status(500).json({
+        message: error instanceof Error ? error.message : "Preview failed"
+      });
+    }
   });
 
   router.post("/", requireDelegatedAuth, (request, response) => {

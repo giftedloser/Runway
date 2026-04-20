@@ -1,8 +1,12 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
-import { Download, Filter, Loader2, RefreshCw, RotateCcw, Rows2, Rows3, X } from "lucide-react";
+import { Download, Filter, KeyRound, Loader2, RefreshCw, RotateCcw, Rows2, Rows3, Trash2, X } from "lucide-react";
 import { useState } from "react";
 
-import { BulkActionConfirm } from "../components/devices/BulkActionConfirm.js";
+import {
+  BulkActionConfirm,
+  type BulkActionType,
+  type BulkDeviceResult
+} from "../components/devices/BulkActionConfirm.js";
 import { ColumnPicker } from "../components/devices/ColumnPicker.js";
 import { DeviceFilters } from "../components/devices/DeviceFilters.js";
 import { DeviceTable, type DeviceTableDensity } from "../components/devices/DeviceTable.js";
@@ -37,8 +41,10 @@ export function DeviceListPage() {
 
   const toast = useToast();
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
-  const [bulkBusy, setBulkBusy] = useState<null | "sync" | "reboot">(null);
-  const [pendingBulk, setPendingBulk] = useState<null | "sync" | "reboot">(null);
+  const [bulkBusy, setBulkBusy] = useState<null | BulkActionType>(null);
+  const [pendingBulk, setPendingBulk] = useState<null | BulkActionType>(null);
+  const [bulkPhase, setBulkPhase] = useState<"confirming" | "running" | "completed">("confirming");
+  const [bulkResults, setBulkResults] = useState<BulkDeviceResult[]>([]);
 
   const toggleSelected = (deviceKey: string) => {
     setSelectedKeys((prev) => {
@@ -61,21 +67,38 @@ export function DeviceListPage() {
   };
   const clearSelection = () => setSelectedKeys(new Set());
 
-  const requestBulk = (action: "sync" | "reboot") => {
-    if (selectedKeys.size === 0) return;
-    setPendingBulk(action);
+  const ACTION_LABELS: Record<BulkActionType, string> = {
+    sync: "Sync",
+    reboot: "Reboot",
+    retire: "Retire",
+    "rotate-laps": "Rotate LAPS"
   };
 
-  const runBulk = async (action: "sync" | "reboot") => {
+  const requestBulk = (action: BulkActionType) => {
+    if (selectedKeys.size === 0) return;
+    setPendingBulk(action);
+    setBulkPhase("confirming");
+    setBulkResults([]);
+  };
+
+  const closeBulk = () => {
+    setPendingBulk(null);
+    setBulkPhase("confirming");
+    setBulkResults([]);
+  };
+
+  const runBulk = async (action: BulkActionType) => {
     if (selectedKeys.size === 0) return;
     setBulkBusy(action);
-    const label = action === "sync" ? "Sync" : "Reboot";
+    setBulkPhase("running");
+    const label = ACTION_LABELS[action];
     try {
       const result = await apiRequest<{
         action: string;
         total: number;
         successCount: number;
         failureCount: number;
+        results: BulkDeviceResult[];
       }>("/api/actions/bulk", {
         method: "POST",
         body: JSON.stringify({
@@ -83,22 +106,25 @@ export function DeviceListPage() {
           deviceKeys: Array.from(selectedKeys)
         })
       });
+      setBulkResults(result.results);
+      setBulkPhase("completed");
       if (result.failureCount === 0) {
         toast.push({
           variant: "success",
-          title: `Bulk ${action} queued`,
+          title: `Bulk ${label.toLowerCase()} queued`,
           description: `${result.successCount} of ${result.total} devices accepted.`
         });
         clearSelection();
       } else {
         toast.push({
           variant: "warning",
-          title: `Bulk ${action} partially completed`,
+          title: `Bulk ${label.toLowerCase()} partially completed`,
           description: `${result.successCount} succeeded, ${result.failureCount} failed.`,
           durationMs: 8000
         });
       }
     } catch (error) {
+      setBulkPhase("confirming");
       toast.push({
         variant: "error",
         title: `${label} failed`,
@@ -106,7 +132,6 @@ export function DeviceListPage() {
       });
     } finally {
       setBulkBusy(null);
-      setPendingBulk(null);
     }
   };
 
@@ -251,8 +276,9 @@ export function DeviceListPage() {
           action={pendingBulk}
           selectedKeys={selectedKeys}
           visibleDevices={devices.data?.items ?? []}
-          busy={bulkBusy !== null}
-          onCancel={() => setPendingBulk(null)}
+          phase={bulkPhase}
+          results={bulkResults}
+          onCancel={closeBulk}
           onConfirm={() => runBulk(pendingBulk)}
         />
       )}
@@ -290,6 +316,32 @@ export function DeviceListPage() {
                 <RotateCcw className="h-3 w-3" />
               )}
               Bulk reboot
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => requestBulk("rotate-laps")}
+              disabled={bulkBusy !== null}
+              className="h-7 px-2.5 text-[11px]"
+            >
+              {bulkBusy === "rotate-laps" ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <KeyRound className="h-3 w-3" />
+              )}
+              Rotate LAPS
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => requestBulk("retire")}
+              disabled={bulkBusy !== null}
+              className="h-7 px-2.5 text-[11px]"
+            >
+              {bulkBusy === "retire" ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <Trash2 className="h-3 w-3" />
+              )}
+              Bulk retire
             </Button>
             <button
               type="button"

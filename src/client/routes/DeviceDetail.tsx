@@ -1,12 +1,14 @@
-import { Link, useParams } from "@tanstack/react-router";
+import { Link, useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import {
   ArrowLeft,
   CheckCircle2,
   ChevronRight,
+  Clock,
   Fingerprint,
   GitBranch,
   Radio,
-  Target
+  Target,
+  Wrench
 } from "lucide-react";
 
 import { ActionHistory } from "../components/devices/ActionHistory.js";
@@ -39,6 +41,23 @@ import type { FlagCode, FlagExplanation, HealthLevel } from "../lib/types.js";
 import { cn } from "../lib/utils.js";
 
 type BreakpointKey = "identity" | "targeting" | "enrollment" | "drift";
+type TabKey = BreakpointKey | "operate" | "history";
+const TAB_ORDER: TabKey[] = [
+  "identity",
+  "targeting",
+  "enrollment",
+  "drift",
+  "operate",
+  "history"
+];
+const TAB_LABELS: Record<TabKey, { label: string; icon: typeof Fingerprint }> = {
+  identity: { label: "Identity", icon: Fingerprint },
+  targeting: { label: "Targeting", icon: Target },
+  enrollment: { label: "Enrollment", icon: Radio },
+  drift: { label: "Drift", icon: GitBranch },
+  operate: { label: "Operate", icon: Wrench },
+  history: { label: "History", icon: Clock }
+};
 
 const BREAKPOINT_BUCKETS: Record<BreakpointKey, FlagCode[]> = {
   identity: ["identity_conflict", "missing_ztdid"],
@@ -118,12 +137,14 @@ function BreakpointChip({
   bucketKey,
   count,
   severity,
-  issues
+  issues,
+  onSelect
 }: {
   bucketKey: BreakpointKey;
   count: number;
   severity: Exclude<HealthLevel, "healthy" | "unknown"> | null;
   issues: FlagExplanation[];
+  onSelect: (tab: TabKey) => void;
 }) {
   const meta = BREAKPOINT_META[bucketKey];
   const Icon = count === 0 ? CheckCircle2 : meta.icon;
@@ -139,15 +160,11 @@ function BreakpointChip({
     count === 0
       ? `${meta.label}: clear — ${meta.description}`
       : `${meta.label} (${count}): ${issues.map((i) => i.title).join(" • ")}`;
-  const scrollTarget = meta.scrollTo;
   return (
     <button
       type="button"
       title={title}
-      onClick={() => {
-        const el = document.getElementById(scrollTarget);
-        el?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }}
+      onClick={() => onSelect(bucketKey)}
       className={cn(
         "flex min-w-0 items-center gap-2 rounded-lg border px-2.5 py-1.5 text-left text-[11.5px] transition-opacity hover:opacity-80",
         tone
@@ -166,6 +183,41 @@ function BreakpointChip({
   );
 }
 
+function TabButton({
+  tab,
+  active,
+  count,
+  onSelect
+}: {
+  tab: TabKey;
+  active: boolean;
+  count?: number;
+  onSelect: (tab: TabKey) => void;
+}) {
+  const meta = TAB_LABELS[tab];
+  const Icon = meta.icon;
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(tab)}
+      className={cn(
+        "flex items-center gap-1.5 border-b-2 px-3 py-2 text-[12.5px] font-medium transition-colors",
+        active
+          ? "border-[var(--pc-accent)] text-[var(--pc-text)]"
+          : "border-transparent text-[var(--pc-text-muted)] hover:text-[var(--pc-text-secondary)]"
+      )}
+    >
+      <Icon className="h-3.5 w-3.5" />
+      <span>{meta.label}</span>
+      {count !== undefined && count > 0 ? (
+        <span className="rounded-full bg-[var(--pc-critical-muted)] px-1.5 py-px text-[10px] font-semibold text-[var(--pc-critical)]">
+          {count}
+        </span>
+      ) : null}
+    </button>
+  );
+}
+
 const DEVICES_DEFAULT_SEARCH = {
   search: undefined,
   health: undefined,
@@ -176,32 +228,21 @@ const DEVICES_DEFAULT_SEARCH = {
   pageSize: 25
 } as const;
 
-function SectionHeading({
-  number,
-  title,
-  description
-}: {
-  number: number;
-  title: string;
-  description: string;
-}) {
+function TabHeading({ title, description }: { title: string; description: string }) {
   return (
-    <div className="flex items-baseline gap-2.5">
-      <span className="flex h-5 w-5 items-center justify-center rounded-md bg-[var(--pc-accent-muted)] text-[10.5px] font-semibold text-[var(--pc-accent-hover)]">
-        {number}
-      </span>
-      <div>
-        <div className="text-[12.5px] font-semibold uppercase tracking-wide text-[var(--pc-text-secondary)]">
-          {title}
-        </div>
-        <div className="text-[11.5px] text-[var(--pc-text-muted)]">{description}</div>
+    <div>
+      <div className="text-[12.5px] font-semibold uppercase tracking-wide text-[var(--pc-text-secondary)]">
+        {title}
       </div>
+      <div className="text-[11.5px] text-[var(--pc-text-muted)]">{description}</div>
     </div>
   );
 }
 
 export function DeviceDetailPage() {
   const { deviceKey } = useParams({ from: "/devices/$deviceKey" });
+  const search = useSearch({ from: "/devices/$deviceKey" }) as { tab?: TabKey };
+  const navigate = useNavigate({ from: "/devices/$deviceKey" });
   const device = useDevice(deviceKey);
 
   if (device.isLoading) return <LoadingState label="Loading device…" />;
@@ -219,6 +260,25 @@ export function DeviceDetailPage() {
   const displayName = data.summary.deviceName ?? data.summary.serialNumber ?? deviceKey;
   const breakpoints = bucketDiagnostics(data.diagnostics);
   const toast = useToast();
+
+  // Default tab: the highest-severity breakpoint bucket, or "identity" if clear.
+  const defaultTab: TabKey =
+    (["critical", "warning", "info"] as const).reduce<TabKey | null>((found, level) => {
+      if (found) return found;
+      for (const key of ["identity", "targeting", "enrollment", "drift"] as BreakpointKey[]) {
+        const bucket = breakpoints[key];
+        if (bucket.issues.length > 0 && bucket.severity === level) return key;
+      }
+      return null;
+    }, null) ?? "identity";
+  const activeTab: TabKey = search.tab ?? defaultTab;
+  const selectTab = (tab: TabKey) => {
+    void navigate({
+      to: "/devices/$deviceKey",
+      params: { deviceKey },
+      search: { tab }
+    });
+  };
 
   const handleCopySummary = async () => {
     try {
@@ -356,7 +416,7 @@ export function DeviceDetailPage() {
           </div>
         )}
 
-        {/* Breakpoint chips — at-a-glance which subsystem is failing */}
+        {/* Breakpoint chips — click to jump to the failing subsystem tab */}
         <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
           {(Object.keys(BREAKPOINT_BUCKETS) as BreakpointKey[]).map((key) => (
             <BreakpointChip
@@ -365,93 +425,104 @@ export function DeviceDetailPage() {
               count={breakpoints[key].issues.length}
               severity={breakpoints[key].severity}
               issues={breakpoints[key].issues}
+              onSelect={selectTab}
             />
           ))}
         </div>
       </header>
 
-      {/* Section 1: Identity — who is this device, across systems */}
-      <section id="section-identity" className="scroll-mt-4 space-y-3">
-        <SectionHeading
-          number={1}
-          title="Identity"
-          description="Who this device is across Autopilot, Intune, and Entra ID"
-        />
-        <IdentityPanel device={data} />
-      </section>
+      {/* Tab navigation */}
+      <div className="flex flex-wrap items-center gap-1 border-b border-[var(--pc-border)]">
+        {TAB_ORDER.map((tab) => {
+          const count =
+            tab === "identity" || tab === "targeting" || tab === "enrollment" || tab === "drift"
+              ? breakpoints[tab].issues.length
+              : undefined;
+          return (
+            <TabButton
+              key={tab}
+              tab={tab}
+              active={activeTab === tab}
+              count={count}
+              onSelect={selectTab}
+            />
+          );
+        })}
+      </div>
 
-      {/* Section 2: Hardware & Enrollment + Group Memberships + Provisioning */}
-      <section id="section-hardware" className="scroll-mt-4 space-y-3">
-        <SectionHeading
-          number={2}
-          title="Hardware & Provisioning"
-          description="Physical device details, group memberships, and provisioning progress"
-        />
-        <HardwarePanel device={data} />
-        <ProvisioningTimeline device={data} />
-        <GroupMembershipsPanel device={data} />
-      </section>
+      {activeTab === "identity" ? (
+        <section className="space-y-3">
+          <TabHeading
+            title="Identity"
+            description="Who this device is across Autopilot, Intune, and Entra ID"
+          />
+          <IdentityPanel device={data} />
+          <HardwarePanel device={data} />
+        </section>
+      ) : null}
 
-      {/* Section 3: Configuration — what it's meant to be */}
-      <section id="section-targeting" className="scroll-mt-4 space-y-3">
-        <SectionHeading
-          number={3}
-          title="Expected Configuration"
-          description="The provisioning chain that determines this device's intended state"
-        />
-        <AssignmentPathPanel path={data.assignmentPath} />
-        <AssignmentPanel device={data} />
-      </section>
+      {activeTab === "targeting" ? (
+        <section className="space-y-3">
+          <TabHeading
+            title="Targeting"
+            description="Group membership, profile assignment, and the intended configuration chain"
+          />
+          <AssignmentPathPanel path={data.assignmentPath} />
+          <AssignmentPanel device={data} />
+          <GroupMembershipsPanel device={data} />
+          <ConfigProfilesPanel device={data} />
+        </section>
+      ) : null}
 
-      {/* Section 4: Diagnostics — why it's not what it should be */}
-      <section id="section-diagnostics" className="scroll-mt-4 space-y-3">
-        <SectionHeading
-          number={4}
-          title="Diagnostics"
-          description="What the state engine found and why it matters"
-        />
-        <DiagnosticPanel device={data} />
-        <CompliancePoliciesPanel device={data} />
-        <ConditionalAccessPanel device={data} />
-        <ConfigProfilesPanel device={data} />
-        <AppStatusPanel device={data} />
-        <RuleViolationsPanel device={data} />
-      </section>
+      {activeTab === "enrollment" ? (
+        <section className="space-y-3">
+          <TabHeading
+            title="Enrollment"
+            description="Autopilot record, Intune check-in, and provisioning progress"
+          />
+          <ProvisioningTimeline device={data} />
+          <DiagnosticPanel device={data} />
+          <AppStatusPanel device={data} />
+        </section>
+      ) : null}
 
-      {/* Section 5: Operate — admin tools */}
-      <section id="section-operate" className="scroll-mt-4 space-y-3">
-        <SectionHeading
-          number={5}
-          title="Operate"
-          description="Remote actions, secrets, and audit history (delegated sign-in required)"
-        />
-        <ActionsToolbar device={data} />
-        <LicensingWidget device={data} />
-        <LapsWidget device={data} />
-        <BitLockerWidget device={data} />
-        <RelatedDevicesPanel device={data} />
-        <ActionHistory device={data} />
-      </section>
+      {activeTab === "drift" ? (
+        <section className="space-y-3">
+          <TabHeading
+            title="Drift"
+            description="Compliance, hybrid-join, user mismatches, and custom rule violations"
+          />
+          <CompliancePoliciesPanel device={data} />
+          <ConditionalAccessPanel device={data} />
+          <RuleViolationsPanel device={data} />
+        </section>
+      ) : null}
 
-      {/* Section 6: History — when did this device's state actually change */}
-      <section id="section-history" className="scroll-mt-4 space-y-3">
-        <SectionHeading
-          number={6}
-          title="History"
-          description="State transitions over time — when this device changed and what flipped"
-        />
-        <HistoryPanel device={data} />
-      </section>
+      {activeTab === "operate" ? (
+        <section className="space-y-3">
+          <TabHeading
+            title="Operate"
+            description="Remote actions, secrets, and related devices (delegated sign-in required)"
+          />
+          <ActionsToolbar device={data} />
+          <LicensingWidget device={data} />
+          <LapsWidget device={data} />
+          <BitLockerWidget device={data} />
+          <RelatedDevicesPanel device={data} />
+          <ActionHistory device={data} />
+        </section>
+      ) : null}
 
-      {/* Section 7: Source Data — raw Graph JSON for verification */}
-      <section id="section-source" className="scroll-mt-4 space-y-3">
-        <SectionHeading
-          number={7}
-          title="Source Data"
-          description="Raw JSON from Microsoft Graph — verify what the engine is working with"
-        />
-        <SourceJsonPanel device={data} />
-      </section>
+      {activeTab === "history" ? (
+        <section className="space-y-3">
+          <TabHeading
+            title="History"
+            description="State transitions over time, plus the raw Graph source data"
+          />
+          <HistoryPanel device={data} />
+          <SourceJsonPanel device={data} />
+        </section>
+      ) : null}
     </div>
   );
 }

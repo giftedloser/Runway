@@ -86,18 +86,26 @@ export function actionsRouter(db: Database.Database) {
   // All action execution routes require delegated auth
   router.use(requireDelegatedAuth);
 
-  // POST /api/actions/bulk — fan out a safe action across many devices.
-  // We deliberately only allow `sync` and `reboot` here: anything destructive
-  // (wipe/retire/reset/rename/rotate-laps) should still be a single-device,
-  // explicit click so an operator cannot fat-finger 600 wipes.
-  const BULK_ALLOWED: ReadonlySet<RemoteActionType> = new Set(["sync", "reboot"]);
+  // POST /api/actions/bulk — fan out an action across many devices.
+  // `retire` and `rotate-laps` are allowed here because they have meaningful
+  // fleet-wide use cases (end-of-life cohorts, compliance-driven LAPS
+  // rotation) — but `wipe`, `autopilot-reset`, `rename`, and the three
+  // `delete-*` cleanups are deliberately excluded. Those remain
+  // single-device clicks so an operator cannot fat-finger a destructive
+  // multi-device run.
+  const BULK_ALLOWED: ReadonlySet<RemoteActionType> = new Set([
+    "sync",
+    "reboot",
+    "retire",
+    "rotate-laps"
+  ]);
   router.post("/bulk", async (request, response) => {
     const action = request.body?.action as RemoteActionType | undefined;
     const deviceKeys = request.body?.deviceKeys;
 
     if (!action || !BULK_ALLOWED.has(action)) {
       response.status(400).json({
-        message: "Bulk actions only support 'sync' or 'reboot'."
+        message: `Bulk actions only support: ${[...BULK_ALLOWED].join(", ")}.`
       });
       return;
     }
@@ -136,10 +144,22 @@ export function actionsRouter(db: Database.Database) {
 
       let result: { success: boolean; status: number; message: string };
       try {
-        result =
-          action === "sync"
-            ? await syncDevice(token, device.intune_id)
-            : await rebootDevice(token, device.intune_id);
+        switch (action) {
+          case "sync":
+            result = await syncDevice(token, device.intune_id);
+            break;
+          case "reboot":
+            result = await rebootDevice(token, device.intune_id);
+            break;
+          case "retire":
+            result = await retireDevice(token, device.intune_id);
+            break;
+          case "rotate-laps":
+            result = await rotateLapsPassword(token, device.intune_id);
+            break;
+          default:
+            result = { success: false, status: 400, message: `Unsupported bulk action: ${action}` };
+        }
       } catch (error) {
         result = {
           success: false,
