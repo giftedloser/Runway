@@ -29,7 +29,7 @@ export function SyncStatusPage() {
       <PageHeader
         eyebrow="System"
         title="Data Ingestion"
-        description="Pulls Autopilot, Intune, and Entra ID data from Microsoft Graph into the local state engine. Run a full sync after configuration changes."
+        description="Pulls Autopilot, Intune, Entra ID, and ConfigMgr management-agent signals from Microsoft Graph into the local state engine. Run a full sync after configuration changes."
         actions={
           <>
             <SourceBadge source="graph" />

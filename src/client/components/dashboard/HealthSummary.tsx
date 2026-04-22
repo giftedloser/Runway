@@ -43,7 +43,7 @@ export function HealthSummary({ counts }: { counts: DashboardResponse["counts"] 
         <div className="text-[11px] text-[var(--pc-text-muted)]">Click a tile to filter the queue</div>
       </div>
       <div className="mb-4 text-[11.5px] text-[var(--pc-text-muted)]">
-        Aggregated state across all correlated Autopilot / Intune / Entra records
+        Aggregated state across correlated Autopilot / Intune / Entra records and ConfigMgr signals
       </div>
 
       {/* Progress bar */}

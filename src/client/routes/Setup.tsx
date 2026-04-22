@@ -91,7 +91,7 @@ export function SetupPage() {
       <PageHeader
         eyebrow="Welcome"
         title="First-run Setup"
-        description="Walk through these steps to take Runway from a fresh install to a working ingestion of your Windows Autopilot, Intune, and Entra ID data. You can skip ahead at any time and revisit Settings later."
+        description="Walk through these steps to take Runway from a fresh install to a working ingestion of your Windows Autopilot, Intune, Entra ID, and ConfigMgr signals. You can skip ahead at any time and revisit Settings later."
       />
 
       {/* Progress stepper */}
@@ -112,7 +112,7 @@ export function SetupPage() {
       <StepShell
         number={2}
         title="Run your first sync"
-        description="Pull Autopilot, Intune, and Entra ID data into the local cache."
+        description="Pull Autopilot, Intune, Entra ID, and ConfigMgr management-agent signals into the local cache."
         done={hasSync}
         active={activeStep === 2}
       >

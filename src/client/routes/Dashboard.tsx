@@ -120,7 +120,7 @@ export function DashboardPage() {
       <PageHeader
         eyebrow="Overview"
         title="Runway Fleet Health"
-        description="Triage Windows devices across Autopilot, Intune, and Entra ID — surfacing devices whose join, enrollment, configuration, or compliance state is drifting from intent. Windows-only by design."
+        description="Triage Windows devices across Autopilot, Intune, Entra ID, and SCCM/ConfigMgr signals — surfacing devices whose join, enrollment, configuration, or compliance state is drifting from intent. Windows-only by design."
         actions={
           <>
             <SyncIndicator

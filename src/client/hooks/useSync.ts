@@ -23,7 +23,7 @@ export function useTriggerSync() {
       toast.push({
         variant: "success",
         title: "Sync triggered",
-        description: "Refreshing Autopilot, Intune, and Entra data."
+        description: "Refreshing Autopilot, Intune, Entra, and ConfigMgr signals."
       });
     },
     onError: (error: unknown) => {

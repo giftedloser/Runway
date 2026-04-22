@@ -158,7 +158,7 @@ export function SettingsPage() {
       <PageHeader
         eyebrow="System"
         title="Settings"
-        description="Configure how Runway connects to Microsoft Graph for your Windows Autopilot, Intune, and Entra ID tenant, and how it interprets your group tag conventions. Changes take effect on the next sync."
+        description="Configure how Runway connects to Microsoft Graph for your Windows Autopilot, Intune, Entra ID, and SCCM/ConfigMgr join signals, and how it interprets your group tag conventions. Changes take effect on the next sync."
       />
 
       {/* Section 1: Graph integration */}
@@ -193,7 +193,7 @@ export function SettingsPage() {
                 </div>
                 <div className="mt-0.5 text-[12px] text-[var(--pc-text-muted)]">
                   {graphConfigured
-                    ? "Server-side credentials detected. Runway can read Autopilot, Intune, and Entra data."
+                    ? "Server-side credentials detected. Runway can read Autopilot, Intune, Entra, and ConfigMgr management-agent signals."
                     : "Missing credentials. Runway cannot ingest live data — running in mock mode."}
                 </div>
               </div>
@@ -428,7 +428,7 @@ export function SettingsPage() {
           </span>
         </div>
         <Card className="p-5">
-          <div className="grid gap-3 md:grid-cols-3">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             <SourceCard
               source="autopilot"
               items={["Hardware records", "Group tags", "Assigned user"]}
@@ -446,6 +446,14 @@ export function SettingsPage() {
             <SourceCard
               source="entra"
               items={["Devices", "Groups & members", "Dynamic membership rules"]}
+            />
+            <SourceCard
+              source="sccm"
+              items={[
+                "ConfigMgr client signal",
+                "Co-management indicator",
+                "Derived from Intune managementAgent"
+              ]}
             />
           </div>
         </Card>
@@ -703,7 +711,7 @@ function SourceCard({
   source,
   items
 }: {
-  source: "autopilot" | "intune" | "entra";
+  source: "autopilot" | "intune" | "entra" | "sccm";
   items: string[];
 }) {
   return (
