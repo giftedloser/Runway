@@ -16,6 +16,7 @@ import { ConfirmDialog } from "../components/shared/ConfirmDialog.js";
 
 import { PageHeader } from "../components/layout/PageHeader.js";
 import { RulesSection } from "../components/settings/RulesSection.js";
+import { SystemHealthSection } from "../components/settings/SystemHealthSection.js";
 import { ErrorState, LoadingState } from "../components/shared/ErrorState.js";
 import { SourceBadge } from "../components/shared/SourceBadge.js";
 import { Button } from "../components/ui/button.js";
@@ -550,7 +551,10 @@ export function SettingsPage() {
         )}
       </section>
 
-      {/* Section 5: Custom rules */}
+      {/* Section 5: System health & retention */}
+      <SystemHealthSection />
+
+      {/* Section 6: Custom rules */}
       <RulesSection />
 
       <ConfirmDialog

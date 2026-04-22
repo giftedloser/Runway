@@ -199,7 +199,7 @@ export function RulesSection() {
     <section className="space-y-3">
       <div className="flex items-baseline gap-2">
         <h2 className="text-[13px] font-semibold uppercase tracking-wide text-[var(--pc-text-secondary)]">
-          5. Custom Rules
+          6. Custom Rules
         </h2>
         <span className="text-[11px] text-[var(--pc-text-muted)]">
           Encode your own join, configuration, and posture expectations
