@@ -2,6 +2,7 @@ import { Cable, CheckCircle2, HelpCircle, XCircle } from "lucide-react";
 
 import type { DeviceDetailResponse } from "../../lib/types.js";
 import { cn } from "../../lib/utils.js";
+import { SourceBadge } from "../shared/SourceBadge.js";
 import { Card } from "../ui/card.js";
 
 function normalizeAgentLabel(value: string | null) {
@@ -37,6 +38,7 @@ export function ConfigMgrConnectionPanel({ device }: { device: DeviceDetailRespo
         <span className="text-[13px] font-semibold text-[var(--pc-text)]">
           SCCM / ConfigMgr Connection
         </span>
+        <SourceBadge source="sccm" size="xs" />
       </div>
 
       <div className={cn("rounded-lg border px-4 py-3", tone)}>

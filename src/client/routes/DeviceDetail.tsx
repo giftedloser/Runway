@@ -458,9 +458,9 @@ export function DeviceDetailPage() {
         <section className="space-y-3">
           <TabHeading
             title="Identity"
-            description="Who this device is across Autopilot, Intune, and Entra ID"
+            description="Who this device is across Autopilot, Intune, Entra ID, and SCCM/ConfigMgr"
           />
-          <IdentityPanel device={data} />
+          <IdentityPanel device={data} showConfigMgrSignal={showConfigMgrConnection} />
           <HardwarePanel device={data} />
         </section>
       ) : null}

@@ -3,7 +3,7 @@ import { AlertTriangle, Fingerprint } from "lucide-react";
 import type { DeviceDetailResponse, MatchConfidence } from "../../lib/types.js";
 import { cn } from "../../lib/utils.js";
 import { Card } from "../ui/card.js";
-import { SourceBadge } from "../shared/SourceBadge.js";
+import { SourceBadge, type DataSource } from "../shared/SourceBadge.js";
 import { StatusBadge } from "../shared/StatusBadge.js";
 
 const CONFIDENCE_STYLES: Record<MatchConfidence, string> = {
@@ -26,7 +26,7 @@ function IdField({
 }: {
   label: string;
   value: string | null | undefined;
-  source: "autopilot" | "intune" | "entra";
+  source: DataSource;
 }) {
   return (
     <div className="rounded-lg border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] p-3">
@@ -46,7 +46,57 @@ function IdField({
   );
 }
 
-export function IdentityPanel({ device }: { device: DeviceDetailResponse }) {
+function ConfigMgrJoinField({
+  device,
+  enabled
+}: {
+  device: DeviceDetailResponse;
+  enabled: boolean;
+}) {
+  const hasIntuneRecord = Boolean(device.identity.intuneId);
+  const status = !enabled
+    ? "Detection disabled"
+    : !hasIntuneRecord
+      ? "Unknown"
+      : device.enrollment.hasConfigMgrClient
+        ? "Connected"
+        : "Not detected";
+  const detail = !enabled
+    ? "Enable in Settings"
+    : !hasIntuneRecord
+      ? "No Intune record"
+      : device.enrollment.managementAgent
+        ? device.enrollment.managementAgent
+        : "managementAgent not reported";
+  const tone = !enabled || !hasIntuneRecord
+    ? "text-[var(--pc-text-muted)]"
+    : device.enrollment.hasConfigMgrClient
+      ? "text-[var(--pc-healthy)]"
+      : "text-[var(--pc-warning)]";
+
+  return (
+    <div className="rounded-lg border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] p-3">
+      <div className="mb-1.5 flex items-center justify-between gap-2">
+        <span className="text-[10.5px] font-medium uppercase tracking-wide text-[var(--pc-text-muted)]">
+          SCCM / ConfigMgr
+        </span>
+        <SourceBadge source="sccm" size="xs" />
+      </div>
+      <div className={cn("text-[12.5px] font-semibold", tone)}>{status}</div>
+      <div className="mt-1 truncate font-mono text-[11px] text-[var(--pc-text-muted)]" title={detail}>
+        {detail}
+      </div>
+    </div>
+  );
+}
+
+export function IdentityPanel({
+  device,
+  showConfigMgrSignal = true
+}: {
+  device: DeviceDetailResponse;
+  showConfigMgrSignal?: boolean;
+}) {
   const { identity } = device;
   return (
     <Card className="p-5">
@@ -56,18 +106,19 @@ export function IdentityPanel({ device }: { device: DeviceDetailResponse }) {
           <span className="text-[13px] font-semibold text-[var(--pc-text)]">Identity Correlation</span>
           <span
             className="text-[11.5px] text-[var(--pc-text-muted)]"
-            title="Linking the same physical device across Autopilot, Intune, and Entra ID"
+            title="Linking the same physical device across Autopilot, Intune, Entra ID, and SCCM/ConfigMgr"
           >
-            · Autopilot ↔ Intune ↔ Entra ID
+            · Autopilot ↔ Intune ↔ Entra ID ↔ SCCM
           </span>
         </div>
         <StatusBadge health={device.summary.health} />
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <IdField label="Autopilot ID" value={identity.autopilotId} source="autopilot" />
         <IdField label="Intune Device ID" value={identity.intuneId} source="intune" />
         <IdField label="Entra Object ID" value={identity.entraId} source="entra" />
+        <ConfigMgrJoinField device={device} enabled={showConfigMgrSignal} />
       </div>
 
       <div className="mt-3 grid gap-3 sm:grid-cols-3">

@@ -5,9 +5,10 @@ import { cn } from "../../lib/utils.js";
 /**
  * Identifies which Microsoft service a piece of data was sourced from.
  * Used throughout the UI so engineers always know whether they are looking
- * at Autopilot, Intune, Entra ID, or a derived/correlated value.
+ * at Autopilot, Intune, Entra ID, SCCM/ConfigMgr, or a
+ * derived/correlated value.
  */
-export type DataSource = "autopilot" | "intune" | "entra" | "graph" | "derived";
+export type DataSource = "autopilot" | "intune" | "entra" | "sccm" | "graph" | "derived";
 
 const SOURCE_META: Record<
   DataSource,
@@ -33,6 +34,13 @@ const SOURCE_META: Record<
     ring: "ring-emerald-500/30",
     bg: "bg-emerald-500/10 text-[var(--pc-healthy)]",
     dot: "bg-emerald-400"
+  },
+  sccm: {
+    label: "SCCM",
+    full: "Configuration Manager client signal derived from Intune managementAgent",
+    ring: "ring-orange-500/30",
+    bg: "bg-orange-500/10 text-orange-200",
+    dot: "bg-orange-400"
   },
   graph: {
     label: "Graph",
