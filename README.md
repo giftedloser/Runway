@@ -1,5 +1,9 @@
 # Runway
 
+![CI](https://github.com/giftedloser/PilotCheck/actions/workflows/ci.yml/badge.svg)
+![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)
+![Platform: Windows](https://img.shields.io/badge/platform-Windows-0078d4.svg)
+
 > A local-first triage console for **Windows** Autopilot, Intune, and Entra ID.
 > Windows-only by design.
 
@@ -7,12 +11,13 @@ Runway correlates Windows device identities across Microsoft Autopilot,
 Intune, and Entra ID, computes provisioning health with a transparent rule
 engine, and presents **problem-first** diagnostics — so an operator opening
 the app on a Monday morning can tell within seconds which devices are broken,
-*why*, and *what to do about it*.
+_why_, and _what to do about it_.
 
 It's built for the small-but-real internal IT team running a fleet of a few
-hundred to a few thousand Windows endpoints — the band where SCCM is overkill,
-the Intune admin centre is too slow to triage from, and PowerShell scripts are
-how everyone is currently getting by.
+hundred to a few thousand Windows endpoints — the band where SCCM console
+hopping is too heavy for quick triage, the Intune admin centre is too slow to
+work from all day, and PowerShell scripts are how everyone is currently getting
+by.
 
 Runway is intentionally **not** a full Intune replacement, **not** a
 multi-tenant tool, and does **not** attempt to manage iOS, Android, or macOS.
@@ -31,8 +36,8 @@ and stays honest about that scope.
   `provisioning_stalled`, `compliance_drift`, …) with severity, summary, and
   the raw evidence behind each.
 - **Assignment-path inspector** — for any device, walks the chain
-  *Autopilot record → group membership → assigned profile → effective
-  deployment mode* and tells you exactly which link is broken.
+  _Autopilot record → group membership → assigned profile → effective
+  deployment mode_ and tells you exactly which link is broken.
 - **Drift history** — transition-only `device_state_history` table, plus a
   14-day fleet-wide health trend on the dashboard.
 - **Remote actions** (delegated auth) — sync, reboot, rename, rotate LAPS,
@@ -48,6 +53,12 @@ and stays honest about that scope.
   to the device queue.
 - **Tag mapping dictionary** — maps Autopilot group tags to expected profiles
   and target groups, with JSON import/export for versioning.
+- **SCCM visibility** — optional ConfigMgr/SCCM status appears alongside
+  Graph, Intune, and Entra signals on device detail pages.
+- **Tenant access gate** — optional Entra sign-in gate locks the app before
+  operators can see fleet data; delegated admin consent remains separate.
+- **Desktop polish** — Tauri shell with Runway branding, custom title bar,
+  drag region, minimize/maximize/close controls, and Windows installers.
 - **Mock mode** — seeds realistic data when Graph credentials aren't
   configured, so the entire UI is explorable offline.
 
@@ -55,15 +66,15 @@ and stays honest about that scope.
 
 ## Stack
 
-| Layer    | Tech                                                        |
-| -------- | ----------------------------------------------------------- |
-| Client   | React 19, TypeScript, Vite, Tailwind CSS v4                 |
-| Routing  | TanStack Router (URL-as-state), TanStack Query              |
-| UI       | shadcn-style primitives, lucide-react icons                 |
-| Server   | Express 5, better-sqlite3, pino                             |
-| Auth     | MSAL Node — app-only for sync, delegated for actions / LAPS |
-| Desktop  | Tauri 2 (optional)                                          |
-| Tests    | Vitest (unit / api / e2e), Testing Library, supertest       |
+| Layer   | Tech                                                                   |
+| ------- | ---------------------------------------------------------------------- |
+| Client  | React 19, TypeScript, Vite, Tailwind CSS v4                            |
+| Routing | TanStack Router (URL-as-state), TanStack Query                         |
+| UI      | shadcn-style primitives, lucide-react icons                            |
+| Server  | Express 5, better-sqlite3, pino                                        |
+| Auth    | MSAL Node - app-only sync, delegated actions, optional app access gate |
+| Desktop | Tauri 2, custom Windows title bar, NSIS/MSI installers                 |
+| Tests   | Vitest (unit / api / e2e), Testing Library, supertest                  |
 
 ---
 
@@ -82,11 +93,14 @@ npm run dev
 ```
 
 - Client: <http://localhost:5173>
-- API:    <http://localhost:3001>
+- API: <http://localhost:3001>
 
 If `AZURE_TENANT_ID` / `AZURE_CLIENT_ID` / `AZURE_CLIENT_SECRET` are not set
 and the database is empty, Runway automatically falls back to **mock mode**
 on first start so the entire UI is explorable without a tenant.
+
+For local development, either set `NODE_ENV=development` or replace
+`SESSION_SECRET` in `.env` with a long random value before starting the server.
 
 ### As a desktop app
 
@@ -136,11 +150,20 @@ PROVISIONING_STALLED_HOURS=8
 
 # Force mock data even when credentials are present
 SEED_MODE=mock
+
+# Optional Entra app-access gate. Keep disabled until first-run setup works.
+APP_ACCESS_MODE=disabled
+APP_ACCESS_ALLOWED_USERS=
+
+# SCCM/ConfigMgr detection is toggled in Settings.
+# It is read from Intune's managementAgent field; no SCCM connector
+# credentials or SCCM actions are configured in Runway.
 ```
 
 ### Required Graph permissions
 
 **Application (read-only sync)**
+
 - `DeviceManagementServiceConfig.Read.All`
 - `DeviceManagementManagedDevices.Read.All`
 - `DeviceManagementConfiguration.Read.All`
@@ -148,6 +171,7 @@ SEED_MODE=mock
 - `Group.Read.All`
 
 **Delegated (remote actions + LAPS / BitLocker / group checks)**
+
 - `DeviceManagementManagedDevices.ReadWrite.All`
 - `DeviceManagementManagedDevices.PrivilegedOperations.All`
 - `DeviceLocalCredential.Read.All`
@@ -162,19 +186,19 @@ Grant admin consent in the tenant after assigning these.
 
 ## Scripts
 
-| Script                  | What it does                                              |
-| ----------------------- | --------------------------------------------------------- |
-| `npm run dev`           | Vite client + tsx server, hot reload                      |
-| `npm run build`         | Build client and server bundles into `dist/`              |
-| `npm run start`         | Run the built server                                      |
-| `npm run db:migrate`    | Apply schema migrations to the SQLite database            |
-| `npm run db:seed:mock`  | Seed realistic mock devices, groups, profiles             |
-| `npm run test`          | Vitest unit + api projects                                |
-| `npm run test:e2e`      | Vitest e2e project                                        |
-| `npm run lint`          | ESLint                                                    |
-| `npm run check`         | Lint + tests                                              |
-| `npm run tauri:dev`     | Run as a Tauri desktop app                                |
-| `npm run tauri:build`   | Build a signed Tauri installer                            |
+| Script                 | What it does                                      |
+| ---------------------- | ------------------------------------------------- |
+| `npm run dev`          | Vite client + tsx server, hot reload              |
+| `npm run build`        | Build client and server bundles into `dist/`      |
+| `npm run start`        | Run the built server                              |
+| `npm run db:migrate`   | Apply schema migrations to the SQLite database    |
+| `npm run db:seed:mock` | Seed realistic mock devices, groups, profiles     |
+| `npm run test`         | Vitest unit + api projects                        |
+| `npm run test:e2e`     | Vitest e2e project                                |
+| `npm run lint`         | ESLint                                            |
+| `npm run check`        | Lint + unit/API + e2e tests                       |
+| `npm run tauri:dev`    | Run as a Tauri desktop app                        |
+| `npm run tauri:build`  | Build the Tauri executable and Windows installers |
 
 ---
 
@@ -224,6 +248,9 @@ file you can read.
 - **[docs/architecture.md](./docs/architecture.md)** — system architecture, data flow, schema overview
 - **[docs/engine.md](./docs/engine.md)** — health flags, rule DSL, custom rules
 - **[docs/graph-setup.md](./docs/graph-setup.md)** — app registration, permissions, redirect URIs
+- **[docs/troubleshooting.md](./docs/troubleshooting.md)** — live Graph troubleshooting and symptom-to-fix tables
+- **[docs/live-testing-checklist.md](./docs/live-testing-checklist.md)** — pre-flight checks before connecting a tenant
+- **[docs/security-report.md](./docs/security-report.md)** — security posture summary for review/approval
 - **[CONTRIBUTING.md](./CONTRIBUTING.md)** — development workflow, conventions
 - **[CHANGELOG.md](./CHANGELOG.md)** — release notes
 

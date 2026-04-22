@@ -36,6 +36,9 @@ pnpm-debug.log*
 # Claude Code
 .claude/
 
+# Local agent workspaces
+.codex/
+
 # Editor / OS
 .DS_Store
 desktop.ini
@@ -55,6 +58,7 @@ Thumbs.db
 *.pem
 
 # Non-Windows icon assets (Windows-only project)
+/runway.ico
 src-tauri/icons/ios/
 src-tauri/icons/android/
 src-tauri/icons/icon.icns

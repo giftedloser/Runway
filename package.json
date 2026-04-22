@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "license": "MIT",
-  "description": "Autopilot, Intune, and Entra device state engine for Runway.",
+  "description": "Local-first Windows Autopilot, Intune, Entra, and SCCM readiness triage for Runway.",
   "engines": {
     "node": ">=24.14 <25",
     "npm": ">=11"
@@ -23,7 +23,7 @@
     "test": "vitest run --project unit --project api",
     "test:e2e": "vitest run --project e2e",
     "lint": "eslint .",
-    "check": "npm run lint && npm run test",
+    "check": "npm run lint && npm run test && npm run test:e2e",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build"
   },

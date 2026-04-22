@@ -8,7 +8,7 @@ assignees: ""
 
 **The problem**
 What real on-call situation would this make better? Bonus points for a
-specific anecdote — PilotCheck features are evaluated against "does this
+specific anecdote — Runway features are evaluated against "does this
 make a real shift better".
 
 **The proposed solution**

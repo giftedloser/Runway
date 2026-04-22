@@ -11,6 +11,7 @@ A clear and concise description of what the bug is.
 
 **To reproduce**
 Steps to reproduce the behaviour:
+
 1. Go to '…'
 2. Click on '…'
 3. See error
@@ -22,7 +23,8 @@ What you expected to happen instead.
 If applicable, add screenshots or paste the relevant pino log lines.
 
 **Environment**
-- PilotCheck version / commit:
+
+- Runway version / commit:
 - OS:
 - Node version:
 - Mock mode or live Graph:

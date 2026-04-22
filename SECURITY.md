@@ -54,6 +54,21 @@ The relevant trust boundaries are:
   to a long random string before shipping. `src/server/config.ts` refuses
   to start outside `NODE_ENV=development`/`test` if the built-in default
   session secret is still in use.
+- **The optional app access gate**, controlled by `APP_ACCESS_MODE=entra`,
+  requires an Entra sign-in before operators can view fleet data. Keep it
+  disabled during first-run setup, then enable it before broader pilot use.
+- **The Tauri desktop shell**, which loads the local web runtime only and
+  grants a narrow window-control capability for the custom title bar.
+- **SCCM / ConfigMgr visibility**, which is read-only and derived from
+  Intune's `managementAgent` value. Runway does not store SCCM credentials
+  and does not execute SCCM actions.
+
+## Current known advisories
+
+`npm audit` currently reports a moderate advisory in the transitive
+`uuid` dependency pulled through `@azure/msal-node`. There is no upstream
+fix available in the current dependency tree. Track the advisory and bump
+MSAL as soon as Microsoft publishes a patched release.
 
 ## Out of scope
 

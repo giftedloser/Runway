@@ -28,7 +28,7 @@ You'll need:
 ## Day-to-day
 
 - `npm run dev` — client + server with hot reload
-- `npm run check` — lint + tests (run before pushing)
+- `npm run check` — lint + unit/API + e2e tests (run before pushing)
 - `npm run test` — unit + api projects only
 - `npm run test:e2e` — full end-to-end suite (slower)
 

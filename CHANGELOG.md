@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
+- GitHub repo polish: stricter CI now runs lint, database migration, unit/API
+  tests, e2e tests, and production build; pull request and issue templates were
+  refreshed for Runway; live-testing and security review docs were added.
 - **Persistent Saved Views** on the device queue — operators can now save
   the current filter set as a named view (`user_views` table), reorder
   them, rename, delete, and one-click recall. The five built-in presets
@@ -42,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   symptom→fix tables.
 
 ### Fixed
+
 - **Rule authoring form silently dropped boolean and number rules.**
   The settings → Custom Rules form sent every non-hour value as a raw
   string, so a rule like `hasAutopilotRecord eq true` was serialized as
@@ -56,11 +61,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `a6ba23e` for the full audit sweep).
 
 ### Changed
+
 - Global keyboard shortcut listener now attaches in capture phase so
   Vim-style two-key sequences (`g s`) preempt page-local single-key
   handlers like the device detail shortcuts.
 
 ### Earlier on main (pre-audit)
+
 - Device queue **column picker** — registry-driven popover lets operators
   toggle Primary User, Compliance, Property, and Deployment Mode columns
   on or off. Choices persist via `usePreference` and the Device column is
