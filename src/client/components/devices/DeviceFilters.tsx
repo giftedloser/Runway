@@ -73,9 +73,9 @@ export function DeviceFilters() {
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 rounded-xl border border-[var(--pc-border)] bg-[var(--pc-surface)] p-3 shadow-[0_18px_60px_rgba(0,0,0,0.10)]">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-        <div className="relative flex-1 lg:max-w-md">
+        <div className="relative flex-1 lg:max-w-lg">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--pc-text-muted)]" />
           <Input
             className="w-full pl-9"
@@ -88,7 +88,7 @@ export function DeviceFilters() {
           />
         </div>
 
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-1.5 lg:ml-auto">
           {HEALTH_OPTIONS.map((health) => {
             const active = search.health === health;
             return (
@@ -122,7 +122,7 @@ export function DeviceFilters() {
             setSearch(() => ({ flag: event.target.value || undefined }))
           }
           aria-label="Filter by flag"
-          className="rounded-md border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-2.5 py-1.5 text-[12px] text-[var(--pc-text)] transition-colors focus:border-[var(--pc-accent)] focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]"
+          className="h-8 rounded-md border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-2.5 py-1.5 text-[12px] text-[var(--pc-text)] transition-colors focus:border-[var(--pc-accent)] focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]"
         >
           <option value="">All flags</option>
           {FLAG_OPTIONS.map((flag) => (

@@ -45,7 +45,7 @@ export function FailurePatterns({
                   }
                 })
               }
-              className="flex w-full items-center gap-4 px-5 py-3.5 text-left transition-colors hover:bg-[var(--pc-tint-subtle)]"
+              className="flex w-full items-center gap-3 px-5 py-3.5 text-left transition-colors hover:bg-[var(--pc-tint-subtle)] sm:gap-4"
             >
               <div className="min-w-0 flex-1">
                 <div className="text-[13px] font-medium text-[var(--pc-text)]">

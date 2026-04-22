@@ -63,7 +63,7 @@ export function GroupInspectorPage() {
           No groups found. Run a sync to pull group membership from Graph.
         </Card>
       ) : (
-        <div className="grid gap-5 lg:grid-cols-[340px_1fr]">
+        <div className="grid gap-5 xl:grid-cols-[360px_minmax(0,1fr)]">
           {/* Left: group list */}
           <div className="space-y-3">
             <div className="relative">
@@ -148,7 +148,7 @@ export function GroupInspectorPage() {
             ) : (
               <div className="space-y-5">
                 <Card className="p-5">
-                  <div className="mb-4 flex items-start justify-between gap-4">
+                  <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <div className="flex items-start gap-3">
                       <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--pc-accent-muted)] text-[var(--pc-accent-hover)]">
                         <UsersRound className="h-4 w-4" />
@@ -227,7 +227,7 @@ export function GroupInspectorPage() {
 
                 {/* Members */}
                 <Card className="overflow-hidden">
-                  <div className="flex flex-wrap items-center gap-3 border-b border-[var(--pc-border)] px-5 py-4">
+                  <div className="flex flex-col gap-3 border-b border-[var(--pc-border)] px-5 py-4 sm:flex-row sm:items-center">
                     <div className="flex items-center gap-2">
                       <Users className="h-4 w-4 text-[var(--pc-accent)]" />
                       <span className="text-[13px] font-semibold text-[var(--pc-text)]">Members</span>
@@ -235,7 +235,7 @@ export function GroupInspectorPage() {
                         ({groupDetail.data.members.length})
                       </span>
                     </div>
-                    <div className="ml-auto flex flex-wrap items-center gap-1.5">
+                    <div className="flex flex-wrap items-center gap-1.5 sm:ml-auto">
                       <MemberFilterChip
                         active={memberFilter === "all"}
                         onClick={() => setMemberFilter("all")}
@@ -300,7 +300,7 @@ export function GroupInspectorPage() {
                     }
                     return (
                       <div className="max-h-[460px] overflow-auto">
-                        <table className="w-full">
+                        <table className="w-full min-w-[780px]">
                           <thead className="sticky top-0 bg-[var(--pc-surface)]">
                             <tr className="text-[10px] uppercase tracking-wide text-[var(--pc-text-muted)]">
                               <th className="px-5 py-2 text-left font-medium">Device</th>
@@ -313,7 +313,7 @@ export function GroupInspectorPage() {
                           </thead>
                           <tbody className="divide-y divide-[var(--pc-border)]">
                             {visible.map((member) => (
-                                <tr
+                              <tr
                                 key={member.deviceKey}
                                 className="transition-colors hover:bg-[var(--pc-tint-subtle)]"
                               >

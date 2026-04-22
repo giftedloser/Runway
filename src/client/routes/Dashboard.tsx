@@ -99,11 +99,11 @@ export function DashboardPage() {
     settings.data?.tagConfig.length === 0 || dashboard.data.lastSync === null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-7">
       {setupIncomplete ? (
         <Link
           to="/setup"
-          className="flex items-center gap-3 rounded-lg border border-[var(--pc-accent)]/40 bg-[var(--pc-accent-muted)] px-4 py-3 text-[12.5px] text-[var(--pc-text-secondary)] transition-colors hover:border-[var(--pc-accent)]/60"
+          className="flex flex-col gap-3 rounded-xl border border-[var(--pc-accent)]/40 bg-[var(--pc-accent-muted)] px-4 py-3 text-[12.5px] text-[var(--pc-text-secondary)] transition-colors hover:border-[var(--pc-accent)]/60 sm:flex-row sm:items-center"
         >
           <ShieldCheck className="h-4 w-4 text-[var(--pc-accent)]" />
           <span className="flex-1">
@@ -112,7 +112,7 @@ export function DashboardPage() {
               Configure Graph credentials, run an initial sync, and add at least one tag mapping.
             </span>
           </span>
-          <ChevronRight className="h-3.5 w-3.5 text-[var(--pc-text-muted)]" />
+          <ChevronRight className="hidden h-3.5 w-3.5 text-[var(--pc-text-muted)] sm:block" />
         </Link>
       ) : null}
 
@@ -136,13 +136,13 @@ export function DashboardPage() {
       />
 
       {/* Top KPI row */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
-        <Card className="px-5 py-4">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 2xl:grid-cols-6">
+        <Card className="min-h-[132px] px-4 py-4 sm:px-5">
           <div className="text-[12px] font-medium text-[var(--pc-text-muted)]">Total Devices</div>
           <div className="mt-1 text-3xl font-semibold tabular-nums text-[var(--pc-text)]">{totalDevices}</div>
           <div className="mt-1 text-[11px] text-[var(--pc-text-muted)]">In current cache</div>
         </Card>
-        <Card className="px-5 py-4">
+        <Card className="min-h-[132px] px-4 py-4 sm:px-5">
           <div className="text-[12px] font-medium text-[var(--pc-text-muted)]">New Today</div>
           <div className="mt-1 text-3xl font-semibold tabular-nums text-[var(--pc-text)]">
             {dashboard.data.newlyUnhealthy24h}
@@ -151,12 +151,12 @@ export function DashboardPage() {
             Devices that became unhealthy in 24h
           </div>
         </Card>
-        <Card className="px-5 py-4">
+        <Card className="min-h-[132px] px-4 py-4 sm:px-5">
           <div className="text-[12px] font-medium text-[var(--pc-text-muted)]">Impacted</div>
           <div className="mt-1 text-3xl font-semibold tabular-nums text-[var(--pc-text)]">{impactedDevices}</div>
           <div className="mt-1 text-[11px] text-[var(--pc-text-muted)]">Outside expected state</div>
         </Card>
-        <Card className="px-5 py-4">
+        <Card className="min-h-[132px] px-4 py-4 sm:px-5">
           <div className="text-[12px] font-medium text-[var(--pc-text-muted)]">Stability</div>
           <div className="mt-1 flex items-end gap-1.5">
             <span className="text-3xl font-semibold tabular-nums text-[var(--pc-text)]">{stabilityRate}</span>
@@ -169,7 +169,7 @@ export function DashboardPage() {
             />
           </div>
         </Card>
-        <Card className="px-5 py-4">
+        <Card className="min-h-[132px] px-4 py-4 sm:px-5">
           <div className="text-[12px] font-medium text-[var(--pc-text-muted)]">Top Signal</div>
           <div className="mt-1 truncate text-[15px] font-semibold text-[var(--pc-text)]">
             {topPattern ? humanizeFlag(topPattern.flag) : "No Issues"}
@@ -180,7 +180,7 @@ export function DashboardPage() {
               : "Fleet looks healthy"}
           </div>
         </Card>
-        <Card className="px-5 py-4">
+        <Card className="min-h-[132px] px-4 py-4 sm:px-5">
           <div className="flex items-center gap-1.5 text-[12px] font-medium text-[var(--pc-text-muted)]">
             <Fingerprint className="h-3 w-3" />
             Correlation
@@ -226,7 +226,7 @@ export function DashboardPage() {
       <RecentChanges transitions={dashboard.data.recentTransitions} />
 
       {/* Main content: Failures + Breakpoints */}
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+      <div className="grid gap-6 2xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
         <FailurePatterns patterns={dashboard.data.failurePatterns} />
 
         <div className="space-y-4">

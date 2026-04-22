@@ -38,7 +38,7 @@ export function HealthSummary({ counts }: { counts: DashboardResponse["counts"] 
 
   return (
     <Card className="p-5">
-      <div className="mb-1 flex items-baseline justify-between">
+      <div className="mb-1 flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
         <div className="text-[13px] font-semibold text-[var(--pc-text)]">Health Distribution</div>
         <div className="text-[11px] text-[var(--pc-text-muted)]">Click a tile to filter the queue</div>
       </div>
@@ -63,7 +63,7 @@ export function HealthSummary({ counts }: { counts: DashboardResponse["counts"] 
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
         {visibleStates.map((health) => {
           const clickable = FILTERABLE.has(health);
           return (

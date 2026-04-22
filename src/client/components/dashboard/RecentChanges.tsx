@@ -52,7 +52,7 @@ export function RecentChanges({ transitions }: { transitions: RecentTransition[]
 
   return (
     <Card className="overflow-hidden">
-      <div className="flex flex-wrap items-center gap-3 border-b border-[var(--pc-border)] px-5 py-4">
+      <div className="flex flex-col gap-3 border-b border-[var(--pc-border)] px-5 py-4 sm:flex-row sm:items-center">
         <div className="flex items-center gap-2">
           <Clock className="h-3.5 w-3.5 text-[var(--pc-accent)]" />
           <div className="text-[13px] font-semibold text-[var(--pc-text)]">What changed in 24h</div>
@@ -60,7 +60,7 @@ export function RecentChanges({ transitions }: { transitions: RecentTransition[]
             ({counts.total} {counts.total === 1 ? "device" : "devices"})
           </div>
         </div>
-        <div className="ml-auto flex items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-1.5 sm:ml-auto">
           <FilterChip active={filter === "all"} onClick={() => setFilter("all")}>
             All <Pill>{counts.total}</Pill>
           </FilterChip>

@@ -103,9 +103,9 @@ export function Sidebar() {
   })();
 
   return (
-    <aside className="flex h-auto w-full shrink-0 flex-col border-b border-[var(--pc-border)] bg-[var(--pc-surface)] lg:sticky lg:top-0 lg:h-screen lg:w-[232px] lg:border-b-0 lg:border-r">
+    <aside className="flex h-auto w-full shrink-0 flex-col border-b border-[var(--pc-border)] bg-[var(--pc-surface)] lg:sticky lg:top-0 lg:h-screen lg:w-[248px] lg:border-b-0 lg:border-r">
       {/* Logo */}
-      <div className="flex items-center gap-3 px-4 py-3 lg:px-5 lg:py-5">
+      <div className="flex items-center gap-3 px-4 py-3.5 lg:px-5 lg:py-5">
         <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-[var(--pc-accent-muted)] ring-1 ring-[var(--pc-accent)]/30">
           <img
             src="/runway.png"
@@ -126,9 +126,9 @@ export function Sidebar() {
       </div>
 
       {/* Nav */}
-      <nav className="flex flex-1 gap-2 overflow-x-auto px-3 pb-3 lg:mt-1 lg:flex-col lg:gap-3 lg:overflow-y-auto">
+      <nav className="flex flex-1 gap-1.5 overflow-x-auto overscroll-x-contain px-3 pb-3 lg:mt-1 lg:flex-col lg:gap-3 lg:overflow-y-auto lg:px-3.5">
         {navGroups.map((group) => (
-          <div key={group.label} className="flex shrink-0 flex-col gap-0.5">
+          <div key={group.label} className="contents lg:flex lg:shrink-0 lg:flex-col lg:gap-0.5">
             <div className="mb-1 hidden px-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--pc-text-muted)] lg:block">
               {group.label}
             </div>
@@ -141,13 +141,16 @@ export function Sidebar() {
                   key={item.to}
                   to={item.to}
                   className={cn(
-                    "group flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium transition-[background-color,color,transform] duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)] lg:gap-3",
+                    "group flex shrink-0 items-center gap-2.5 whitespace-nowrap rounded-lg px-3 py-2 text-[13px] font-medium transition-[background-color,color,transform] duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)] lg:gap-3 lg:whitespace-normal",
                     active
                       ? "bg-[var(--pc-accent-muted)] text-[var(--pc-accent-hover)]"
                       : "text-[var(--pc-text-secondary)] hover:bg-[var(--pc-tint-hover)] hover:text-[var(--pc-text)] hover:translate-x-0.5"
                   )}
                 >
-                  <Icon className="h-4 w-4 shrink-0 transition-transform duration-150 group-hover:scale-110" />
+                  <Icon
+                    aria-hidden="true"
+                    className="h-4 w-4 shrink-0 transition-transform duration-150 group-hover:scale-110"
+                  />
                   {item.label}
                 </Link>
               );
@@ -179,7 +182,7 @@ export function Sidebar() {
                 title={`Current: ${themeLabels[theme]}. Click to cycle.`}
                 aria-label={`Current theme: ${themeLabels[theme]}. Click to cycle theme.`}
               >
-                <ThemeIcon className="h-3 w-3" />
+                <ThemeIcon aria-hidden="true" className="h-3 w-3" />
                 {themeLabels[theme]}
               </button>
             );

@@ -169,7 +169,7 @@ export function SettingsPage() {
         </div>
 
         <Card className="p-5">
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex items-start gap-3">
               {graphConfigured ? (
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--pc-healthy-muted)]">
@@ -196,7 +196,7 @@ export function SettingsPage() {
             </div>
           </div>
 
-          <div className="mt-5 grid gap-2 sm:grid-cols-3">
+          <div className="mt-5 grid gap-2 md:grid-cols-3">
             {REQUIRED_ENV.map((env) => {
               const present = !missing.includes(env.key);
               return (
@@ -245,7 +245,7 @@ export function SettingsPage() {
           </span>
         </div>
         <Card className="p-5">
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex items-start gap-3">
               <div
                 className={
@@ -424,7 +424,7 @@ export function SettingsPage() {
           </span>
         </div>
         <Card className="p-5">
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-3 md:grid-cols-3">
             <SourceCard
               source="autopilot"
               items={["Hardware records", "Group tags", "Assigned user"]}
@@ -456,7 +456,7 @@ export function SettingsPage() {
           <span className="text-[11px] text-[var(--pc-text-muted)]">
             Tells the engine what each Autopilot group tag should resolve to
           </span>
-          <div className="ml-auto flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
             <input
               ref={fileInputRef}
               type="file"
@@ -495,7 +495,7 @@ export function SettingsPage() {
             <Plus className="h-4 w-4 text-[var(--pc-accent)]" />
             <div className="text-[13px] font-semibold text-[var(--pc-text)]">Add mapping</div>
           </div>
-          <div className="grid gap-x-4 gap-y-3 sm:grid-cols-2">
+          <div className="grid gap-x-4 gap-y-3 sm:grid-cols-2 xl:grid-cols-4">
             <div className="space-y-1">
               <label className="block text-[11px] font-medium text-[var(--pc-text-muted)]">
                 Group tag
@@ -609,7 +609,7 @@ export function SettingsPage() {
             <span className="text-[var(--pc-text-secondary)]">not in target group</span> conditions.
           </Card>
         ) : (
-          <div className="grid gap-3 xl:grid-cols-2">
+          <div className="grid gap-3 2xl:grid-cols-2">
             {settings.data.tagConfig.map((row) => (
               <Card key={row.groupTag} className="p-4">
                 <div className="flex items-start justify-between gap-3">

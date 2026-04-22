@@ -20,8 +20,11 @@ export function AppShell() {
         <MockModeBanner />
         <div className="flex flex-1 flex-col lg:flex-row">
           <Sidebar />
-          <main id="main-content" className="min-w-0 flex-1">
-            <div className="pc-page-enter mx-auto w-full max-w-[1440px] px-4 py-5 sm:px-6 lg:px-10 lg:py-8">
+          <main
+            id="main-content"
+            className="min-w-0 flex-1 overflow-x-hidden bg-[radial-gradient(circle_at_top_right,var(--pc-accent-muted),transparent_32rem)]"
+          >
+            <div className="pc-page-enter mx-auto w-full max-w-[1520px] px-4 pb-24 pt-5 sm:px-6 lg:px-8 lg:pb-24 lg:pt-8 xl:px-10">
               <Outlet />
             </div>
           </main>

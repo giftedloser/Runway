@@ -36,7 +36,7 @@ export function ProfileAuditPage() {
           No profiles found. Run a sync to pull profile data from Graph.
         </div>
       ) : (
-        <div className="grid gap-5 xl:grid-cols-2">
+        <div className="grid gap-5 2xl:grid-cols-2">
           {profiles.data.map((profile) => (
             <div key={profile.profileId} className="space-y-3">
               <ProfileCard

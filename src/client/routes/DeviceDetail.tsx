@@ -203,7 +203,7 @@ function TabButton({
       type="button"
       onClick={() => onSelect(tab)}
       className={cn(
-        "flex items-center gap-1.5 border-b-2 px-3 py-2 text-[12.5px] font-medium transition-colors",
+        "flex shrink-0 items-center gap-1.5 border-b-2 px-3 py-2 text-[12.5px] font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]",
         active
           ? "border-[var(--pc-accent)] text-[var(--pc-text)]"
           : "border-transparent text-[var(--pc-text-muted)] hover:text-[var(--pc-text-secondary)]"
@@ -350,7 +350,7 @@ export function DeviceDetailPage() {
       </div>
 
       {/* Hero header */}
-      <header className="rounded-xl border border-[var(--pc-border)] bg-[var(--pc-surface)] p-5">
+      <header className="rounded-xl border border-[var(--pc-border)] bg-[var(--pc-surface)] p-4 shadow-[0_18px_60px_rgba(0,0,0,0.14)] sm:p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
             <div className="text-[11px] font-semibold uppercase tracking-wider text-[var(--pc-accent)]">
@@ -421,7 +421,7 @@ export function DeviceDetailPage() {
         )}
 
         {/* Breakpoint chips — click to jump to the failing subsystem tab */}
-        <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <div className="mt-5 grid grid-cols-2 gap-2 md:grid-cols-4">
           {(Object.keys(BREAKPOINT_BUCKETS) as BreakpointKey[]).map((key) => (
             <BreakpointChip
               key={key}
@@ -436,7 +436,7 @@ export function DeviceDetailPage() {
       </header>
 
       {/* Tab navigation */}
-      <div className="flex flex-wrap items-center gap-1 border-b border-[var(--pc-border)]">
+      <div className="sticky top-0 z-20 -mx-4 flex items-center gap-1 overflow-x-auto border-b border-[var(--pc-border)] bg-[var(--pc-bg)]/95 px-4 pt-1 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 xl:-mx-10 xl:px-10">
         {TAB_ORDER.map((tab) => {
           const count =
             tab === "identity" || tab === "targeting" || tab === "enrollment" || tab === "drift"

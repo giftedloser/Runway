@@ -137,7 +137,7 @@ export function SavedViews() {
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
+    <div className="flex items-center gap-1.5 overflow-x-auto rounded-xl border border-[var(--pc-border)] bg-[var(--pc-surface)] px-3 py-2">
       <span className="mr-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--pc-text-muted)]">
         Views
       </span>
@@ -156,7 +156,7 @@ export function SavedViews() {
               })
             }
             className={cn(
-              "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors",
+              "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors",
               active
                 ? "border-[var(--pc-accent)]/60 bg-[var(--pc-accent-muted)] text-[var(--pc-text)]"
                 : "border-[var(--pc-border)] bg-[var(--pc-surface-raised)] text-[var(--pc-text-secondary)] hover:border-[var(--pc-accent)]/40 hover:text-[var(--pc-text)]"
@@ -190,7 +190,7 @@ export function SavedViews() {
               }
               title={view.name}
               className={cn(
-                "inline-flex items-center gap-1.5 rounded-full border py-1 pl-2.5 pr-6 text-[11px] font-medium transition-colors",
+                "inline-flex shrink-0 items-center gap-1.5 rounded-full border py-1 pl-2.5 pr-6 text-[11px] font-medium transition-colors",
                 active
                   ? "border-[var(--pc-accent)]/60 bg-[var(--pc-accent-muted)] text-[var(--pc-text)]"
                   : "border-[var(--pc-border)] bg-[var(--pc-surface-raised)] text-[var(--pc-text-secondary)] hover:border-[var(--pc-accent)]/40 hover:text-[var(--pc-text)]"
@@ -218,7 +218,7 @@ export function SavedViews() {
             event.preventDefault();
             void handleSave();
           }}
-          className="inline-flex items-center gap-1 rounded-full border border-[var(--pc-accent)]/60 bg-[var(--pc-surface-raised)] py-0.5 pl-2.5 pr-1 text-[11px]"
+          className="inline-flex shrink-0 items-center gap-1 rounded-full border border-[var(--pc-accent)]/60 bg-[var(--pc-surface-raised)] py-0.5 pl-2.5 pr-1 text-[11px]"
         >
           <Bookmark className="h-3 w-3 text-[var(--pc-accent)]" />
           <input
@@ -264,7 +264,7 @@ export function SavedViews() {
               ? "Save the current filters as a named view"
               : "Apply filters first, then save them as a view"
           }
-          className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-[var(--pc-border)] bg-transparent px-2.5 py-1 text-[11px] font-medium text-[var(--pc-text-muted)] transition-colors hover:border-[var(--pc-accent)]/60 hover:text-[var(--pc-text)] disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-dashed border-[var(--pc-border)] bg-transparent px-2.5 py-1 text-[11px] font-medium text-[var(--pc-text-muted)] transition-colors hover:border-[var(--pc-accent)]/60 hover:text-[var(--pc-text)] disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Plus className="h-3 w-3" />
           Save current

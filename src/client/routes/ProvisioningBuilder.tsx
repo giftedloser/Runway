@@ -216,7 +216,7 @@ export function ProvisioningBuilderPage() {
         }
       />
 
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1.65fr)_360px]">
+      <div className="grid gap-5 2xl:grid-cols-[minmax(0,1.65fr)_360px]">
         <div className="space-y-5">
           <Card className="overflow-hidden border-[var(--pc-border-hover)]">
             <div className="border-b border-[var(--pc-border)] bg-[linear-gradient(135deg,rgba(99,102,241,0.18),rgba(19,22,30,0.88)_55%)] px-5 py-5">
@@ -359,7 +359,7 @@ export function ProvisioningBuilderPage() {
 
           {discover.isFetching && !data ? (
             <Card className="p-5">
-              <LoadingState label="Discovering provisioning targets..." />
+              <LoadingState label="Discovering provisioning targets…" />
             </Card>
           ) : null}
 
@@ -985,7 +985,7 @@ function HardwareHashImport() {
               title={login.blockedReason ?? undefined}
               className="shrink-0"
             >
-              {!login.canStart ? "Unavailable" : login.isPending ? "Opening..." : "Sign in"}
+              {!login.canStart ? "Unavailable" : login.isPending ? "Opening…" : "Sign in"}
             </Button>
           </div>
         </div>
@@ -1069,7 +1069,7 @@ function HardwareHashImport() {
               <div className="truncate text-[12.5px] font-medium text-[var(--pc-text)]">{fileName}</div>
               <div className="mt-0.5 text-[11px] text-[var(--pc-text-muted)]">
                 {parseCsv.isPending
-                  ? "Parsing..."
+                  ? "Parsing…"
                   : `${entries.length} device${entries.length !== 1 ? "s" : ""} found${parseErrors.length > 0 ? `, ${parseErrors.length} error${parseErrors.length !== 1 ? "s" : ""}` : ""}`}
               </div>
             </div>
@@ -1146,7 +1146,7 @@ function HardwareHashImport() {
                           {entry.groupTag || "\u2014"}
                         </td>
                         <td className="max-w-[200px] truncate px-3 py-2 font-mono text-[11px] text-[var(--pc-text-muted)]">
-                          {entry.hardwareHash.slice(0, 32)}...
+                          {entry.hardwareHash.slice(0, 32)}…
                         </td>
                         {importResult && (
                           <td className="px-3 py-2">
@@ -1190,7 +1190,7 @@ function HardwareHashImport() {
                 {importEntries.isPending ? (
                   <>
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    Importing to Autopilot...
+                    Importing to Autopilot…
                   </>
                 ) : (
                   <>

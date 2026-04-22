@@ -164,8 +164,8 @@ export function DeviceListPage() {
       <SavedViews />
       <DeviceFilters />
 
-      <div className="flex items-center justify-between text-[11px] text-[var(--pc-text-muted)]">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-col gap-3 rounded-xl border border-[var(--pc-border)] bg-[var(--pc-surface)] px-3 py-2.5 text-[11px] text-[var(--pc-text-muted)] sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 flex-wrap items-center gap-3">
           <span className="inline-flex items-center gap-1.5">
             {Boolean(search.search || search.health || search.flag || search.property || search.profile) && (
               <Filter className="h-3 w-3 text-[var(--pc-accent)]" />
@@ -188,7 +188,7 @@ export function DeviceListPage() {
             select
           </span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex w-full items-center gap-2 overflow-x-auto sm:w-auto sm:justify-end">
           <ColumnPicker value={visibleColumnIds} onChange={setVisibleColumnIds} />
           <button
             type="button"
@@ -285,7 +285,7 @@ export function DeviceListPage() {
 
       {/* Floating bulk action bar */}
       {selectedKeys.size > 0 && (
-        <div className="pointer-events-none fixed inset-x-0 bottom-6 z-40 flex justify-center px-4">
+        <div className="pointer-events-none fixed inset-x-0 bottom-[max(1rem,env(safe-area-inset-bottom))] z-40 flex justify-center px-4">
           <div className="pointer-events-auto flex max-w-[calc(100vw-2rem)] items-center gap-3 overflow-x-auto overscroll-contain rounded-full border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-4 py-2 shadow-2xl">
             <span className="text-[12px] font-medium text-[var(--pc-text)]">
               {selectedKeys.size} selected
