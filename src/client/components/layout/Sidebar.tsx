@@ -123,6 +123,20 @@ export function Sidebar() {
             Autopilot · Intune · Entra
           </div>
         </div>
+        {(() => {
+          const ThemeIcon = themeIcons[theme];
+          return (
+            <button
+              type="button"
+              onClick={cycleTheme}
+              className="ml-auto inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] text-[var(--pc-text-secondary)] transition-[border-color,color,background-color,transform] hover:-translate-y-0.5 hover:border-[var(--pc-border-hover)] hover:text-[var(--pc-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)] lg:hidden"
+              title={`Current: ${themeLabels[theme]}. Click to cycle.`}
+              aria-label={`Current theme: ${themeLabels[theme]}. Click to cycle theme.`}
+            >
+              <ThemeIcon aria-hidden="true" className="h-4 w-4" />
+            </button>
+          );
+        })()}
       </div>
 
       {/* Nav */}
@@ -251,7 +265,7 @@ function PropertiesGroup({
             )}
             title={`Filter device queue to ${property}`}
           >
-            <Building2 className="h-3.5 w-3.5 shrink-0 opacity-70" />
+            <Building2 aria-hidden="true" className="h-3.5 w-3.5 shrink-0 opacity-70" />
             <span className="truncate">{property}</span>
           </Link>
         );
