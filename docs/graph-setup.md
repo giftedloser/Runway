@@ -9,6 +9,10 @@ Runway talks to Graph in two distinct modes:
 
 Both flows share a single Entra app registration.
 
+The delegated callback must round-trip an exact `state` value and the
+redirect URI must exactly match the one registered in Entra. Runway uses
+`http://localhost:3001/api/auth/callback` by default.
+
 ## 1. Create the app registration
 
 In the Entra admin centre:
@@ -57,7 +61,10 @@ Under **API permissions → Add a permission → Microsoft Graph**:
 - `DeviceManagementManagedDevices.ReadWrite.All`
 - `DeviceManagementManagedDevices.PrivilegedOperations.All`
 - `DeviceLocalCredential.Read.All`
-- `User.Read` (default)
+- `BitLockerKey.Read.All`
+- `Group.ReadWrite.All`
+- `DeviceManagementServiceConfig.ReadWrite.All`
+- `User.Read`
 
 Then click **Grant admin consent for &lt;tenant&gt;**. Both columns should
 turn green.

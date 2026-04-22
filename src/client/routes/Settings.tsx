@@ -39,7 +39,11 @@ const REQUIRED_ENV = [
 const DELEGATED_SCOPES = [
   "DeviceManagementManagedDevices.ReadWrite.All",
   "DeviceManagementManagedDevices.PrivilegedOperations.All",
-  "DeviceLocalCredential.Read.All"
+  "DeviceLocalCredential.Read.All",
+  "BitLockerKey.Read.All",
+  "Group.ReadWrite.All",
+  "DeviceManagementServiceConfig.ReadWrite.All",
+  "User.Read"
 ];
 
 export function SettingsPage() {

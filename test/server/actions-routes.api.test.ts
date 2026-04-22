@@ -7,6 +7,7 @@ import request from "supertest";
 // device lookup, validation), not the session/cookie machinery.
 vi.mock("../../src/server/auth/auth-middleware.js", () => ({
   requireDelegatedAuth: (_req: unknown, _res: unknown, next: () => void) => next(),
+  hasValidDelegatedSession: () => false,
   getDelegatedToken: () => "fake-token",
   getDelegatedUser: () => "tester@example.com"
 }));
@@ -23,7 +24,6 @@ const remoteActionMocks = {
   wipeDevice: vi.fn().mockResolvedValue({ success: true, status: 204, message: "ok" }),
   rotateLapsPassword: vi.fn().mockResolvedValue({ success: true, status: 204, message: "ok" }),
   deleteIntuneDevice: vi.fn().mockResolvedValue({ success: true, status: 204, message: "ok" }),
-  deleteEntraDevice: vi.fn().mockResolvedValue({ success: true, status: 204, message: "ok" }),
   deleteAutopilotDevice: vi.fn().mockResolvedValue({ success: true, status: 204, message: "ok" })
 };
 
@@ -91,7 +91,6 @@ describe("POST /api/actions/bulk — guardrails", () => {
       "autopilot-reset",
       "rename",
       "delete-intune",
-      "delete-entra",
       "delete-autopilot"
     ]) {
       const response = await request(app)
@@ -249,18 +248,14 @@ describe("POST /api/actions/:deviceKey/:action — guardrails", () => {
     seedDevice(db, {
       deviceKey: "dev-orphan",
       intuneId: null,
-      entraId: "entra-orphan",
       autopilotId: "autopilot-orphan"
     });
 
-    const entra = await request(app).post("/api/actions/dev-orphan/delete-entra").send({});
     const autopilot = await request(app)
       .post("/api/actions/dev-orphan/delete-autopilot")
       .send({});
 
-    expect(entra.status).toBe(200);
     expect(autopilot.status).toBe(200);
-    expect(remoteActionMocks.deleteEntraDevice).toHaveBeenCalledWith("fake-token", "entra-orphan");
     expect(remoteActionMocks.deleteAutopilotDevice).toHaveBeenCalledWith(
       "fake-token",
       "autopilot-orphan"

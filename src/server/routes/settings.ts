@@ -35,6 +35,11 @@ const graphConfigSchema = z.object({
   redirectUri: z.string().url().optional()
 });
 
+function isLoopbackAddress(address: string | undefined) {
+  if (!address) return false;
+  return address === "127.0.0.1" || address === "::1" || address === "::ffff:127.0.0.1";
+}
+
 export function settingsRouter(db: Database.Database) {
   const router = Router();
 
@@ -123,6 +128,11 @@ export function settingsRouter(db: Database.Database) {
   router.post("/graph", (request, response, next) => {
     if (config.isGraphConfigured) {
       requireDelegatedAuth(request, response, next);
+    } else if (!isLoopbackAddress(request.socket.remoteAddress) || config.HOST !== "127.0.0.1") {
+      response.status(403).json({
+        message:
+          "First-run Graph bootstrap is only allowed from a loopback-only Runway server. Set credentials manually in .env for non-local deployments."
+      });
     } else {
       next();
     }

@@ -38,11 +38,14 @@ PKCE model in a later milestone.
 Runway is local-first — there is no Runway cloud service to attack.
 The relevant trust boundaries are:
 
-- **The local SQLite database**, which contains device state, action logs,
-  and any LAPS passwords retrieved during a session. Treat the file as
-  sensitive and store it on an encrypted disk.
+- **The local SQLite database**, which contains device state and action
+  logs. Treat the file as sensitive and store it on an encrypted disk.
 - **The Express API** bound to localhost. By default it does not listen on
   external interfaces, but a misconfigured reverse proxy could expose it.
+- **First-run Graph bootstrap**, which is only accepted when the server is
+  bound to loopback and the request also originates from a loopback
+  address. Non-local deployments must provision Graph credentials through
+  `.env` instead of the setup form.
 - **Microsoft Graph credentials** in the per-user app data `.env`. The
   client secret lives only on the operator's machine. Rotate it on the
   same cadence as any other production secret. Use Windows DPAPI or
@@ -60,5 +63,8 @@ The relevant trust boundaries are:
   operator's machine. A compromised operator workstation can read the
   `.env`; that is a known consequence of the self-hosted model and is
   addressed by the operator's endpoint protection, not by Runway.
+- The pilot-only choice to use a local confidential-client secret for the
+  current delegated flow. This is documented architectural debt until the
+  planned PKCE public-client migration lands.
 - Mock mode behaviour — mock mode is for development and demos only and
   intentionally accepts non-production shortcuts.

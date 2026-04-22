@@ -397,7 +397,6 @@ export type RemoteActionType =
   | "rotate-laps"
   | "change-primary-user"
   | "delete-intune"
-  | "delete-entra"
   | "delete-autopilot";
 
 export interface ActionResult {

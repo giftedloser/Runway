@@ -109,20 +109,18 @@ export function Sidebar() {
     <aside className="flex h-auto w-full shrink-0 flex-col border-b border-[var(--pc-border)] bg-[var(--pc-surface)] lg:sticky lg:top-0 lg:h-screen lg:w-[248px] lg:self-start lg:border-b-0 lg:border-r">
       {/* Logo */}
       <div className="flex items-center gap-3 px-4 py-3.5 lg:px-5 lg:py-5">
-        <div className="flex h-9 w-9 items-center justify-center overflow-hidden">
-          <img
-            src="/runway.png"
-            alt=""
-            width={36}
-            height={36}
-            className="h-9 w-9 object-contain"
-          />
-        </div>
+        <img
+          src="/runway.png"
+          alt=""
+          width={38}
+          height={38}
+          className="h-9.5 w-9.5 shrink-0 object-contain drop-shadow-[0_6px_18px_rgba(0,0,0,0.18)]"
+        />
         <div className="min-w-0">
-          <div className="font-display text-[23px] font-semibold uppercase leading-none tracking-wide text-[var(--pc-text)]">
+          <div className="font-brand text-[25px] uppercase leading-none tracking-[0.18em] text-[var(--pc-text)]">
             Runway
           </div>
-          <div className="truncate text-[11px] text-[var(--pc-text-muted)]">
+          <div className="truncate pl-[0.08em] text-[10.5px] uppercase tracking-[0.18em] text-[var(--pc-text-muted)]">
             Autopilot · Intune · Entra
           </div>
         </div>

@@ -1,16 +1,17 @@
+import { randomBytes } from "node:crypto";
+
 import { ConfidentialClientApplication, type AuthorizationUrlRequest } from "@azure/msal-node";
 
 import { config } from "../config.js";
 
-const SCOPES = [
+export const DELEGATED_SCOPES = [
+  "User.Read",
   "DeviceLocalCredential.Read.All",
+  "BitLockerKey.Read.All",
   "DeviceManagementManagedDevices.ReadWrite.All",
   "DeviceManagementManagedDevices.PrivilegedOperations.All",
-  "BitLockerKey.Read.All",
   "Group.ReadWrite.All",
-  "User.Read.All",
-  "DeviceManagementServiceConfig.ReadWrite.All",
-  "Directory.AccessAsUser.All"
+  "DeviceManagementServiceConfig.ReadWrite.All"
 ];
 
 let msalInstance: ConfidentialClientApplication | null = null;
@@ -33,11 +34,15 @@ function getMsal(): ConfidentialClientApplication {
 export async function getAuthUrl(state?: string): Promise<string> {
   const msal = getMsal();
   const request: AuthorizationUrlRequest = {
-    scopes: SCOPES,
+    scopes: DELEGATED_SCOPES,
     redirectUri: config.AZURE_REDIRECT_URI,
-    state: state ?? "login"
+    state: state ?? createAuthState()
   };
   return msal.getAuthCodeUrl(request);
+}
+
+export function createAuthState(): string {
+  return randomBytes(16).toString("hex");
 }
 
 export async function acquireDelegatedToken(code: string): Promise<{
@@ -48,7 +53,7 @@ export async function acquireDelegatedToken(code: string): Promise<{
   const msal = getMsal();
   const result = await msal.acquireTokenByCode({
     code,
-    scopes: SCOPES,
+    scopes: DELEGATED_SCOPES,
     redirectUri: config.AZURE_REDIRECT_URI
   });
   if (!result?.accessToken) {

@@ -5,6 +5,7 @@ import request from "supertest";
 // Stub delegated auth — same pattern as actions-routes tests.
 vi.mock("../../src/server/auth/auth-middleware.js", () => ({
   requireDelegatedAuth: (_req: unknown, _res: unknown, next: () => void) => next(),
+  hasValidDelegatedSession: () => false,
   getDelegatedToken: () => "fake-token",
   getDelegatedUser: () => "tester@example.com"
 }));

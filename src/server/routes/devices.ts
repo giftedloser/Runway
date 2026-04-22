@@ -2,6 +2,7 @@ import { Router } from "express";
 
 import type Database from "better-sqlite3";
 
+import { hasValidDelegatedSession } from "../auth/auth-middleware.js";
 import {
   getDeviceDetail,
   getDeviceHistory,
@@ -35,7 +36,9 @@ export function devicesRouter(db: Database.Database) {
 
   router.get("/:deviceKey", (request, response) => {
     try {
-      const device = getDeviceDetail(db, request.params.deviceKey);
+      const device = getDeviceDetail(db, request.params.deviceKey, {
+        includeRawJson: hasValidDelegatedSession(request)
+      });
       if (!device) {
         response.status(404).json({ message: "Device not found." });
         return;

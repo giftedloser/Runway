@@ -147,10 +147,14 @@ SEED_MODE=mock
 - `Device.Read.All`
 - `Group.Read.All`
 
-**Delegated (remote actions + LAPS)**
+**Delegated (remote actions + LAPS / BitLocker / group checks)**
 - `DeviceManagementManagedDevices.ReadWrite.All`
 - `DeviceManagementManagedDevices.PrivilegedOperations.All`
 - `DeviceLocalCredential.Read.All`
+- `BitLockerKey.Read.All`
+- `Group.ReadWrite.All`
+- `DeviceManagementServiceConfig.ReadWrite.All`
+- `User.Read`
 
 Grant admin consent in the tenant after assigning these.
 
@@ -227,13 +231,16 @@ file you can read.
 
 ## Security
 
-Runway is **local-first** — all device state, action logs, and LAPS
-secrets stay on the operator's machine in a local SQLite file. There is no
-Runway cloud, no telemetry, no analytics. The only external network calls
-are to `graph.microsoft.com` and `login.microsoftonline.com`.
+Runway is **local-first** — all device state and action logs stay on the
+operator's machine in a local SQLite file. There is no Runway cloud, no
+telemetry, no analytics. The only external network calls are to
+`graph.microsoft.com` and `login.microsoftonline.com`.
 
 LAPS passwords are fetched on-demand via delegated auth, displayed with a
 30-second auto-rehide, and never persisted to disk.
+
+Raw source JSON and conditional-access policy detail are only returned to
+an authenticated admin session.
 
 If you discover a security issue, please see [SECURITY.md](./SECURITY.md).
 

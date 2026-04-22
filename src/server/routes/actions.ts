@@ -13,7 +13,6 @@ import {
   rotateLapsPassword,
   changePrimaryUser,
   deleteIntuneDevice,
-  deleteEntraDevice,
   deleteAutopilotDevice
 } from "../actions/remote-actions.js";
 import { listActionLogs, listDeviceActionLogs, logAction } from "../db/queries/actions.js";
@@ -28,7 +27,6 @@ const VALID_ACTIONS: ReadonlySet<RemoteActionType> = new Set([
   "rotate-laps",
   "change-primary-user",
   "delete-intune",
-  "delete-entra",
   "delete-autopilot"
 ]);
 
@@ -271,14 +269,6 @@ export function actionsRouter(db: Database.Database) {
         case "delete-intune":
           result = await deleteIntuneDevice(token, intuneId);
           break;
-        case "delete-entra": {
-          if (!device.entra_id) {
-            response.status(400).json({ message: "Device has no Entra ID object. Cannot delete." });
-            return;
-          }
-          result = await deleteEntraDevice(token, device.entra_id);
-          break;
-        }
         case "delete-autopilot": {
           if (!device.autopilot_id) {
             response.status(400).json({ message: "Device has no Autopilot registration. Cannot delete." });

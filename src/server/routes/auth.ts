@@ -1,7 +1,16 @@
 import { Router } from "express";
 
 import { config } from "../config.js";
-import { getAuthUrl, acquireDelegatedToken } from "../auth/delegated-auth.js";
+import { acquireDelegatedToken, createAuthState, getAuthUrl } from "../auth/delegated-auth.js";
+
+function saveSession(session: Express.Request["session"]) {
+  return new Promise<void>((resolve, reject) => {
+    session.save((error) => {
+      if (error) reject(error);
+      else resolve();
+    });
+  });
+}
 
 export function authRouter() {
   const router = Router();
@@ -22,7 +31,7 @@ export function authRouter() {
   });
 
   // GET /api/auth/login — redirect to Microsoft login
-  router.get("/login", async (_request, response) => {
+  router.get("/login", async (request, response) => {
     if (!config.isGraphConfigured) {
       response.status(409).json({
         message: `Microsoft Graph sign-in is unavailable. Missing: ${config.graphMissing.join(", ")}.`
@@ -31,7 +40,10 @@ export function authRouter() {
     }
 
     try {
-      const url = await getAuthUrl();
+      const state = createAuthState();
+      request.session.oauthState = state;
+      await saveSession(request.session);
+      const url = await getAuthUrl(state);
       response.json({ loginUrl: url });
     } catch (error) {
       response.status(500).json({
@@ -43,8 +55,12 @@ export function authRouter() {
   // GET /api/auth/callback — handle Microsoft redirect
   router.get("/callback", async (request, response) => {
     const code = request.query.code as string | undefined;
-    if (!code) {
-      response.status(400).send("Missing authorization code.");
+    const returnedState = request.query.state as string | undefined;
+    const expectedState = request.session.oauthState;
+    request.session.oauthState = undefined;
+
+    if (!code || !returnedState || !expectedState || returnedState !== expectedState) {
+      response.status(400).send("Invalid authentication callback.");
       return;
     }
 
@@ -54,6 +70,7 @@ export function authRouter() {
       request.session.delegatedUser = result.account.username;
       request.session.delegatedName = result.account.name;
       request.session.delegatedExpiresAt = result.expiresOn.toISOString();
+      await saveSession(request.session);
 
       response
         .status(200)
@@ -99,7 +116,7 @@ export function authRouter() {
       <p>You can return to Runway now. This window should close automatically.</p>
     </main>
     <script>
-      window.opener?.postMessage({ type: "pilotcheck-auth-complete" }, "*");
+      window.opener?.postMessage({ type: "pilotcheck-auth-complete" }, window.location.origin);
       window.setTimeout(() => window.close(), 150);
     </script>
   </body>

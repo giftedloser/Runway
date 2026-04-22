@@ -17,7 +17,6 @@ import { groupsRouter } from "./routes/groups.js";
 import { healthRouter, healthzHandler } from "./routes/health.js";
 import { bitlockerRouter } from "./routes/bitlocker.js";
 import { lapsRouter } from "./routes/laps.js";
-import { licensingRouter } from "./routes/licensing.js";
 import { conditionalAccessRouter } from "./routes/conditional-access.js";
 import { provisioningRouter } from "./routes/provisioning.js";
 import { profilesRouter } from "./routes/profiles.js";
@@ -75,7 +74,6 @@ export function createApp(db: Database.Database) {
   app.use("/api/actions", actionsRouter(db));
   app.use("/api/laps", lapsRouter(db));
   app.use("/api/bitlocker", bitlockerRouter(db));
-  app.use("/api/licensing", licensingRouter(db));
   app.use("/api/conditional-access", conditionalAccessRouter(db));
   app.use("/api/provisioning", provisioningRouter(db));
   app.use("/api/autopilot-import", autopilotImportRouter(db));

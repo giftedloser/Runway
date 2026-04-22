@@ -15,7 +15,6 @@ const ACTION_LABELS: Record<string, string> = {
   wipe: "Factory wipe",
   "rotate-laps": "LAPS rotation",
   "delete-intune": "Delete from Intune",
-  "delete-entra": "Delete from Entra",
   "delete-autopilot": "Delete from Autopilot",
   "autopilot-import": "Autopilot import"
 };

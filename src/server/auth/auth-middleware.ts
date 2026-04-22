@@ -6,19 +6,28 @@ declare module "express-session" {
     delegatedUser?: string;
     delegatedName?: string;
     delegatedExpiresAt?: string;
+    oauthState?: string;
   }
 }
 
-export function requireDelegatedAuth(request: Request, response: Response, next: NextFunction) {
+export function hasValidDelegatedSession(request: Request): boolean {
   const session = request.session;
   if (!session.delegatedToken) {
-    response.status(401).json({ message: "Admin login required for this action." });
-    return;
+    return false;
   }
   if (session.delegatedExpiresAt && new Date(session.delegatedExpiresAt) < new Date()) {
     session.delegatedToken = undefined;
     session.delegatedUser = undefined;
-    response.status(401).json({ message: "Session expired. Please log in again." });
+    session.delegatedName = undefined;
+    session.delegatedExpiresAt = undefined;
+    return false;
+  }
+  return true;
+}
+
+export function requireDelegatedAuth(request: Request, response: Response, next: NextFunction) {
+  if (!hasValidDelegatedSession(request)) {
+    response.status(401).json({ message: "Admin login required for this action." });
     return;
   }
   next();

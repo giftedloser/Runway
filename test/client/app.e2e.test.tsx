@@ -2,8 +2,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { App } from "../../src/client/App.js";
-
 const dashboardPayload = {
   lastSync: "2026-04-06T00:00:00.000Z",
   counts: { critical: 2, warning: 1, info: 1, healthy: 10, unknown: 0 },
@@ -130,6 +128,7 @@ const deviceDetailPayload = {
 
 describe("client drilldown", () => {
   beforeEach(() => {
+    vi.resetModules();
     window.history.pushState({}, "", "/");
     vi.spyOn(window, "open").mockReturnValue(null);
     Object.defineProperty(navigator, "clipboard", {
@@ -163,13 +162,19 @@ describe("client drilldown", () => {
     vi.restoreAllMocks();
   });
 
-  it("navigates from dashboard to devices to a device detail", async () => {
+  async function renderApp() {
     const queryClient = new QueryClient();
+    const { App } = await import("../../src/client/App.js");
     render(
       <QueryClientProvider client={queryClient}>
         <App queryClient={queryClient} />
       </QueryClientProvider>
     );
+    return queryClient;
+  }
+
+  it("navigates from dashboard to devices to a device detail", async () => {
+    await renderApp();
 
     // Dashboard renders
     expect(await screen.findByText("Runway Fleet Health")).toBeInTheDocument();
@@ -195,16 +200,11 @@ describe("client drilldown", () => {
   });
 
   it("surfaces overview master search results and opens a device", async () => {
-    const queryClient = new QueryClient();
-    render(
-      <QueryClientProvider client={queryClient}>
-        <App queryClient={queryClient} />
-      </QueryClientProvider>
-    );
+    await renderApp();
 
     expect(await screen.findByText("Runway Fleet Health")).toBeInTheDocument();
 
-    fireEvent.change(screen.getByPlaceholderText(/search devices by name/i), {
+    fireEvent.change(screen.getAllByPlaceholderText(/search devices by name/i)[0], {
       target: { value: "Lodge" }
     });
 
@@ -216,12 +216,7 @@ describe("client drilldown", () => {
   });
 
   it("playbook link buttons copy the URL when external open is unavailable", async () => {
-    const queryClient = new QueryClient();
-    render(
-      <QueryClientProvider client={queryClient}>
-        <App queryClient={queryClient} />
-      </QueryClientProvider>
-    );
+    await renderApp();
 
     fireEvent.click((await screen.findAllByText("Critical Devices"))[0]);
     fireEvent.click(await screen.findByText("DESKTOP-Lodge-001"));

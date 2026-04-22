@@ -2,6 +2,7 @@ import { Router } from "express";
 
 import type Database from "better-sqlite3";
 
+import { requireDelegatedAuth } from "../auth/auth-middleware.js";
 import type { ConditionalAccessPolicyRow } from "../db/types.js";
 
 function parseJsonField(value: string | null): unknown {
@@ -27,6 +28,7 @@ function formatPolicy(row: ConditionalAccessPolicyRow) {
 
 export function conditionalAccessRouter(db: Database.Database) {
   const router = Router();
+  router.use(requireDelegatedAuth);
 
   router.get("/", (_request, response) => {
     const rows = db

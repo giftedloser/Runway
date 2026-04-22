@@ -183,6 +183,11 @@ body {
   font-family: "Barlow Condensed", "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
 }
 
+.font-brand {
+  font-family: "Oswald Variable", "Barlow Condensed", "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  font-variation-settings: "wght" 540;
+}
+
 h1,
 h2,
 h3 {

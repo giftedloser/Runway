@@ -70,17 +70,6 @@ describe("remote-actions — request shape", () => {
     );
   });
 
-  it("deleteEntraDevice DELETEs the directory device object by entraId", async () => {
-    requestWithDelegatedTokenMock.mockResolvedValueOnce({ status: 204, data: null });
-    await actions.deleteEntraDevice("tok", "entra-456");
-
-    expect(requestWithDelegatedTokenMock).toHaveBeenCalledWith(
-      "tok",
-      "/devices/entra-456",
-      { method: "DELETE" }
-    );
-  });
-
   it("deleteAutopilotDevice DELETEs the windowsAutopilotDeviceIdentities resource and accepts 200 OR 204", async () => {
     requestWithDelegatedTokenMock.mockResolvedValueOnce({ status: 200, data: null });
     const result = await actions.deleteAutopilotDevice("tok", "ap-789");

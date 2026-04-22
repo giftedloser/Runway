@@ -45,9 +45,8 @@ dynamically by `src/server/auth/delegated-auth.ts`:
 - `DeviceLocalCredential.Read.All`
 - `BitLockerKey.Read.All`
 - `Group.ReadWrite.All`
-- `User.Read.All`
+- `User.Read`
 - `DeviceManagementServiceConfig.ReadWrite.All`
-- `Directory.AccessAsUser.All`
 
 If any of these are missing from the app registration, sign-in will either
 fail outright or succeed but produce 403s when the admin clicks an action.
@@ -60,6 +59,7 @@ fail outright or succeed but produce 403s when the admin clicks an action.
 | Sync succeeds, device count is 0                 | Permissions added as _Delegated_ instead of _Application_              | Remove and re-add as **Application permissions**, re-consent          |
 | Actions return 403 after sign-in                 | Delegated `*.PrivilegedOperations.All` missing, or signed-in user isn't Intune Admin | Add scope and re-consent; sign in as a role with action rights       |
 | LAPS reveal returns 404 for every device         | `DeviceLocalCredential.Read.All` not granted, or device not LAPS-enrolled | Grant scope; verify LAPS policy is actually assigned to the device    |
+| BitLocker reveal returns 403 or 404              | `BitLockerKey.Read.All` missing, or the device has no escrowed recovery key | Grant scope; verify BitLocker recovery keys are actually stored in Entra |
 | Sign-in succeeds but scopes missing from token   | App registration's _Allowed token audiences_ or scopes got edited      | Recreate the redirect URI exactly as `http://localhost:3001/api/auth/callback` |
 
 ---

@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // assertions for these routes live in provisioning-groups.api.test.ts instead.
 vi.mock("../../src/server/auth/auth-middleware.js", () => ({
   requireDelegatedAuth: (_req: unknown, _res: unknown, next: () => void) => next(),
+  hasValidDelegatedSession: () => false,
   getDelegatedToken: () => "test-token",
   getDelegatedUser: () => "test-user"
 }));

@@ -93,14 +93,6 @@ const ACTIONS: ActionSpec[] = [
     requireTyped: true
   },
   {
-    type: "delete-entra",
-    label: "Delete from Entra",
-    icon: Trash2,
-    description: "Permanently delete this device's Entra ID device object. This will break any Azure AD join. Cannot be undone.",
-    destructive: true,
-    requireTyped: true
-  },
-  {
     type: "delete-autopilot",
     label: "Delete from Autopilot",
     icon: Trash2,
@@ -127,9 +119,6 @@ function actionAvailability(
 ): { disabled: boolean; reason?: string } {
   if (INTUNE_BACKED_ACTIONS.has(spec.type) && !device.identity.intuneId) {
     return { disabled: true, reason: "This device has no Intune enrollment." };
-  }
-  if (spec.type === "delete-entra" && !device.identity.entraId) {
-    return { disabled: true, reason: "This device has no Entra device object." };
   }
   if (spec.type === "delete-autopilot" && !device.identity.autopilotId) {
     return { disabled: true, reason: "This device has no Autopilot registration." };

@@ -29,7 +29,6 @@ import { HardwarePanel } from "../components/devices/HardwarePanel.js";
 import { HistoryPanel } from "../components/devices/HistoryPanel.js";
 import { IdentityPanel } from "../components/devices/IdentityPanel.js";
 import { LapsWidget } from "../components/devices/LapsWidget.js";
-import { LicensingWidget } from "../components/devices/LicensingWidget.js";
 import { ProvisioningTimeline } from "../components/devices/ProvisioningTimeline.js";
 import { RelatedDevicesPanel } from "../components/devices/RelatedDevicesPanel.js";
 import { RuleViolationsPanel } from "../components/devices/RuleViolationsPanel.js";
@@ -510,7 +509,6 @@ export function DeviceDetailPage() {
             description="Remote actions, secrets, and related devices (delegated sign-in required)"
           />
           <ActionsToolbar device={data} />
-          <LicensingWidget device={data} />
           <LapsWidget device={data} />
           <BitLockerWidget device={data} />
           <RelatedDevicesPanel device={data} />

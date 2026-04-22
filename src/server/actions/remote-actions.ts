@@ -9,7 +9,6 @@ export type RemoteActionType =
   | "wipe"
   | "rotate_laps"
   | "delete_intune"
-  | "delete_entra"
   | "delete_autopilot";
 
 interface ActionResult {
@@ -144,22 +143,6 @@ export async function deleteIntuneDevice(
     success: status === 204,
     status,
     message: status === 204 ? "Intune device record deleted." : `Delete from Intune failed with status ${status}.`
-  };
-}
-
-export async function deleteEntraDevice(
-  token: string,
-  entraId: string
-): Promise<ActionResult> {
-  const { status } = await requestWithDelegatedToken(
-    token,
-    `/devices/${entraId}`,
-    { method: "DELETE" }
-  );
-  return {
-    success: status === 204,
-    status,
-    message: status === 204 ? "Entra device object deleted." : `Delete from Entra failed with status ${status}.`
   };
 }
 

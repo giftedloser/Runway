@@ -289,7 +289,8 @@ export function listDeviceStates(
 
 export function getDeviceDetail(
   db: Database.Database,
-  deviceKey: string
+  deviceKey: string,
+  options: { includeRawJson?: boolean } = {}
 ): DeviceDetailResponse | null {
   const ruleLookup = new Map(
     (
@@ -303,13 +304,14 @@ export function getDeviceDetail(
       }>
     ).map((row) => [row.id, row])
   );
-  return getDeviceDetailWithRules(db, deviceKey, ruleLookup);
+  return getDeviceDetailWithRules(db, deviceKey, ruleLookup, options);
 }
 
 function getDeviceDetailWithRules(
   db: Database.Database,
   deviceKey: string,
-  ruleLookup: Map<string, { id: string; name: string; severity: string; description: string }>
+  ruleLookup: Map<string, { id: string; name: string; severity: string; description: string }>,
+  options: { includeRawJson?: boolean }
 ): DeviceDetailResponse | null {
   const row = db
     .prepare("SELECT * FROM device_state WHERE device_key = ?")
@@ -339,6 +341,7 @@ function getDeviceDetailWithRules(
   const autopilotRaw = autopilotSource?.raw_json ?? null;
   const intuneRaw = intuneSource?.raw_json ?? null;
   const entraRaw = entraSource?.raw_json ?? null;
+  const includeRawJson = options.includeRawJson === true;
 
   // Group memberships for this device
   const groupMemberships = row.entra_id
@@ -497,9 +500,9 @@ function getDeviceDetailWithRules(
       errorCode: a.error_code
     })),
     sourceRefs: {
-      autopilotRawJson: autopilotRaw,
-      intuneRawJson: intuneRaw,
-      entraRawJson: entraRaw
+      autopilotRawJson: includeRawJson ? autopilotRaw : null,
+      intuneRawJson: includeRawJson ? intuneRaw : null,
+      entraRawJson: includeRawJson ? entraRaw : null
     }
   };
 }
