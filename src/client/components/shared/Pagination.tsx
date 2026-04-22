@@ -45,7 +45,7 @@ export function Pagination({
             <select
               value={pageSize}
               onChange={(event) => onPageSizeChange(Number(event.target.value))}
-              className="rounded-md border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-2 py-1 text-[12px] text-[var(--pc-text)] focus:border-[var(--pc-accent)] focus:outline-none"
+              className="rounded-md border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-2 py-1 text-[12px] text-[var(--pc-text)] transition-colors focus:border-[var(--pc-accent)] focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]"
             >
               {PAGE_SIZES.map((size) => (
                 <option key={size} value={size}>
@@ -61,7 +61,7 @@ export function Pagination({
             disabled={safePage <= 1}
             onClick={() => onPageChange(safePage - 1)}
             className={cn(
-              "flex h-8 w-8 items-center justify-center rounded-md border border-[var(--pc-border)] text-[var(--pc-text-secondary)] transition-colors",
+              "flex h-8 w-8 items-center justify-center rounded-md border border-[var(--pc-border)] text-[var(--pc-text-secondary)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]",
               safePage <= 1
                 ? "cursor-not-allowed opacity-40"
                 : "hover:border-[var(--pc-accent)] hover:text-[var(--pc-text)]"
@@ -78,7 +78,7 @@ export function Pagination({
             disabled={safePage >= totalPages}
             onClick={() => onPageChange(safePage + 1)}
             className={cn(
-              "flex h-8 w-8 items-center justify-center rounded-md border border-[var(--pc-border)] text-[var(--pc-text-secondary)] transition-colors",
+              "flex h-8 w-8 items-center justify-center rounded-md border border-[var(--pc-border)] text-[var(--pc-text-secondary)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]",
               safePage >= totalPages
                 ? "cursor-not-allowed opacity-40"
                 : "hover:border-[var(--pc-accent)] hover:text-[var(--pc-text)]"

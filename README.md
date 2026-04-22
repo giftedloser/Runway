@@ -1,9 +1,9 @@
-# PilotCheck
+# Runway
 
 > A local-first triage console for **Windows** Autopilot, Intune, and Entra ID.
 > Windows-only by design.
 
-PilotCheck correlates Windows device identities across Microsoft Autopilot,
+Runway correlates Windows device identities across Microsoft Autopilot,
 Intune, and Entra ID, computes provisioning health with a transparent rule
 engine, and presents **problem-first** diagnostics — so an operator opening
 the app on a Monday morning can tell within seconds which devices are broken,
@@ -14,7 +14,7 @@ hundred to a few thousand Windows endpoints — the band where SCCM is overkill,
 the Intune admin centre is too slow to triage from, and PowerShell scripts are
 how everyone is currently getting by.
 
-PilotCheck is intentionally **not** a full Intune replacement, **not** a
+Runway is intentionally **not** a full Intune replacement, **not** a
 multi-tenant tool, and does **not** attempt to manage iOS, Android, or macOS.
 Those are non-goals — the product is laser-focused on the Windows triage loop
 and stays honest about that scope.
@@ -85,7 +85,7 @@ npm run dev
 - API:    <http://localhost:3001>
 
 If `AZURE_TENANT_ID` / `AZURE_CLIENT_ID` / `AZURE_CLIENT_SECRET` are not set
-and the database is empty, PilotCheck automatically falls back to **mock mode**
+and the database is empty, Runway automatically falls back to **mock mode**
 on first start so the entire UI is explorable without a tenant.
 
 ### As a desktop app
@@ -99,9 +99,9 @@ npm run tauri:build    # production installer
 
 ## Configuration
 
-PilotCheck is **self-hosted, bring-your-own-Entra-app-registration**. The
+Runway is **self-hosted, bring-your-own-Entra-app-registration**. The
 installer never contains Microsoft Graph credentials — each operator
-registers PilotCheck as an application in their own tenant and places the
+registers Runway as an application in their own tenant and places the
 credentials in their per-user app data folder. See
 [`docs/graph-auth.md`](docs/graph-auth.md) for the full design and the
 planned migration to a PKCE public-client model.
@@ -227,9 +227,9 @@ file you can read.
 
 ## Security
 
-PilotCheck is **local-first** — all device state, action logs, and LAPS
+Runway is **local-first** — all device state, action logs, and LAPS
 secrets stay on the operator's machine in a local SQLite file. There is no
-PilotCheck cloud, no telemetry, no analytics. The only external network calls
+Runway cloud, no telemetry, no analytics. The only external network calls
 are to `graph.microsoft.com` and `login.microsoftonline.com`.
 
 LAPS passwords are fetched on-demand via delegated auth, displayed with a
@@ -241,4 +241,4 @@ If you discover a security issue, please see [SECURITY.md](./SECURITY.md).
 
 ## License
 
-MIT © PilotCheck contributors — see [LICENSE](./LICENSE).
+MIT © Runway contributors — see [LICENSE](./LICENSE).

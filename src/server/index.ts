@@ -29,11 +29,11 @@ async function bootstrap() {
 
   const app = createApp(db);
   app.listen(config.PORT, config.HOST, () => {
-    logger.info(`PilotCheck API listening on http://${config.HOST}:${config.PORT}`);
+    logger.info(`Runway API listening on http://${config.HOST}:${config.PORT}`);
   });
 }
 
 bootstrap().catch((error) => {
-  logger.error({ err: error }, "PilotCheck failed to start.");
+  logger.error({ err: error }, "Runway failed to start.");
   process.exitCode = 1;
 });

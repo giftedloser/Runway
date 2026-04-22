@@ -23,6 +23,7 @@ export function DiagnosticPanel({ device }: { device: DeviceDetailResponse }) {
     serialNumber: device.summary.serialNumber,
     intuneId: device.identity.intuneId,
     autopilotId: device.identity.autopilotId,
+    entraId: device.identity.entraId,
     deviceName: device.summary.deviceName
   };
 
@@ -197,45 +198,74 @@ function PlaybookRow({ step }: { step: PlaybookStep }) {
           ? BookOpen
           : ExternalLink;
 
-  const onCopy = async () => {
+  const copyPayload = async (successTitle = "Copied to clipboard") => {
     try {
       await navigator.clipboard.writeText(step.payload);
       toast.push({
         variant: "success",
-        title: "Copied to clipboard",
+        title: successTitle,
         description: step.label,
         durationMs: 1800
       });
+      return true;
     } catch {
       toast.push({
         variant: "error",
         title: "Could not copy",
         description: "Clipboard access denied."
       });
+      return false;
     }
+  };
+
+  const onOpen = async () => {
+    const opened = window.open(step.payload, "_blank", "noopener,noreferrer");
+    if (opened) {
+      opened.opener = null;
+      toast.push({
+        variant: "info",
+        title: "Opened playbook link",
+        description: step.label,
+        durationMs: 1500
+      });
+      return;
+    }
+    await copyPayload("Link copied instead");
   };
 
   return (
     <li className="flex items-center gap-2 text-[12px]">
       <Icon className="h-3 w-3 shrink-0 text-[var(--pc-accent)]" />
-      <span className="flex-1 text-[var(--pc-text-secondary)]">{step.label}</span>
+      <span className="min-w-0 flex-1 truncate text-[var(--pc-text-secondary)]" title={step.payload}>
+        {step.label}
+      </span>
       {isLink ? (
-        <a
-          href={step.payload}
-          target="_blank"
-          rel="noreferrer noopener"
-          className="rounded border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-2 py-0.5 text-[10.5px] font-medium text-[var(--pc-accent-hover)] transition-colors hover:border-[var(--pc-accent)]/40 hover:text-[var(--pc-text)]"
-        >
-          Open
-        </a>
+        <div className="flex shrink-0 items-center gap-1">
+          <button
+            type="button"
+            onClick={onOpen}
+            className="rounded border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-2 py-0.5 text-[10.5px] font-medium text-[var(--pc-accent-hover)] transition-colors hover:border-[var(--pc-accent)]/40 hover:text-[var(--pc-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]"
+            title={step.payload}
+          >
+            Open
+          </button>
+          <button
+            type="button"
+            onClick={() => void copyPayload("Link copied")}
+            className="rounded border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-2 py-0.5 text-[10.5px] font-medium text-[var(--pc-text-secondary)] transition-colors hover:border-[var(--pc-accent)]/40 hover:text-[var(--pc-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]"
+            title={step.payload}
+          >
+            Copy
+          </button>
+        </div>
       ) : (
         <button
           type="button"
-          onClick={onCopy}
-          className="rounded border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-2 py-0.5 text-[10.5px] font-medium text-[var(--pc-text-secondary)] transition-colors hover:border-[var(--pc-accent)]/40 hover:text-[var(--pc-text)]"
+          onClick={() => void copyPayload()}
+          className="shrink-0 rounded border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-2 py-0.5 text-[10.5px] font-medium text-[var(--pc-text-secondary)] transition-colors hover:border-[var(--pc-accent)]/40 hover:text-[var(--pc-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]"
           title={step.payload}
         >
-          Copy
+          Copy Command
         </button>
       )}
     </li>

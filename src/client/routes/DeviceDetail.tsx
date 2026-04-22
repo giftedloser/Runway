@@ -20,6 +20,7 @@ import { AssignmentPathPanel } from "../components/devices/AssignmentPathPanel.j
 import { buildSummaryText, CopySummaryButton } from "../components/devices/CopySummaryButton.js";
 import { CompliancePoliciesPanel } from "../components/devices/CompliancePoliciesPanel.js";
 import { ConditionalAccessPanel } from "../components/devices/ConditionalAccessPanel.js";
+import { ConfigMgrConnectionPanel } from "../components/devices/ConfigMgrConnectionPanel.js";
 import { ConfigProfilesPanel } from "../components/devices/ConfigProfilesPanel.js";
 import { DeviceShortcuts } from "../components/devices/DeviceShortcuts.js";
 import { DiagnosticPanel } from "../components/devices/DiagnosticPanel.js";
@@ -37,6 +38,7 @@ import { ErrorState, LoadingState } from "../components/shared/ErrorState.js";
 import { useToast } from "../components/shared/toast.js";
 import { StatusBadge } from "../components/shared/StatusBadge.js";
 import { useDevice } from "../hooks/useDevices.js";
+import { useSettings } from "../hooks/useSettings.js";
 import type { FlagCode, FlagExplanation, HealthLevel } from "../lib/types.js";
 import { cn } from "../lib/utils.js";
 
@@ -244,6 +246,7 @@ export function DeviceDetailPage() {
   const search = useSearch({ from: "/devices/$deviceKey" }) as { tab?: TabKey };
   const navigate = useNavigate({ from: "/devices/$deviceKey" });
   const device = useDevice(deviceKey);
+  const settings = useSettings();
   const toast = useToast();
 
   if (device.isLoading) return <LoadingState label="Loading device…" />;
@@ -258,6 +261,7 @@ export function DeviceDetailPage() {
   }
 
   const data = device.data;
+  const showConfigMgrConnection = settings.data?.featureFlags.sccm_detection === true;
   const displayName = data.summary.deviceName ?? data.summary.serialNumber ?? deviceKey;
   const breakpoints = bucketDiagnostics(data.diagnostics);
 
@@ -481,6 +485,7 @@ export function DeviceDetailPage() {
             description="Autopilot record, Intune check-in, and provisioning progress"
           />
           <ProvisioningTimeline device={data} />
+          {showConfigMgrConnection ? <ConfigMgrConnectionPanel device={data} /> : null}
           <DiagnosticPanel device={data} />
           <AppStatusPanel device={data} />
         </section>

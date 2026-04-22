@@ -142,7 +142,7 @@ export function DeviceListPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `pilotcheck-devices-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `runway-devices-${new Date().toISOString().slice(0, 10)}.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -194,7 +194,7 @@ export function DeviceListPage() {
             type="button"
             onClick={exportCsv}
             disabled={!devices.data || devices.data.items.length === 0}
-            className="inline-flex items-center gap-1.5 rounded-md border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-2 py-1 text-[11px] text-[var(--pc-text-secondary)] transition-colors hover:bg-[var(--pc-tint-subtle)] hover:text-[var(--pc-text)] disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-md border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-2 py-1 text-[11px] text-[var(--pc-text-secondary)] transition-[background-color,border-color,color,opacity] hover:bg-[var(--pc-tint-subtle)] hover:text-[var(--pc-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)] disabled:cursor-not-allowed disabled:opacity-50"
             title="Export current page to CSV"
           >
             <Download className="h-3 w-3" />
@@ -286,7 +286,7 @@ export function DeviceListPage() {
       {/* Floating bulk action bar */}
       {selectedKeys.size > 0 && (
         <div className="pointer-events-none fixed inset-x-0 bottom-6 z-40 flex justify-center px-4">
-          <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-4 py-2 shadow-2xl">
+          <div className="pointer-events-auto flex max-w-[calc(100vw-2rem)] items-center gap-3 overflow-x-auto overscroll-contain rounded-full border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-4 py-2 shadow-2xl">
             <span className="text-[12px] font-medium text-[var(--pc-text)]">
               {selectedKeys.size} selected
             </span>
@@ -346,7 +346,7 @@ export function DeviceListPage() {
             <button
               type="button"
               onClick={clearSelection}
-              className="rounded p-1 text-[var(--pc-text-muted)] transition-colors hover:bg-[var(--pc-tint-hover)] hover:text-[var(--pc-text)]"
+              className="rounded p-1 text-[var(--pc-text-muted)] transition-colors hover:bg-[var(--pc-tint-hover)] hover:text-[var(--pc-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]"
               aria-label="Clear selection"
               title="Clear selection"
             >
@@ -375,9 +375,10 @@ function DensityButton({
       type="button"
       onClick={onClick}
       aria-pressed={active}
+      aria-label={label}
       title={label}
       className={cn(
-        "inline-flex h-6 w-7 items-center justify-center rounded transition-colors",
+        "inline-flex h-6 w-7 items-center justify-center rounded transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]",
         active
           ? "bg-[var(--pc-accent-muted)] text-[var(--pc-accent)]"
           : "text-[var(--pc-text-muted)] hover:bg-[var(--pc-tint-subtle)] hover:text-[var(--pc-text)]"

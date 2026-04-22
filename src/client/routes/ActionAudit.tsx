@@ -99,7 +99,7 @@ export function ActionAuditPage() {
         <PageHeader
           eyebrow="System"
           title="Action Audit"
-          description="Cross-device timeline of every remote action dispatched from PilotCheck."
+          description="Cross-device timeline of every remote action dispatched from Runway."
         />
         <Card className="flex items-center justify-between gap-4 p-5">
           <div className="flex items-start gap-3">
@@ -117,7 +117,7 @@ export function ActionAuditPage() {
             onClick={() => login.mutate()}
             disabled={login.isPending || !login.canStart}
             title={login.blockedReason ?? undefined}
-            className="rounded-md border border-[var(--pc-border)] bg-[var(--pc-accent)] px-3 py-1.5 text-[12px] font-medium text-[var(--pc-text)] transition-colors hover:bg-[var(--pc-accent-hover)] disabled:opacity-60"
+            className="rounded-md border border-[var(--pc-border)] bg-[var(--pc-accent)] px-3 py-1.5 text-[12px] font-medium text-[var(--pc-text)] transition-colors hover:bg-[var(--pc-accent-hover)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)] disabled:opacity-60"
           >
             {!login.canStart ? "Unavailable" : login.isPending ? "Opening…" : "Sign in"}
           </button>
@@ -142,7 +142,7 @@ export function ActionAuditPage() {
       <PageHeader
         eyebrow="System"
         title="Action Audit"
-        description="Cross-device timeline of every remote action dispatched from PilotCheck. Use this when an operator needs to confirm a fix landed, or when investigating a fleet-wide incident."
+        description="Cross-device timeline of every remote action dispatched from Runway. Use this when an operator needs to confirm a fix landed, or when investigating a fleet-wide incident."
       />
 
       <div className="grid gap-4 sm:grid-cols-3">
@@ -200,7 +200,8 @@ export function ActionAuditPage() {
         <select
           value={actionFilter}
           onChange={(event) => setActionFilter(event.target.value)}
-          className="rounded-md border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-2.5 py-1 text-[11.5px] text-[var(--pc-text)] focus:border-[var(--pc-accent)] focus:outline-none"
+          aria-label="Filter by action type"
+          className="rounded-md border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-2.5 py-1 text-[11.5px] text-[var(--pc-text)] transition-colors focus:border-[var(--pc-accent)] focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]"
         >
           <option value="all">All action types</option>
           {allActionTypes.map((action) => (
@@ -257,7 +258,7 @@ export function ActionAuditPage() {
                           <Link
                             to="/devices/$deviceKey"
                             params={{ deviceKey: deviceKeyFor(entry) }}
-                            className="font-mono text-[11.5px] text-[var(--pc-accent)] hover:text-[var(--pc-accent-hover)]"
+                            className="rounded font-mono text-[11.5px] text-[var(--pc-accent)] hover:text-[var(--pc-accent-hover)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]"
                           >
                             {entry.deviceName ?? entry.deviceSerial}
                           </Link>
@@ -307,7 +308,7 @@ export function ActionAuditPage() {
                     <Link
                       to="/devices/$deviceKey"
                       params={{ deviceKey: deviceKeyFor(entry) }}
-                      className="shrink-0 text-[var(--pc-text-muted)] hover:text-[var(--pc-text)]"
+                      className="shrink-0 rounded p-1 text-[var(--pc-text-muted)] hover:bg-[var(--pc-tint-hover)] hover:text-[var(--pc-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]"
                       aria-label="Open device"
                     >
                       <ChevronRight className="h-3.5 w-3.5" />
@@ -355,7 +356,7 @@ function FilterChip({
       type="button"
       onClick={onClick}
       className={cn(
-        "inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors",
+        "inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]",
         active
           ? tone === "healthy"
             ? "border-[var(--pc-healthy)]/50 bg-[var(--pc-healthy-muted)] text-emerald-100"

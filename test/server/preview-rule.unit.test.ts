@@ -68,6 +68,7 @@ function intune(overrides: Partial<IntuneRow> & { id: string }): IntuneRow {
     primary_user_upn: null,
     enrollment_profile_name: null,
     autopilot_enrolled: 1,
+    management_agent: null,
     last_synced_at: NOW,
     raw_json: null,
     ...overrides
@@ -98,6 +99,7 @@ function seedDevices(specs: Array<{
   groupTag?: string;
   propertyLabel?: string;
   profile?: string;
+  managementAgent?: string | null;
 }>) {
   const tagConfigRows = Array.from(
     new Set(specs.map((s) => s.groupTag).filter((g): g is string => Boolean(g)))
@@ -128,7 +130,8 @@ function seedDevices(specs: Array<{
           id: `int-${i}`,
           serial_number: s.serial,
           device_name: `DEV-${s.serial}`,
-          compliance_state: s.compliance ?? "compliant"
+          compliance_state: s.compliance ?? "compliant",
+          management_agent: s.managementAgent ?? null
         })
       ),
       tagConfigRows
@@ -278,6 +281,52 @@ describe("previewRule — boolean & compound predicates", () => {
     });
 
     expect(result.count).toBe(2);
+  });
+
+  it("matches the SCCM-derived hasConfigMgrClient field from managementAgent", () => {
+    seedDevices([
+      {
+        serial: "SN-SCCM",
+        managementAgent: "configurationManagerClientMdm"
+      },
+      {
+        serial: "SN-MDM",
+        managementAgent: "mdm"
+      }
+    ]);
+
+    const result = previewRule(db, {
+      type: "leaf",
+      field: "hasConfigMgrClient",
+      op: "eq",
+      value: true
+    });
+
+    expect(result.count).toBe(1);
+    expect(result.sampleDevices[0]?.serialNumber).toBe("SN-SCCM");
+  });
+
+  it("matches the raw managementAgent string for advanced SCCM rules", () => {
+    seedDevices([
+      {
+        serial: "SN-COMANAGED",
+        managementAgent: "configurationManagerClientMdm"
+      },
+      {
+        serial: "SN-NATIVE",
+        managementAgent: "mdm"
+      }
+    ]);
+
+    const result = previewRule(db, {
+      type: "leaf",
+      field: "managementAgent",
+      op: "contains",
+      value: "configurationManager"
+    });
+
+    expect(result.count).toBe(1);
+    expect(result.sampleDevices[0]?.serialNumber).toBe("SN-COMANAGED");
   });
 
   it("compound and-predicate matches only the intersection", () => {

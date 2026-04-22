@@ -22,6 +22,7 @@ import type {
   ProfileAssignmentRow,
   ProfileRow
 } from "../types.js";
+import { hasConfigMgrClient } from "../../engine/config-mgr.js";
 
 function safeJsonParse<T>(raw: string | null | undefined, fallback: T): T {
   if (!raw) return fallback;
@@ -325,8 +326,8 @@ function getDeviceDetailWithRules(
         | undefined) ?? null
     : null;
   const intuneSource = row.intune_id
-    ? (db.prepare("SELECT raw_json, os_version, enrollment_type, managed_device_owner_type, enrollment_profile_name, last_sync_datetime FROM intune_devices WHERE id = ?").get(row.intune_id) as
-        | { raw_json: string | null; os_version: string | null; enrollment_type: string | null; managed_device_owner_type: string | null; enrollment_profile_name: string | null; last_sync_datetime: string | null }
+    ? (db.prepare("SELECT raw_json, os_version, enrollment_type, managed_device_owner_type, enrollment_profile_name, last_sync_datetime, management_agent FROM intune_devices WHERE id = ?").get(row.intune_id) as
+        | { raw_json: string | null; os_version: string | null; enrollment_type: string | null; managed_device_owner_type: string | null; enrollment_profile_name: string | null; last_sync_datetime: string | null; management_agent: string | null }
         | undefined) ?? null
     : null;
   const entraSource = row.entra_id
@@ -462,7 +463,9 @@ function getDeviceDetailWithRules(
       managedDeviceOwnerType: intuneSource?.managed_device_owner_type ?? null,
       registrationDate: entraSource?.registration_datetime ?? null,
       firstSeenAt: autopilotSource?.first_seen_at ?? null,
-      firstProfileAssignedAt: autopilotSource?.first_profile_assigned_at ?? null
+      firstProfileAssignedAt: autopilotSource?.first_profile_assigned_at ?? null,
+      managementAgent: intuneSource?.management_agent ?? null,
+      hasConfigMgrClient: hasConfigMgrClient(intuneSource?.management_agent)
     },
     groupMemberships: groupMemberships.map((g) => ({
       groupId: g.group_id,
@@ -640,7 +643,7 @@ export function countNewlyUnhealthy(db: Database.Database, sinceIso: string): nu
  * day we look up the latest history row per device whose `computed_at` is
  * on-or-before that day's end and bucket by `overall_health`. Devices that
  * had no history yet on that day are simply not counted (they didn't exist
- * to PilotCheck yet).
+ * to Runway yet).
  */
 export function getHealthTrend(db: Database.Database, days: number): HealthTrendPoint[] {
   const now = new Date();

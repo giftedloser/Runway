@@ -71,7 +71,10 @@ export function GroupInspectorPage() {
               <Input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Search groups..."
+                placeholder="Search groups…"
+                name="group-search"
+                autoComplete="off"
+                spellCheck={false}
                 className="w-full pl-8"
               />
             </div>
@@ -84,7 +87,7 @@ export function GroupInspectorPage() {
                       key={group.groupId}
                       type="button"
                       onClick={() => setSelectedId(group.groupId)}
-                      className={`flex w-full items-start gap-3 px-4 py-3 text-left transition-colors ${
+                      className={`flex w-full items-start gap-3 px-4 py-3 text-left transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)] ${
                         active
                           ? "bg-[var(--pc-accent-muted)]"
                           : "hover:bg-[var(--pc-tint-subtle)]"
@@ -259,6 +262,9 @@ export function GroupInspectorPage() {
                           value={memberSearch}
                           onChange={(event) => setMemberSearch(event.target.value)}
                           placeholder="Filter…"
+                          name="group-member-search"
+                          autoComplete="off"
+                          spellCheck={false}
                           className="h-7 w-32 pl-6 text-[11px]"
                         />
                       </div>
@@ -315,7 +321,7 @@ export function GroupInspectorPage() {
                                   <Link
                                     to="/devices/$deviceKey"
                                     params={{ deviceKey: member.deviceKey }}
-                                    className="font-medium text-[var(--pc-text)] transition-colors hover:text-[var(--pc-accent-hover)]"
+                                    className="rounded font-medium text-[var(--pc-text)] transition-colors hover:text-[var(--pc-accent-hover)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]"
                                   >
                                     {member.deviceName ?? "—"}
                                   </Link>
@@ -373,7 +379,7 @@ function MemberFilterChip({
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors ${
+      className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)] ${
         active
           ? activeStyle
           : "border-[var(--pc-border)] bg-[var(--pc-surface-raised)] text-[var(--pc-text-secondary)] hover:border-[var(--pc-accent)]/40 hover:text-[var(--pc-text)]"

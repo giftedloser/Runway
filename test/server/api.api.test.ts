@@ -14,7 +14,7 @@ import { createApp } from "../../src/server/app.js";
 import { runMigrations } from "../../src/server/db/migrate.js";
 import { seedMockData } from "../../src/server/db/seed.js";
 
-describe("PilotCheck API", () => {
+describe("Runway API", () => {
   let db: Database.Database;
 
   beforeEach(async () => {
@@ -64,5 +64,18 @@ describe("PilotCheck API", () => {
 
     const response = await request(app).get("/api/settings").expect(200);
     expect(response.body.tagConfig.some((row: { groupTag: string }) => row.groupTag === "LAB")).toBe(true);
+  });
+
+  it("updates the SCCM detection feature flag through the settings API", async () => {
+    const app = createApp(db);
+
+    const updated = await request(app)
+      .put("/api/settings/feature-flags/sccm_detection")
+      .send({ enabled: true })
+      .expect(200);
+
+    expect(updated.body.sccm_detection).toBe(true);
+    const settings = await request(app).get("/api/settings").expect(200);
+    expect(settings.body.featureFlags.sccm_detection).toBe(true);
   });
 });

@@ -79,7 +79,10 @@ export function DeviceFilters() {
           <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--pc-text-muted)]" />
           <Input
             className="w-full pl-9"
-            placeholder="Search by name, serial, or UPN..."
+            placeholder="Search by name, serial, or UPN…"
+            name="device-search"
+            autoComplete="off"
+            spellCheck={false}
             value={searchInput}
             onChange={(event) => handleSearchChange(event.target.value)}
           />
@@ -101,6 +104,7 @@ export function DeviceFilters() {
                 aria-pressed={active}
                 className={cn(
                   "rounded-md px-3 py-1.5 text-[12px] font-medium capitalize transition-colors",
+                  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]",
                   active
                     ? HEALTH_STYLES[health]
                     : "bg-[var(--pc-tint-subtle)] text-[var(--pc-text-secondary)] hover:bg-[var(--pc-tint-hover)]"
@@ -118,7 +122,7 @@ export function DeviceFilters() {
             setSearch(() => ({ flag: event.target.value || undefined }))
           }
           aria-label="Filter by flag"
-          className="rounded-md border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-2.5 py-1.5 text-[12px] text-[var(--pc-text)] focus:border-[var(--pc-accent)] focus:outline-none"
+          className="rounded-md border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-2.5 py-1.5 text-[12px] text-[var(--pc-text)] transition-colors focus:border-[var(--pc-accent)] focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]"
         >
           <option value="">All flags</option>
           {FLAG_OPTIONS.map((flag) => (
@@ -144,7 +148,7 @@ export function DeviceFilters() {
                 })
               })
             }
-            className="inline-flex items-center gap-1 rounded-md border border-[var(--pc-border)] px-2.5 py-1.5 text-[12px] text-[var(--pc-text-secondary)] transition-colors hover:border-[var(--pc-critical)]/50 hover:text-[var(--pc-text)]"
+            className="inline-flex items-center gap-1 rounded-md border border-[var(--pc-border)] px-2.5 py-1.5 text-[12px] text-[var(--pc-text-secondary)] transition-colors hover:border-[var(--pc-critical)]/50 hover:text-[var(--pc-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]"
           >
             <X className="h-3 w-3" />
             Clear filters
@@ -223,7 +227,7 @@ function ActiveTag({
       <button
         type="button"
         onClick={onClear}
-        className="ml-0.5 rounded-full p-0.5 text-current opacity-60 transition-opacity hover:opacity-100"
+        className="ml-0.5 rounded-full p-0.5 text-current opacity-60 transition-opacity hover:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
         aria-label={`Remove ${label} filter`}
       >
         <X className="h-3 w-3" />

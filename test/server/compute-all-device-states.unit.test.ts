@@ -72,6 +72,7 @@ function intune(overrides: Partial<IntuneRow> & { id: string }): IntuneRow {
     primary_user_upn: null,
     enrollment_profile_name: null,
     autopilot_enrolled: 1,
+    management_agent: null,
     last_synced_at: NOW,
     raw_json: null,
     ...overrides

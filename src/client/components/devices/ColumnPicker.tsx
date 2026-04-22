@@ -57,8 +57,9 @@ export function ColumnPicker({ value, onChange }: ColumnPickerProps) {
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className="inline-flex items-center gap-1.5 rounded-md border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-2 py-1 text-[11px] text-[var(--pc-text-secondary)] transition-colors hover:bg-[var(--pc-tint-subtle)] hover:text-[var(--pc-text)]"
+        className="inline-flex items-center gap-1.5 rounded-md border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-2 py-1 text-[11px] text-[var(--pc-text-secondary)] transition-[background-color,color,border-color] hover:bg-[var(--pc-tint-subtle)] hover:text-[var(--pc-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]"
         title="Choose visible columns"
+        aria-label="Choose visible columns"
         aria-haspopup="true"
         aria-expanded={open}
       >
@@ -70,7 +71,11 @@ export function ColumnPicker({ value, onChange }: ColumnPickerProps) {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-[calc(100%+4px)] z-30 w-60 rounded-lg border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] p-1.5 shadow-xl">
+        <div
+          className="absolute right-0 top-[calc(100%+4px)] z-30 w-60 rounded-lg border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] p-1.5 shadow-xl"
+          role="menu"
+          aria-label="Visible columns"
+        >
           <div className="px-2 py-1 text-[10px] font-medium uppercase tracking-wide text-[var(--pc-text-muted)]">
             Visible columns
           </div>
@@ -84,7 +89,7 @@ export function ColumnPicker({ value, onChange }: ColumnPickerProps) {
                     disabled={col.locked}
                     onClick={() => toggle(col.id)}
                     className={cn(
-                      "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[12px] transition-colors",
+                      "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[12px] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]",
                       col.locked
                         ? "cursor-not-allowed text-[var(--pc-text-muted)]"
                         : "text-[var(--pc-text-secondary)] hover:bg-[var(--pc-tint-subtle)] hover:text-[var(--pc-text)]"
@@ -115,7 +120,7 @@ export function ColumnPicker({ value, onChange }: ColumnPickerProps) {
             <button
               type="button"
               onClick={() => onChange(DEFAULT_VISIBLE_COLUMNS)}
-              className="w-full rounded-md px-2 py-1.5 text-left text-[11px] text-[var(--pc-text-muted)] transition-colors hover:bg-[var(--pc-tint-subtle)] hover:text-[var(--pc-text)]"
+              className="w-full rounded-md px-2 py-1.5 text-left text-[11px] text-[var(--pc-text-muted)] transition-colors hover:bg-[var(--pc-tint-subtle)] hover:text-[var(--pc-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]"
             >
               Reset to defaults
             </button>

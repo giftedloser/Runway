@@ -1,6 +1,6 @@
 # Architecture
 
-PilotCheck is a single-process Express server serving a React SPA, backed by
+Runway is a single-process Express server serving a React SPA, backed by
 a local SQLite database. There is no message queue, no background worker, and
 no external state — everything runs on one machine.
 
@@ -12,7 +12,7 @@ no external state — everything runs on one machine.
                             │  delegated (actions / LAPS)
                             ▼
 ┌──────────────────────────────────────────────────────────────┐
-│                     PilotCheck server (Node)                 │
+│                     Runway server (Node)                 │
 │                                                              │
 │  ┌──────────┐   ┌──────────┐   ┌──────────────┐              │
 │  │   sync   │ → │  engine  │ → │ device_state │              │
@@ -51,7 +51,7 @@ no external state — everything runs on one machine.
 ## Why local-first
 
 - **No tenancy story to maintain** — every install is a single tenant by
-  definition. There is no PilotCheck cloud, so there is nothing to breach.
+  definition. There is no Runway cloud, so there is nothing to breach.
 - **Fast queries on cold cache** — SQLite + WAL on a local SSD answers a
   600-device dashboard query in single-digit milliseconds.
 - **Offline development** — mock seed mode lets the entire UI be developed

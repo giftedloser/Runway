@@ -1,6 +1,6 @@
-# Contributing to PilotCheck
+# Contributing to Runway
 
-Thanks for being here. PilotCheck is an opinionated tool built for a
+Thanks for being here. Runway is an opinionated tool built for a
 specific operational reality, so the bar for new features is "does this make
 a real on-call shift better". Bug fixes, docs, and rough edges are always
 welcome.
@@ -75,7 +75,7 @@ You'll need:
 
 Please include:
 
-- PilotCheck version (or commit hash)
+- Runway version (or commit hash)
 - Node version
 - OS
 - Whether you're in mock mode or live Graph mode

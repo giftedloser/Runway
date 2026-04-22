@@ -203,7 +203,7 @@ export function CommandPalette() {
       {
         type: "action",
         id: "action-sync",
-        title: "Run sync now",
+        title: "Run Sync Now",
         hint: "Trigger an incremental sync",
         icon: RefreshCcw,
         action: () => {
@@ -269,7 +269,7 @@ export function CommandPalette() {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 px-4 pt-[12vh] backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto overscroll-contain bg-black/60 px-4 pt-[12vh] backdrop-blur-sm"
       onClick={close}
       role="dialog"
       aria-modal="true"
@@ -286,7 +286,10 @@ export function CommandPalette() {
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Search devices, jump to a page, run an action..."
+            placeholder="Search devices, jump to a page, run an action…"
+            name="command-search"
+            autoComplete="off"
+            spellCheck={false}
             className="flex-1 bg-transparent text-[14px] text-[var(--pc-text)] outline-none placeholder:text-[var(--pc-text-muted)]"
           />
           <kbd className="rounded border border-[var(--pc-border)] px-1.5 py-0.5 font-mono text-[10px] text-[var(--pc-text-muted)]">
@@ -357,7 +360,7 @@ export function CommandPalette() {
           )}
           {flatCommands.length === 0 && !deviceSearch.isFetching && (
             <div className="px-4 py-6 text-center text-[12px] text-[var(--pc-text-muted)]">
-              No matches.
+              No matches
             </div>
           )}
         </div>
@@ -422,7 +425,7 @@ function CommandGroup({
                 onMouseEnter={() => setActive(globalIndex)}
                 onClick={item.onSelect}
                 className={cn(
-                  "flex w-full items-center gap-3 rounded-md px-2 py-2 text-left text-[13px] transition-colors",
+                  "flex w-full items-center gap-3 rounded-md px-2 py-2 text-left text-[13px] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]",
                   isActive
                     ? "bg-[var(--pc-accent-muted)] text-[var(--pc-text)]"
                     : "text-[var(--pc-text-secondary)] hover:bg-[var(--pc-tint-subtle)]"

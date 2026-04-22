@@ -6,7 +6,14 @@ import type Database from "better-sqlite3";
 import { requireDelegatedAuth } from "../auth/auth-middleware.js";
 import { config } from "../config.js";
 import { resolveEnvPath, writeEnvUpdates } from "../config/env-writer.js";
-import { getSettings, deleteTagConfig, upsertTagConfig } from "../db/queries/settings.js";
+import {
+  deleteTagConfig,
+  FEATURE_FLAG_KEYS,
+  getSettings,
+  isFeatureFlagKey,
+  setFeatureFlag,
+  upsertTagConfig
+} from "../db/queries/settings.js";
 import { computeAllDeviceStates } from "../engine/compute-all-device-states.js";
 import { logger } from "../logger.js";
 
@@ -70,6 +77,31 @@ export function settingsRouter(db: Database.Database) {
     response.json(getSettings(db));
   });
 
+  // PUT /api/settings/feature-flags/:key — toggles a named server-side
+  // feature flag. Requires admin sign-in because flags can enable costly
+  // data paths (extra Graph selects, extra UI panels) that shouldn't be
+  // flippable by any local process that can reach the port.
+  const featureFlagBodySchema = z.object({ enabled: z.boolean() });
+  router.put("/feature-flags/:key", requireDelegatedAuth, (request, response) => {
+    const key = String(request.params.key);
+    if (!isFeatureFlagKey(key)) {
+      response.status(400).json({
+        message: `Unknown feature flag "${key}". Known keys: ${FEATURE_FLAG_KEYS.join(", ")}.`
+      });
+      return;
+    }
+    const body = featureFlagBodySchema.safeParse(request.body);
+    if (!body.success) {
+      response.status(400).json({
+        message: "Body must be {\"enabled\": boolean}.",
+        errors: body.error.flatten().fieldErrors
+      });
+      return;
+    }
+    setFeatureFlag(db, key, body.data.enabled);
+    response.json(getSettings(db).featureFlags);
+  });
+
   // GET /api/settings/graph/env — where the wizard would write, plus a
   // hint about whether the server already sees Graph credentials. The UI
   // shows the path so the operator knows what file is about to change.
@@ -121,7 +153,7 @@ export function settingsRouter(db: Database.Database) {
       );
       response.status(202).json({
         message:
-          "Graph credentials saved. Restart PilotCheck to apply the new credentials.",
+          "Graph credentials saved. Restart Runway to apply the new credentials.",
         envPath: writeResult.path,
         restartRequired: true
       });

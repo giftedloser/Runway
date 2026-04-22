@@ -82,6 +82,7 @@ describe("correlation engine", () => {
           primary_user_upn: null,
           enrollment_profile_name: null,
           autopilot_enrolled: 1,
+          management_agent: null,
           last_synced_at: "2026-04-06T00:00:00.000Z",
           raw_json: JSON.stringify({ deviceId: "device-1" })
         }
@@ -142,6 +143,7 @@ describe("correlation engine", () => {
     primary_user_upn: null,
     enrollment_profile_name: null,
     autopilot_enrolled: 1,
+    management_agent: null,
     last_synced_at: "2026-04-08T00:00:00.000Z",
     raw_json: overrides.deviceId ? JSON.stringify({ deviceId: overrides.deviceId }) : "{}"
   });

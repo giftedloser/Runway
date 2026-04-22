@@ -2,7 +2,7 @@
 
 :root {
   color-scheme: dark;
-  font-family: "Inter Variable", "Inter", system-ui, -apple-system, sans-serif;
+  font-family: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
 
   /* Backgrounds */
   --pc-bg: #0c0e14;
@@ -83,8 +83,75 @@
   --pc-tint-hover: rgba(0, 0, 0, 0.05);
 }
 
+/* Ocean theme: high-contrast blue/green palette for long triage sessions. */
+:root[data-theme="ocean"] {
+  color-scheme: dark;
+
+  --pc-bg: #071318;
+  --pc-surface: #0d2028;
+  --pc-surface-raised: #12303a;
+  --pc-surface-overlay: #173d49;
+
+  --pc-border: rgba(155, 220, 218, 0.12);
+  --pc-border-hover: rgba(155, 220, 218, 0.22);
+
+  --pc-text: #edfdfb;
+  --pc-text-secondary: #a4c8c5;
+  --pc-text-muted: #6f9695;
+
+  --pc-accent: #14b8a6;
+  --pc-accent-hover: #5eead4;
+  --pc-accent-muted: rgba(20, 184, 166, 0.14);
+
+  --pc-critical: #fb7185;
+  --pc-critical-muted: rgba(251, 113, 133, 0.14);
+  --pc-warning: #fbbf24;
+  --pc-warning-muted: rgba(251, 191, 36, 0.13);
+  --pc-info: #38bdf8;
+  --pc-info-muted: rgba(56, 189, 248, 0.14);
+  --pc-healthy: #2dd4bf;
+  --pc-healthy-muted: rgba(45, 212, 191, 0.14);
+
+  --pc-tint-subtle: rgba(177, 240, 236, 0.05);
+  --pc-tint-hover: rgba(177, 240, 236, 0.08);
+}
+
+/* Copper theme: warmer dark palette with clear amber focus affordances. */
+:root[data-theme="copper"] {
+  color-scheme: dark;
+
+  --pc-bg: #160f0b;
+  --pc-surface: #211610;
+  --pc-surface-raised: #2c1d14;
+  --pc-surface-overlay: #3a271b;
+
+  --pc-border: rgba(255, 210, 164, 0.12);
+  --pc-border-hover: rgba(255, 210, 164, 0.24);
+
+  --pc-text: #fff7ed;
+  --pc-text-secondary: #d8b9a0;
+  --pc-text-muted: #96735c;
+
+  --pc-accent: #f97316;
+  --pc-accent-hover: #fdba74;
+  --pc-accent-muted: rgba(249, 115, 22, 0.14);
+
+  --pc-critical: #fb7185;
+  --pc-critical-muted: rgba(251, 113, 133, 0.14);
+  --pc-warning: #facc15;
+  --pc-warning-muted: rgba(250, 204, 21, 0.13);
+  --pc-info: #38bdf8;
+  --pc-info-muted: rgba(56, 189, 248, 0.13);
+  --pc-healthy: #4ade80;
+  --pc-healthy-muted: rgba(74, 222, 128, 0.13);
+
+  --pc-tint-subtle: rgba(255, 221, 186, 0.05);
+  --pc-tint-hover: rgba(255, 221, 186, 0.08);
+}
+
 html {
   background: var(--pc-bg);
+  overflow-x: hidden;
 }
 
 body {
@@ -92,6 +159,9 @@ body {
   min-height: 100vh;
   background: var(--pc-bg);
   color: var(--pc-text);
+  overflow-x: hidden;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -107,6 +177,20 @@ body {
 
 .font-mono {
   font-family: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+.font-display {
+  font-family: "Barlow Condensed", "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
 }
 
 * {
@@ -247,4 +331,43 @@ body {
 .pc-focus-ring:focus-visible {
   outline: 2px solid var(--pc-accent);
   outline-offset: 2px;
+}
+
+.pc-skip-link {
+  position: fixed;
+  left: max(0.75rem, env(safe-area-inset-left));
+  top: max(0.75rem, env(safe-area-inset-top));
+  z-index: 100;
+  transform: translateY(-150%);
+  border-radius: 999px;
+  border: 1px solid var(--pc-border-hover);
+  background: var(--pc-surface-raised);
+  color: var(--pc-text);
+  padding: 0.5rem 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+  transition: transform 150ms ease-out;
+}
+
+.pc-skip-link:focus-visible {
+  transform: translateY(0);
+  outline: 2px solid var(--pc-accent);
+  outline-offset: 2px;
+}
+
+.pc-content-visibility {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 44px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 1ms !important;
+  }
 }

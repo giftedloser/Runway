@@ -141,7 +141,7 @@ export function HealthTrendChart({ data }: HealthTrendChartProps) {
       ) : (
         <div className="px-5 py-10 text-center text-[12px] text-[var(--pc-text-muted)]">
           No history yet — run a few syncs over the next couple of days and
-          PilotCheck will start charting drift here.
+          Runway will start charting drift here.
         </div>
       )}
     </Card>

@@ -1,6 +1,7 @@
 import type Database from "better-sqlite3";
 
 import type { DeviceListItem, FlagCode, RulePredicate, RuleSeverity } from "../../shared/types.js";
+import { hasConfigMgrClient } from "./config-mgr.js";
 import { evaluateRules, type RuleContext } from "./evaluate-rules.js";
 
 /**
@@ -44,6 +45,7 @@ interface PreviewRow {
   match_confidence: DeviceListItem["matchConfidence"];
   active_flags: string | null;
   os_version: string | null;
+  management_agent: string | null;
 }
 
 function safeJsonParse<T>(raw: string | null | undefined, fallback: T): T {
@@ -76,7 +78,9 @@ function rowToContext(row: PreviewRow): RuleContext {
     assignmentChainComplete: Boolean(row.assignment_chain_complete),
     assignmentBreakPoint: row.assignment_break_point,
     flagCount: row.flag_count,
-    osVersion: row.os_version
+    osVersion: row.os_version,
+    managementAgent: row.management_agent,
+    hasConfigMgrClient: hasConfigMgrClient(row.management_agent)
   };
 }
 
@@ -119,7 +123,8 @@ export function previewRule(
               d.hybrid_join_configured, d.assignment_chain_complete,
               d.assignment_break_point, d.flag_count, d.overall_health,
               d.diagnosis, d.match_confidence, d.active_flags,
-              i.os_version AS os_version
+              i.os_version AS os_version,
+              i.management_agent AS management_agent
          FROM device_state d
          LEFT JOIN intune_devices i ON i.id = d.intune_id`
     )

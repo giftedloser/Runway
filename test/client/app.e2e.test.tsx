@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { App } from "../../src/client/App.js";
@@ -17,6 +17,7 @@ const dashboardPayload = {
 
 const settingsPayload = {
   graph: { configured: true, missing: [] },
+  featureFlags: { sccm_detection: true },
   tagConfig: [
     { groupTag: "Lodge", expectedProfileNames: ["Lodge-UD"], expectedGroupNames: [], propertyLabel: "Lodge" }
   ]
@@ -107,7 +108,9 @@ const deviceDetailPayload = {
     managedDeviceOwnerType: "company",
     registrationDate: "2026-01-15T00:00:00.000Z",
     firstSeenAt: "2026-01-10T00:00:00.000Z",
-    firstProfileAssignedAt: "2026-01-12T00:00:00.000Z"
+    firstProfileAssignedAt: "2026-01-12T00:00:00.000Z",
+    managementAgent: null,
+    hasConfigMgrClient: false
   },
   groupMemberships: [
     { groupId: "grp-1", groupName: "AP-Lodge-Devices", membershipType: "dynamic" }
@@ -128,6 +131,13 @@ const deviceDetailPayload = {
 describe("client drilldown", () => {
   beforeEach(() => {
     window.history.pushState({}, "", "/");
+    vi.spyOn(window, "open").mockReturnValue(null);
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: {
+        writeText: vi.fn(async () => undefined)
+      }
+    });
     const jsonResponse = (body: unknown, status = 200) =>
       new Response(JSON.stringify(body), {
         status,
@@ -162,7 +172,7 @@ describe("client drilldown", () => {
     );
 
     // Dashboard renders
-    expect(await screen.findByText("Windows Fleet Health")).toBeInTheDocument();
+    expect(await screen.findByText("Runway Fleet Health")).toBeInTheDocument();
 
     // Drill into the Critical Devices quick-action link → device queue
     fireEvent.click(screen.getByText("Critical Devices"));
@@ -182,5 +192,29 @@ describe("client drilldown", () => {
     expect(
       await screen.findByText("No Profile Assigned", {}, { timeout: 3000 })
     ).toBeInTheDocument();
+  });
+
+  it("playbook link buttons copy the URL when external open is unavailable", async () => {
+    const queryClient = new QueryClient();
+    render(
+      <QueryClientProvider client={queryClient}>
+        <App queryClient={queryClient} />
+      </QueryClientProvider>
+    );
+
+    fireEvent.click(await screen.findByText("Critical Devices"));
+    fireEvent.click(await screen.findByText("DESKTOP-Lodge-001"));
+    await screen.findByText("Device Diagnostics", {}, { timeout: 3000 });
+    const enrollmentButtons = screen.getAllByRole("button", { name: /enrollment/i });
+    fireEvent.click(enrollmentButtons[enrollmentButtons.length - 1]);
+
+    const openButtons = await screen.findAllByRole("button", { name: "Open" });
+    fireEvent.click(openButtons[0]);
+
+    await waitFor(() => {
+      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
+        "https://intune.microsoft.com/#view/Microsoft_Intune_Enrollment/AutopilotProfilesBlade"
+      );
+    });
   });
 });

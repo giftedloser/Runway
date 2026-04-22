@@ -1,4 +1,4 @@
-# PilotCheck — Phase 5 Plan
+# Runway — Phase 5 Plan
 
 > Status: **proposed**
 > Prereq: Phase 3.5 (Remote Actions + LAPS + Delegated Auth) and Phase 4 (Group Inspector) shipped.
@@ -6,7 +6,7 @@
 
 ## Framing
 
-PilotCheck is **not an Autopilot dashboard**. It is an **end-to-end endpoint state validation engine**
+Runway is **not an Autopilot dashboard**. It is an **end-to-end endpoint state validation engine**
 that asks one question for every device:
 
 > _Is this endpoint joined, enrolled, configured, and operating in the state we intend — across

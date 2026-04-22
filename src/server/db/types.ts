@@ -29,6 +29,13 @@ export interface IntuneRow {
   primary_user_upn: string | null;
   enrollment_profile_name: string | null;
   autopilot_enrolled: number;
+  /**
+   * Raw Graph `managedDevice.managementAgent` value (e.g. `mdm`,
+   * `configurationManagerClient`, `configurationManagerClientMdm`). Used
+   * to derive whether the SCCM / ConfigMgr client is installed on a
+   * device without imposing a specific interpretation at ingest time.
+   */
+  management_agent: string | null;
   last_synced_at: string;
   raw_json: string | null;
 }

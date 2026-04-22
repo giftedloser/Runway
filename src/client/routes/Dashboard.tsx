@@ -118,7 +118,7 @@ export function DashboardPage() {
 
       <PageHeader
         eyebrow="Overview"
-        title="Windows Fleet Health"
+        title="Runway Fleet Health"
         description="Triage Windows devices across Autopilot, Intune, and Entra ID — surfacing devices whose join, enrollment, configuration, or compliance state is drifting from intent. Windows-only by design."
         actions={
           <>
@@ -164,7 +164,7 @@ export function DashboardPage() {
           </div>
           <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--pc-tint-hover)]">
             <div
-              className="h-full rounded-full bg-[var(--pc-healthy)] transition-all"
+              className="h-full rounded-full bg-[var(--pc-healthy)] transition-[width] duration-300"
               style={{ width: `${Math.max(stabilityRate, 3)}%` }}
             />
           </div>

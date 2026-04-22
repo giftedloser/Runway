@@ -2,24 +2,31 @@ import { useCallback, useEffect } from "react";
 
 import { usePreference } from "./usePreference.js";
 
-export type Theme = "dark" | "light" | "system";
+export type Theme = "dark" | "light" | "ocean" | "copper" | "system";
+export type AppliedTheme = Exclude<Theme, "system">;
 
-const THEMES: Theme[] = ["dark", "light", "system"];
+const THEMES: Theme[] = ["dark", "light", "ocean", "copper", "system"];
+const DARK_SCHEME_THEMES = new Set<AppliedTheme>(["dark", "ocean", "copper"]);
 
-function resolveTheme(theme: Theme): "dark" | "light" {
+function isTheme(value: unknown): value is Theme {
+  return typeof value === "string" && THEMES.includes(value as Theme);
+}
+
+function resolveTheme(theme: Theme): AppliedTheme {
   if (theme !== "system") return theme;
   if (typeof window === "undefined") return "dark";
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
-function applyTheme(resolved: "dark" | "light") {
+function applyTheme(resolved: AppliedTheme) {
   const root = document.documentElement;
   root.setAttribute("data-theme", resolved);
-  root.style.colorScheme = resolved;
+  root.style.colorScheme = DARK_SCHEME_THEMES.has(resolved) ? "dark" : "light";
 }
 
-export function useTheme(): [Theme, () => void, "dark" | "light"] {
-  const [theme, setTheme] = usePreference<Theme>("theme", "dark");
+export function useTheme(): [Theme, () => void, AppliedTheme] {
+  const [storedTheme, setTheme] = usePreference<Theme>("theme", "dark");
+  const theme = isTheme(storedTheme) ? storedTheme : "dark";
 
   const resolved = resolveTheme(theme);
 

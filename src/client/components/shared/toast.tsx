@@ -166,7 +166,7 @@ function ToastViewport({
             <button
               type="button"
               onClick={() => onDismiss(toast.id)}
-              className="-mr-1 -mt-0.5 rounded p-1 opacity-70 transition-opacity hover:opacity-100"
+              className="-mr-1 -mt-0.5 rounded p-1 opacity-70 transition-opacity hover:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]"
               aria-label="Dismiss notification"
             >
               <X className="h-3 w-3" />

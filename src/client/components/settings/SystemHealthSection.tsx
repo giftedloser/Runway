@@ -77,7 +77,7 @@ export function SystemHealthSection() {
     <section className="space-y-3">
       <div className="flex items-baseline gap-2">
         <h2 className="text-[13px] font-semibold uppercase tracking-wide text-[var(--pc-text-secondary)]">
-          5. System Health & Retention
+          6. System Health & Retention
         </h2>
         <span className="text-[11px] text-[var(--pc-text-muted)]">
           Process status, sync freshness, and data pruning

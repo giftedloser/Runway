@@ -366,6 +366,12 @@ function buildMockPayload(): SnapshotPayload {
             : user,
         enrollment_profile_name: profileName,
         autopilot_enrolled: 1,
+        // A subset of seeded devices pretend to be ConfigMgr co-managed so
+        // the new SCCM-detection tile and rule field have realistic data
+        // in the local/mock installation. Pick by id-suffix for stability
+        // across runs.
+        management_agent:
+          Number(seq) % 4 === 0 ? "configurationManagerClientMdm" : "mdm",
         last_synced_at: now,
         raw_json: JSON.stringify({
           id: intuneId,

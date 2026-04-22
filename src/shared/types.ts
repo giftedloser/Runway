@@ -119,6 +119,18 @@ export interface DeviceDetailResponse {
     registrationDate: string | null;
     firstSeenAt: string | null;
     firstProfileAssignedAt: string | null;
+    /**
+     * Raw Intune `managedDevice.managementAgent` value. `null` when the
+     * device has no Intune record. Used by the client to show the
+     * ConfigMgr / SCCM detection tile when the feature is enabled.
+     */
+    managementAgent: string | null;
+    /**
+     * True when `managementAgent` includes any `configurationManager*`
+     * variant — i.e. the ConfigMgr client is on the device, either
+     * standalone or in co-management with Intune.
+     */
+    hasConfigMgrClient: boolean;
   };
   groupMemberships: Array<{
     groupId: string;
@@ -273,9 +285,25 @@ export interface GraphReadiness {
   missing: string[];
 }
 
+/**
+ * Simple on/off toggles stored server-side in the `feature_flags` table.
+ * Keys are narrowly enumerated in `src/server/db/queries/settings.ts` so
+ * the client can't invent arbitrary flag names. Absent keys default to
+ * `false`.
+ */
+export interface FeatureFlagMap {
+  /**
+   * When enabled, device-detail shows a "ConfigMgr client" tile derived
+   * from Intune's `managementAgent` field, and the rule engine exposes
+   * the `managementAgent` / `hasConfigMgrClient` predicates.
+   */
+  sccm_detection: boolean;
+}
+
 export interface SettingsResponse {
   graph: GraphReadiness;
   tagConfig: TagConfigRecord[];
+  featureFlags: FeatureFlagMap;
 }
 
 // --- Rule Engine v1 ---

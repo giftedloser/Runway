@@ -1,6 +1,6 @@
 # Health Engine
 
-PilotCheck's health engine is a pure function from joined raw state to a
+Runway's health engine is a pure function from joined raw state to a
 typed list of flags. There is no statefulness, no I/O during evaluation, and
 no "magic" — every diagnostic in the UI traces back to a named rule file
 you can read.
@@ -84,7 +84,7 @@ proper plugin (a TypeScript file the engine `import`s), not more DSL.
 The `tag_config` table maps Autopilot group tags to their expected
 deployment profile and target Entra group. This is what makes
 `tag_mismatch`, `not_in_target_group`, and `deployment_mode_mismatch`
-possible — without a tag dictionary entry, PilotCheck has no idea what a
+possible — without a tag dictionary entry, Runway has no idea what a
 device is *supposed* to look like.
 
 The dictionary is editable in **Settings → Group Tag → Profile Mapping**

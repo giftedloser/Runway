@@ -134,10 +134,10 @@ export function GraphCredentialsWizard({ onDismissRestart }: Props) {
         <div className="flex items-start gap-3 rounded-lg border border-[var(--pc-warning)]/40 bg-[var(--pc-warning-muted)] p-3">
           <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-[var(--pc-warning)]" />
           <div className="min-w-0 flex-1 text-[12px] text-[var(--pc-text)]">
-            <div className="font-semibold">Credentials saved — restart PilotCheck to apply</div>
+            <div className="font-semibold">Credentials saved — restart Runway to apply</div>
             <div className="mt-0.5 text-[var(--pc-text-secondary)]">
               The new tenant ID, client ID, and secret were written to{" "}
-              <span className="font-mono text-[11px]">{savedTo}</span>. The server reads these only at startup, so close and reopen PilotCheck (or restart the sidecar service) before signing in.
+              <span className="font-mono text-[11px]">{savedTo}</span>. The server reads these only at startup, so close and reopen Runway (or restart the sidecar service) before signing in.
             </div>
           </div>
           <Button

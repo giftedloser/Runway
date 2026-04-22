@@ -67,15 +67,15 @@ export function DesktopBootstrap({ children }: { children: ReactNode }) {
     <div className="flex min-h-screen items-center justify-center bg-[var(--pc-surface)] px-6">
       <div className="w-full max-w-md rounded-2xl border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] p-6 shadow-lg shadow-black/20">
         <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--pc-text-muted)]">
-          PilotCheck
+          Runway
         </div>
         <h1 className="mt-3 text-xl font-semibold text-[var(--pc-text)]">
           {timedOut ? "Local engine failed to start" : "Starting desktop runtime…"}
         </h1>
         <p className="mt-2 text-sm leading-6 text-[var(--pc-text-secondary)]">
           {timedOut
-            ? "The installed app could not reach its local runtime. Close PilotCheck and reopen it. If this keeps happening, rebuild the installer so the packaged runtime is refreshed."
-            : "Launching the local PilotCheck runtime and loading your existing mock-data workspace."}
+            ? "The installed app could not reach its local runtime. Close Runway and reopen it. If this keeps happening, rebuild the installer so the packaged runtime is refreshed."
+            : "Launching the local Runway runtime and loading your existing mock-data workspace."}
         </p>
         <div className="mt-5 flex items-center gap-3">
           <button

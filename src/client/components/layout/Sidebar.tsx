@@ -1,6 +1,5 @@
 import { Link, useRouterState, useSearch } from "@tanstack/react-router";
 import {
-  Activity,
   Building2,
   DatabaseZap,
   GitBranch,
@@ -8,6 +7,8 @@ import {
   LayoutDashboard,
   Monitor,
   Moon,
+  Palette,
+  Flame,
   Settings2,
   ShieldCheck,
   Sun,
@@ -30,8 +31,20 @@ const appVersion =
     ? __APP_VERSION__
     : (globalThis as { __APP_VERSION__?: string }).__APP_VERSION__ ?? "dev";
 
-const themeIcons: Record<Theme, typeof Sun> = { light: Sun, dark: Moon, system: Monitor };
-const themeLabels: Record<Theme, string> = { light: "Light", dark: "Dark", system: "System" };
+const themeIcons: Record<Theme, typeof Sun> = {
+  light: Sun,
+  dark: Moon,
+  ocean: Palette,
+  copper: Flame,
+  system: Monitor
+};
+const themeLabels: Record<Theme, string> = {
+  light: "Light",
+  dark: "Dark",
+  ocean: "Ocean",
+  copper: "Copper",
+  system: "System"
+};
 
 interface NavItem {
   to: string;
@@ -90,23 +103,33 @@ export function Sidebar() {
   })();
 
   return (
-    <aside className="sticky top-0 flex h-screen w-[232px] shrink-0 flex-col border-r border-[var(--pc-border)] bg-[var(--pc-surface)]">
+    <aside className="flex h-auto w-full shrink-0 flex-col border-b border-[var(--pc-border)] bg-[var(--pc-surface)] lg:sticky lg:top-0 lg:h-screen lg:w-[232px] lg:border-b-0 lg:border-r">
       {/* Logo */}
-      <div className="flex items-center gap-3 px-5 py-5">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--pc-accent)] text-[var(--pc-text)]">
-          <Activity className="h-4 w-4" />
+      <div className="flex items-center gap-3 px-4 py-3 lg:px-5 lg:py-5">
+        <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-[var(--pc-accent-muted)] ring-1 ring-[var(--pc-accent)]/30">
+          <img
+            src="/runway.png"
+            alt=""
+            width={36}
+            height={36}
+            className="h-full w-full object-cover"
+          />
         </div>
-        <div>
-          <div className="text-[15px] font-semibold tracking-tight text-[var(--pc-text)]">PilotCheck</div>
-          <div className="text-[11px] text-[var(--pc-text-muted)]">Windows Autopilot · Intune · Entra</div>
+        <div className="min-w-0">
+          <div className="font-display text-[23px] font-semibold uppercase leading-none tracking-wide text-[var(--pc-text)]">
+            Runway
+          </div>
+          <div className="truncate text-[11px] text-[var(--pc-text-muted)]">
+            Autopilot · Intune · Entra
+          </div>
         </div>
       </div>
 
       {/* Nav */}
-      <nav className="mt-1 flex flex-1 flex-col gap-3 overflow-y-auto px-3 pb-3">
+      <nav className="flex flex-1 gap-2 overflow-x-auto px-3 pb-3 lg:mt-1 lg:flex-col lg:gap-3 lg:overflow-y-auto">
         {navGroups.map((group) => (
-          <div key={group.label} className="flex flex-col gap-0.5">
-            <div className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--pc-text-muted)]">
+          <div key={group.label} className="flex shrink-0 flex-col gap-0.5">
+            <div className="mb-1 hidden px-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--pc-text-muted)] lg:block">
               {group.label}
             </div>
             {group.items.map((item) => {
@@ -118,7 +141,7 @@ export function Sidebar() {
                   key={item.to}
                   to={item.to}
                   className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium transition-all duration-150",
+                    "group flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium transition-[background-color,color,transform] duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)] lg:gap-3",
                     active
                       ? "bg-[var(--pc-accent-muted)] text-[var(--pc-accent-hover)]"
                       : "text-[var(--pc-text-secondary)] hover:bg-[var(--pc-tint-hover)] hover:text-[var(--pc-text)] hover:translate-x-0.5"
@@ -138,7 +161,7 @@ export function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="space-y-3 border-t border-[var(--pc-border)] px-3 py-4">
+      <div className="hidden space-y-3 border-t border-[var(--pc-border)] px-3 py-4 lg:block">
         <AuthIndicator />
         <div className="flex items-center justify-between px-2 text-[10.5px]">
           <span className="text-[var(--pc-text-muted)]">Engine</span>
@@ -152,8 +175,9 @@ export function Sidebar() {
               <button
                 type="button"
                 onClick={cycleTheme}
-                className="flex items-center gap-1.5 rounded-md border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-2 py-1 text-[10.5px] text-[var(--pc-text-secondary)] transition-colors hover:border-[var(--pc-border-hover)] hover:text-[var(--pc-text)]"
+                className="flex items-center gap-1.5 rounded-md border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-2 py-1 text-[10.5px] text-[var(--pc-text-secondary)] transition-[border-color,color,background-color] hover:border-[var(--pc-border-hover)] hover:text-[var(--pc-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]"
                 title={`Current: ${themeLabels[theme]}. Click to cycle.`}
+                aria-label={`Current theme: ${themeLabels[theme]}. Click to cycle theme.`}
               >
                 <ThemeIcon className="h-3 w-3" />
                 {themeLabels[theme]}
@@ -197,7 +221,7 @@ function PropertiesGroup({
   const activeProperty = pathname.startsWith("/devices") ? search.property : undefined;
 
   return (
-    <div className="flex flex-col gap-0.5">
+    <div className="hidden flex-col gap-0.5 lg:flex">
       <div className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--pc-text-muted)]">
         Properties
       </div>
@@ -217,7 +241,7 @@ function PropertiesGroup({
               pageSize: 25
             }}
             className={cn(
-              "flex items-center gap-3 rounded-lg px-3 py-1.5 text-[12px] font-medium transition-all duration-150",
+              "flex items-center gap-3 rounded-lg px-3 py-1.5 text-[12px] font-medium transition-[background-color,color,transform] duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]",
               active
                 ? "bg-[var(--pc-accent-muted)] text-[var(--pc-accent-hover)]"
                 : "text-[var(--pc-text-secondary)] hover:bg-[var(--pc-tint-hover)] hover:text-[var(--pc-text)] hover:translate-x-0.5"

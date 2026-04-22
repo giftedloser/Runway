@@ -1,6 +1,6 @@
 # Troubleshooting
 
-Common failure modes when running PilotCheck against a real tenant, and how
+Common failure modes when running Runway against a real tenant, and how
 to recover. If something here is missing or wrong, please open an issue —
 these notes live with the code so they stay current.
 
@@ -13,7 +13,7 @@ See also:
 
 ## 1. Graph permissions
 
-PilotCheck talks to Graph in two distinct modes and each has its own
+Runway talks to Graph in two distinct modes and each has its own
 permission surface. Most "it worked yesterday" problems are really missing
 consent on one of them.
 
@@ -156,4 +156,4 @@ File an issue with:
 - Whether you're in app-only, delegated, or both.
 - The list of Graph permissions granted (screenshot of the API permissions
   page is ideal).
-- The PilotCheck commit SHA (`git rev-parse HEAD`).
+- The Runway commit SHA (`git rev-parse HEAD`).

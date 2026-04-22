@@ -64,7 +64,7 @@ export function authRouter() {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>PilotCheck Sign-In Complete</title>
+    <title>Runway Sign-In Complete</title>
     <style>
       body {
         margin: 0;
@@ -96,7 +96,7 @@ export function authRouter() {
   <body>
     <main>
       <h1>Microsoft sign-in complete</h1>
-      <p>You can return to PilotCheck now. This window should close automatically.</p>
+      <p>You can return to Runway now. This window should close automatically.</p>
     </main>
     <script>
       window.opener?.postMessage({ type: "pilotcheck-auth-complete" }, "*");

@@ -91,7 +91,7 @@ export function SetupPage() {
       <PageHeader
         eyebrow="Welcome"
         title="First-run Setup"
-        description="Walk through these steps to take PilotCheck from a fresh install to a working ingestion of your Windows Autopilot, Intune, and Entra ID data. You can skip ahead at any time and revisit Settings later."
+        description="Walk through these steps to take Runway from a fresh install to a working ingestion of your Windows Autopilot, Intune, and Entra ID data. You can skip ahead at any time and revisit Settings later."
       />
 
       {/* Progress stepper */}
@@ -100,7 +100,7 @@ export function SetupPage() {
       <StepShell
         number={1}
         title="Graph credentials"
-        description="PilotCheck reads from Microsoft Graph using a read-only app registration. Paste your tenant ID, app (client) ID, and client secret value below — we'll write them to the server's .env so the next start picks them up."
+        description="Runway reads from Microsoft Graph using a read-only app registration. Paste your tenant ID, app (client) ID, and client secret value below — we'll write them to the server's .env so the next start picks them up."
         done={graphConfigured}
         active={activeStep === 1}
       >

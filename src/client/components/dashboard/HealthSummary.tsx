@@ -55,7 +55,7 @@ export function HealthSummary({ counts }: { counts: DashboardResponse["counts"] 
             return (
               <div
                 key={health}
-                className={`${config[health].color} transition-all`}
+                className={`${config[health].color} transition-[width] duration-300`}
                 style={{ width: `${pct}%` }}
               />
             );
@@ -73,7 +73,7 @@ export function HealthSummary({ counts }: { counts: DashboardResponse["counts"] 
               onClick={() => handleClick(health)}
               disabled={!clickable}
               className={
-                "rounded-lg bg-[var(--pc-tint-subtle)] px-4 py-3 text-left transition-all duration-150 " +
+                "rounded-lg bg-[var(--pc-tint-subtle)] px-4 py-3 text-left transition-[background-color,box-shadow,transform] duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)] " +
                 (clickable
                   ? "cursor-pointer ring-1 ring-transparent hover:bg-[var(--pc-tint-hover)] hover:ring-[var(--pc-border)] hover:-translate-y-0.5 hover:shadow-md"
                   : "cursor-default opacity-80")

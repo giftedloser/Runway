@@ -45,11 +45,11 @@ export function persistSnapshot(db: Database.Database, payload: SnapshotPayload)
     INSERT INTO intune_devices (
       id, device_name, serial_number, entra_device_id, os_version, compliance_state,
       enrollment_type, managed_device_owner_type, last_sync_datetime, primary_user_upn,
-      enrollment_profile_name, autopilot_enrolled, last_synced_at, raw_json
+      enrollment_profile_name, autopilot_enrolled, management_agent, last_synced_at, raw_json
     ) VALUES (
       @id, @device_name, @serial_number, @entra_device_id, @os_version, @compliance_state,
       @enrollment_type, @managed_device_owner_type, @last_sync_datetime, @primary_user_upn,
-      @enrollment_profile_name, @autopilot_enrolled, @last_synced_at, @raw_json
+      @enrollment_profile_name, @autopilot_enrolled, @management_agent, @last_synced_at, @raw_json
     )
   `);
   const insertEntra = db.prepare(`

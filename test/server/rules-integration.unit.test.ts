@@ -66,6 +66,7 @@ function intune(overrides: Partial<IntuneRow> & { id: string }): IntuneRow {
     primary_user_upn: null,
     enrollment_profile_name: null,
     autopilot_enrolled: 1,
+    management_agent: null,
     last_synced_at: NOW,
     raw_json: null,
     ...overrides
@@ -337,6 +338,60 @@ describe("custom rule → computeAllDeviceStates integration", () => {
     computeAllDeviceStates(db);
     const [state] = readStates();
     expect(state.active_rule_ids).toContain(rule.id);
+  });
+
+  it("evaluates SCCM ConfigMgr client fields from Intune managementAgent", () => {
+    const rule = createRule(db, {
+      name: "ConfigMgr client required",
+      description: "",
+      severity: "warning",
+      scope: "global",
+      predicate: {
+        type: "leaf",
+        field: "hasConfigMgrClient",
+        op: "eq",
+        value: false
+      }
+    });
+
+    persistSnapshot(
+      db,
+      snapshot({
+        autopilotRows: [
+          autopilot({
+            id: "ap-sccm",
+            serial_number: "SN-SCCM",
+            deployment_profile_name: "Lodge-UD",
+            profile_assignment_status: "assigned"
+          }),
+          autopilot({
+            id: "ap-mdm",
+            serial_number: "SN-MDM",
+            deployment_profile_name: "Lodge-UD",
+            profile_assignment_status: "assigned"
+          })
+        ],
+        intuneRows: [
+          intune({
+            id: "int-sccm",
+            serial_number: "SN-SCCM",
+            management_agent: "configurationManagerClientMdm"
+          }),
+          intune({
+            id: "int-mdm",
+            serial_number: "SN-MDM",
+            management_agent: "mdm"
+          })
+        ]
+      })
+    );
+
+    computeAllDeviceStates(db);
+    const states = readStates();
+    const connected = states.find((s) => s.serial_number === "SN-SCCM");
+    const missing = states.find((s) => s.serial_number === "SN-MDM");
+    expect(connected?.active_rule_ids ?? []).not.toContain(rule.id);
+    expect(missing?.active_rule_ids).toContain(rule.id);
   });
 
   it("matches a compound AND predicate spanning autopilot and intune context", () => {

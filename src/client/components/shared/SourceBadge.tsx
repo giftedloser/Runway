@@ -43,7 +43,7 @@ const SOURCE_META: Record<
   },
   derived: {
     label: "Derived",
-    full: "Computed by the PilotCheck state engine",
+    full: "Computed by the Runway state engine",
     ring: "ring-white/15",
     bg: "bg-[var(--pc-tint-hover)] text-[var(--pc-text-secondary)]",
     dot: "bg-[var(--pc-text-muted)]"

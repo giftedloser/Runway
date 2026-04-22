@@ -136,6 +136,17 @@ describe("API — device detail", () => {
     expect(Array.isArray(detail.body.ruleViolations)).toBe(true);
   });
 
+  it("returns SCCM / ConfigMgr management-agent fields in enrollment", async () => {
+    const app = createApp(db);
+    const list = await request(app).get("/api/devices").expect(200);
+    const key = list.body.items[0].deviceKey;
+    const detail = await request(app).get(`/api/devices/${key}`).expect(200);
+
+    expect("managementAgent" in detail.body.enrollment).toBe(true);
+    expect("hasConfigMgrClient" in detail.body.enrollment).toBe(true);
+    expect(typeof detail.body.enrollment.hasConfigMgrClient).toBe("boolean");
+  });
+
   it("diagnostics include caveat field (nullable)", async () => {
     const app = createApp(db);
     const list = await request(app).get("/api/devices").expect(200);

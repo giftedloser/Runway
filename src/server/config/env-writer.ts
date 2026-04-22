@@ -3,7 +3,7 @@ import path from "node:path";
 import os from "node:os";
 
 /**
- * First-run / wizard support for editing the PilotCheck `.env` file in
+ * First-run / wizard support for editing the Runway `.env` file in
  * place. We *must* preserve any existing keys, comments, and ordering so
  * an operator who hand-edited PORT or DATABASE_PATH does not lose those
  * settings the moment they save Graph credentials through the UI.

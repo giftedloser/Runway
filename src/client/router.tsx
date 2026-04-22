@@ -1,18 +1,14 @@
-import { Link, createRootRouteWithContext, createRoute, createRouter } from "@tanstack/react-router";
+import {
+  Link,
+  createRootRouteWithContext,
+  createRoute,
+  createRouter,
+  lazyRouteComponent
+} from "@tanstack/react-router";
 import type { QueryClient } from "@tanstack/react-query";
 import { FileQuestion } from "lucide-react";
 
-import { ActionAuditPage } from "./routes/ActionAudit.js";
 import { AppShell } from "./components/layout/AppShell.js";
-import { DashboardPage } from "./routes/Dashboard.js";
-import { DeviceDetailPage } from "./routes/DeviceDetail.js";
-import { DeviceListPage } from "./routes/DeviceList.js";
-import { GroupInspectorPage } from "./routes/GroupInspector.js";
-import { ProfileAuditPage } from "./routes/ProfileAudit.js";
-import { ProvisioningBuilderPage } from "./routes/ProvisioningBuilder.js";
-import { SettingsPage } from "./routes/Settings.js";
-import { SetupPage } from "./routes/setup.js";
-import { SyncStatusPage } from "./routes/SyncStatus.js";
 
 function NotFoundPage() {
   return (
@@ -28,7 +24,7 @@ function NotFoundPage() {
       </p>
       <Link
         to="/"
-        className="mt-2 inline-flex items-center gap-2 rounded-lg bg-[var(--pc-accent)] px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-[var(--pc-accent-hover)] hover:shadow-md"
+        className="mt-2 inline-flex items-center gap-2 rounded-lg bg-[var(--pc-accent)] px-4 py-2 text-sm font-medium text-white shadow-sm transition-[background-color,box-shadow] hover:bg-[var(--pc-accent-hover)] hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]"
       >
         Back to Dashboard
       </Link>
@@ -44,7 +40,7 @@ const rootRoute = createRootRouteWithContext<{ queryClient: QueryClient }>()({
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/",
-  component: DashboardPage
+  component: lazyRouteComponent(() => import("./routes/Dashboard.js"), "DashboardPage")
 });
 
 const devicesRoute = createRoute({
@@ -69,7 +65,7 @@ const devicesRoute = createRoute({
           ? Number(search.pageSize)
           : 25
   }),
-  component: DeviceListPage
+  component: lazyRouteComponent(() => import("./routes/DeviceList.js"), "DeviceListPage")
 });
 
 const DEVICE_DETAIL_TABS = [
@@ -94,13 +90,13 @@ const deviceDetailRoute = createRoute({
         : undefined;
     return tab ? { tab } : {};
   },
-  component: DeviceDetailPage
+  component: lazyRouteComponent(() => import("./routes/DeviceDetail.js"), "DeviceDetailPage")
 });
 
 const profilesRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/profiles",
-  component: ProfileAuditPage
+  component: lazyRouteComponent(() => import("./routes/ProfileAudit.js"), "ProfileAuditPage")
 });
 
 const groupsRoute = createRoute({
@@ -109,37 +105,40 @@ const groupsRoute = createRoute({
   validateSearch: (search: Record<string, unknown>) => ({
     groupId: typeof search.groupId === "string" ? search.groupId : undefined
   }),
-  component: GroupInspectorPage
+  component: lazyRouteComponent(() => import("./routes/GroupInspector.js"), "GroupInspectorPage")
 });
 
 const syncRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/sync",
-  component: SyncStatusPage
+  component: lazyRouteComponent(() => import("./routes/SyncStatus.js"), "SyncStatusPage")
 });
 
 const settingsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/settings",
-  component: SettingsPage
+  component: lazyRouteComponent(() => import("./routes/Settings.js"), "SettingsPage")
 });
 
 const setupRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/setup",
-  component: SetupPage
+  component: lazyRouteComponent(() => import("./routes/setup.js"), "SetupPage")
 });
 
 const provisioningRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/provisioning",
-  component: ProvisioningBuilderPage
+  component: lazyRouteComponent(
+    () => import("./routes/ProvisioningBuilder.js"),
+    "ProvisioningBuilderPage"
+  )
 });
 
 const actionAuditRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/actions",
-  component: ActionAuditPage
+  component: lazyRouteComponent(() => import("./routes/ActionAudit.js"), "ActionAuditPage")
 });
 
 const routeTree = rootRoute.addChildren([

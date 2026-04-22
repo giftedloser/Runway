@@ -27,10 +27,15 @@ export interface PlaybookContext {
   serialNumber: string | null;
   intuneId: string | null;
   autopilotId: string | null;
+  entraId: string | null;
   deviceName: string | null;
 }
 
 type PlaybookBuilder = (ctx: PlaybookContext) => PlaybookStep[];
+
+function odataString(value: string | null, fallback: string) {
+  return (value ?? fallback).replaceAll("'", "''");
+}
 
 /**
  * Per-flag playbooks. Only flags with concrete, runnable next steps are
@@ -144,9 +149,9 @@ const PLAYBOOKS: Partial<Record<FlagCode, PlaybookBuilder>> = {
     {
       type: "graph",
       label: "List groups this device belongs to",
-      payload: ctx.intuneId
-        ? `https://graph.microsoft.com/v1.0/devices?$filter=deviceId eq '${ctx.intuneId}'&$expand=memberOf`
-        : "https://graph.microsoft.com/v1.0/devices?$select=displayName,deviceId&$top=10"
+      payload: ctx.entraId
+        ? `https://graph.microsoft.com/v1.0/devices/${ctx.entraId}/memberOf?$select=id,displayName`
+        : `https://graph.microsoft.com/v1.0/devices?$filter=displayName eq '${odataString(ctx.deviceName, "DEVICE_NAME")}'&$select=id,displayName,deviceId`
     },
     {
       type: "doc",
@@ -211,7 +216,7 @@ const PLAYBOOKS: Partial<Record<FlagCode, PlaybookBuilder>> = {
     {
       type: "graph",
       label: "Check Entra device physical IDs for ZTDID",
-      payload: `https://graph.microsoft.com/v1.0/devices?$filter=displayName eq '${ctx.deviceName ?? "DEVICE_NAME"}'&$select=displayName,physicalIds,deviceId`
+      payload: `https://graph.microsoft.com/v1.0/devices?$filter=displayName eq '${odataString(ctx.deviceName, "DEVICE_NAME")}'&$select=displayName,physicalIds,deviceId`
     },
     {
       type: "powershell",
@@ -249,7 +254,7 @@ const PLAYBOOKS: Partial<Record<FlagCode, PlaybookBuilder>> = {
     {
       type: "graph",
       label: "Find duplicate Entra device records by serial",
-      payload: `https://graph.microsoft.com/beta/devices?$filter=contains(physicalIds,'${ctx.serialNumber ?? "SERIAL"}')`
+      payload: `https://graph.microsoft.com/beta/devices?$filter=contains(physicalIds,'${odataString(ctx.serialNumber, "SERIAL")}')`
     },
     {
       type: "doc",

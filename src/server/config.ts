@@ -40,7 +40,7 @@ const isDevOrTest = nodeEnv === "development" || nodeEnv === "test";
 if (!isDevOrTest && parsed.SESSION_SECRET === DEFAULT_SESSION_SECRET) {
   throw new Error(
     "SESSION_SECRET is set to the built-in development default. " +
-      "Set SESSION_SECRET to a long random value in the PilotCheck .env before starting the server. " +
+      "Set SESSION_SECRET to a long random value in the Runway .env before starting the server. " +
       "(Set NODE_ENV=development to bypass this check in local development.)"
   );
 }

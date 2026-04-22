@@ -14,11 +14,12 @@ interface GraphManagedDevice {
   userPrincipalName?: string | null;
   enrollmentProfileName?: string | null;
   autopilotEnrolled?: boolean | null;
+  managementAgent?: string | null;
 }
 
 export async function syncIntuneDevices(client: GraphClient): Promise<IntuneRow[]> {
   const rows = await client.getAllPages<GraphManagedDevice>(
-    "/deviceManagement/managedDevices?$filter=operatingSystem eq 'Windows'&$select=id,deviceName,serialNumber,azureADDeviceId,complianceState,osVersion,enrollmentType,managedDeviceOwnerType,lastSyncDateTime,userPrincipalName,enrollmentProfileName,autopilotEnrolled"
+    "/deviceManagement/managedDevices?$filter=operatingSystem eq 'Windows'&$select=id,deviceName,serialNumber,azureADDeviceId,complianceState,osVersion,enrollmentType,managedDeviceOwnerType,lastSyncDateTime,userPrincipalName,enrollmentProfileName,autopilotEnrolled,managementAgent"
   );
   const now = new Date().toISOString();
 
@@ -35,6 +36,7 @@ export async function syncIntuneDevices(client: GraphClient): Promise<IntuneRow[
     primary_user_upn: row.userPrincipalName ?? null,
     enrollment_profile_name: row.enrollmentProfileName ?? null,
     autopilot_enrolled: row.autopilotEnrolled ? 1 : 0,
+    management_agent: row.managementAgent ?? null,
     last_synced_at: now,
     raw_json: JSON.stringify(row)
   }));

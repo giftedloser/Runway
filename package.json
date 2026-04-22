@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "license": "MIT",
-  "description": "Autopilot, Intune, and Entra device state engine for PilotCheck.",
+  "description": "Autopilot, Intune, and Entra device state engine for Runway.",
   "engines": {
     "node": ">=24.14 <25",
     "npm": ">=11"

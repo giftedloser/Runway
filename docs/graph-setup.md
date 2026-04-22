@@ -1,6 +1,6 @@
 # Microsoft Graph Setup
 
-PilotCheck talks to Graph in two distinct modes:
+Runway talks to Graph in two distinct modes:
 
 - **App-only** — used by the background sync to read Autopilot, Intune, and
   Entra resources. Runs unattended.
@@ -14,7 +14,7 @@ Both flows share a single Entra app registration.
 In the Entra admin centre:
 
 1. **Identity → Applications → App registrations → New registration**
-2. Name it `PilotCheck` (or whatever you like).
+2. Name it `Runway` (or whatever you like).
 3. Supported account types: **Single tenant**.
 4. Redirect URI: `Web` → `http://localhost:3001/api/auth/callback`
 5. Click **Register**.
@@ -30,7 +30,7 @@ AZURE_CLIENT_ID=<application id>
 ## 2. Create a client secret
 
 1. **Certificates & secrets → Client secrets → New client secret**
-2. Description: `PilotCheck server`
+2. Description: `Runway server`
 3. Expires: pick a policy that matches your tenant's rotation rules.
 4. Copy the **Value** immediately into your `.env`:
 
@@ -64,7 +64,7 @@ turn green.
 
 ## 4. Verify
 
-Restart the PilotCheck server. The **Settings → Microsoft Graph
+Restart the Runway server. The **Settings → Microsoft Graph
 Integration** card should now show three green check marks for
 `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, and `AZURE_CLIENT_SECRET`.
 

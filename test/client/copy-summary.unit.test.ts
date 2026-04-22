@@ -132,9 +132,9 @@ describe("buildSummaryText", () => {
     expect(text).toContain("Broken at group_membership");
   });
 
-  it("ends with PilotCheck attribution", () => {
+  it("ends with Runway attribution", () => {
     const text = buildSummaryText(makeDetail());
-    expect(text).toContain("— Copied from PilotCheck");
+    expect(text).toContain("— Copied from Runway");
   });
 
   it("uses dash for missing device name and serial", () => {

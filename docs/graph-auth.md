@@ -1,6 +1,6 @@
 # Graph authentication model
 
-PilotCheck talks to Microsoft Graph in two distinct modes:
+Runway talks to Microsoft Graph in two distinct modes:
 
 1. **App-only sync** — the background poller that reads Autopilot, Intune,
    and Entra resources every few minutes.
@@ -22,11 +22,11 @@ available to the running app. For a Windows desktop installer that means one
 of three things:
 
 1. **Bundle the secret in the installer** — every installation contains the
-   same shared secret. Anyone who extracts it can impersonate PilotCheck's
+   same shared secret. Anyone who extracts it can impersonate Runway's
    app registration against your tenant. **Unacceptable.**
 2. **Ship a blank installer and have each operator paste a per-tenant secret
    into `%LOCALAPPDATA%\...\.env` on first run.** The secret lives only on the
-   operator's machine and is never transmitted. **This is what PilotCheck
+   operator's machine and is never transmitted. **This is what Runway
    does today.**
 3. **Drop the confidential client entirely and use a public-client PKCE flow
    for delegated auth.** The app has no secret, and Azure AD enforces
@@ -71,10 +71,10 @@ background sync out of the box" story unless A2 is adopted.
 ### Option B — Per-tenant operator registration (v0.1.0 commitment)
 
 Keep the confidential-client code as-is, but formally document that
-PilotCheck is a **self-hosted, bring-your-own-Entra-app-registration** tool.
+Runway is a **self-hosted, bring-your-own-Entra-app-registration** tool.
 The shipped installer is blank. On first run the operator:
 
-1. Registers PilotCheck as an application in their own tenant.
+1. Registers Runway as an application in their own tenant.
 2. Generates a client secret (or uploads a certificate).
 3. Pastes tenant ID, client ID, and secret into
    `%LOCALAPPDATA%\com.giftedloser.pilotcheck\.env`.
@@ -89,7 +89,7 @@ config problem rather than a distribution problem.
 
 **Cons:** higher setup friction — the operator has to register an app;
 `.env` on disk is readable by anyone with local admin on that machine
-(mitigated by Windows DPAPI or BitLocker, but not enforced by PilotCheck
+(mitigated by Windows DPAPI or BitLocker, but not enforced by Runway
 itself).
 
 ### Option C — Hybrid (future consideration)
@@ -134,7 +134,7 @@ the hybrid doesn't need to exist at all.
    checked into git and **never** bundled into the dist/ output.
 3. **README + SECURITY.md state this explicitly.** No implicit assumptions
    about where the secret lives.
-4. **Recommend DPAPI or BitLocker at rest.** PilotCheck itself does not
+4. **Recommend DPAPI or BitLocker at rest.** Runway itself does not
    encrypt `.env` — that's the operator's responsibility. Windows DPAPI via
    `ProtectedData.Protect` or a full-disk encryption baseline handles this
    cleanly.

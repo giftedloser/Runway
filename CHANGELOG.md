@@ -1,10 +1,10 @@
 # Changelog
 
-All notable changes to PilotCheck will be documented in this file. The
+All notable changes to Runway will be documented in this file. The
 format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-> PilotCheck is pre-release. No versioned tags have been cut yet — every
+> Runway is pre-release. No versioned tags have been cut yet — every
 > change below lives on `main`. Once the first public release is cut, the
 > Unreleased section will be split and the `[0.1.0]` link activated.
 

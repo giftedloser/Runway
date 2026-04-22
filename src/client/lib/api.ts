@@ -58,7 +58,7 @@ export async function apiRequest<T>(path: string, init?: RequestInit) {
       ...init
     });
   } catch {
-    throw new Error(`PilotCheck could not reach its local runtime for ${path}.`);
+    throw new Error(`Runway could not reach its local runtime for ${path}.`);
   }
 
   if (!response.ok) {
@@ -74,7 +74,7 @@ export async function apiRequest<T>(path: string, init?: RequestInit) {
   }
 
   if (!isJsonResponse(response)) {
-    throw new Error(`PilotCheck expected JSON from ${path} but received a different response.`);
+    throw new Error(`Runway expected JSON from ${path} but received a different response.`);
   }
 
   return (await response.json()) as T;

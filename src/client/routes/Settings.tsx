@@ -1,11 +1,14 @@
 import { useRef, useState } from "react";
 import {
   Boxes,
+  Cable,
   CheckCircle2,
   Download,
   KeyRound,
   Plus,
   Tag,
+  ToggleLeft,
+  ToggleRight,
   Trash2,
   Upload,
   XCircle
@@ -24,7 +27,7 @@ import { Button } from "../components/ui/button.js";
 import { Card } from "../components/ui/card.js";
 import { Input } from "../components/ui/input.js";
 import { useAuthStatus, useLogin, useLogout } from "../hooks/useAuth.js";
-import { useSettings, useTagConfigMutations } from "../hooks/useSettings.js";
+import { useSetFeatureFlag, useSettings, useTagConfigMutations } from "../hooks/useSettings.js";
 import type { TagConfigRecord } from "../lib/types.js";
 
 const REQUIRED_ENV = [
@@ -45,6 +48,7 @@ export function SettingsPage() {
   const login = useLogin();
   const logout = useLogout();
   const mutations = useTagConfigMutations();
+  const featureFlagMutation = useSetFeatureFlag();
   const toast = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importing, setImporting] = useState(false);
@@ -72,6 +76,7 @@ export function SettingsPage() {
   const graphConfigured = settings.data.graph.configured;
   const missing = settings.data.graph.missing;
   const isAuthed = auth.data?.authenticated === true;
+  const sccmDetectionEnabled = settings.data.featureFlags.sccm_detection;
 
   const exportTagConfig = () => {
     const payload = JSON.stringify(settings.data?.tagConfig ?? [], null, 2);
@@ -79,7 +84,7 @@ export function SettingsPage() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `pilotcheck-tag-config-${new Date().toISOString().slice(0, 10)}.json`;
+    link.download = `runway-tag-config-${new Date().toISOString().slice(0, 10)}.json`;
     document.body.appendChild(link);
     link.click();
     link.remove();
@@ -149,7 +154,7 @@ export function SettingsPage() {
       <PageHeader
         eyebrow="System"
         title="Settings"
-        description="Configure how PilotCheck connects to Microsoft Graph for your Windows Autopilot, Intune, and Entra ID tenant, and how it interprets your group tag conventions. Changes take effect on the next sync."
+        description="Configure how Runway connects to Microsoft Graph for your Windows Autopilot, Intune, and Entra ID tenant, and how it interprets your group tag conventions. Changes take effect on the next sync."
       />
 
       {/* Section 1: Graph integration */}
@@ -184,8 +189,8 @@ export function SettingsPage() {
                 </div>
                 <div className="mt-0.5 text-[12px] text-[var(--pc-text-muted)]">
                   {graphConfigured
-                    ? "Server-side credentials detected. PilotCheck can read Autopilot, Intune, and Entra data."
-                    : "Missing credentials. PilotCheck cannot ingest live data — running in mock mode."}
+                    ? "Server-side credentials detected. Runway can read Autopilot, Intune, and Entra data."
+                    : "Missing credentials. Runway cannot ingest live data — running in mock mode."}
                 </div>
               </div>
             </div>
@@ -310,14 +315,112 @@ export function SettingsPage() {
         </Card>
       </section>
 
-      {/* Section 3: Sources */}
+      {/* Section 3: SCCM / ConfigMgr */}
       <section className="space-y-3">
         <div className="flex items-baseline gap-2">
           <h2 className="text-[13px] font-semibold uppercase tracking-wide text-[var(--pc-text-secondary)]">
-            3. Data Sources
+            3. SCCM / ConfigMgr Signal
           </h2>
           <span className="text-[11px] text-[var(--pc-text-muted)]">
-            What PilotCheck reads from each Microsoft service
+            Optional join-picture check on device pages
+          </span>
+        </div>
+        <Card className="p-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex items-start gap-3">
+              <div
+                className={
+                  sccmDetectionEnabled
+                    ? "flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--pc-healthy-muted)]"
+                    : "flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--pc-tint-subtle)]"
+                }
+              >
+                <Cable
+                  className={
+                    sccmDetectionEnabled
+                      ? "h-4 w-4 text-[var(--pc-healthy)]"
+                      : "h-4 w-4 text-[var(--pc-text-muted)]"
+                  }
+                />
+              </div>
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="text-[13px] font-semibold text-[var(--pc-text)]">
+                    ConfigMgr client detection
+                  </div>
+                  <span
+                    className={
+                      sccmDetectionEnabled
+                        ? "rounded-md bg-[var(--pc-healthy-muted)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--pc-healthy)]"
+                        : "rounded-md bg-[var(--pc-tint-subtle)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--pc-text-muted)]"
+                    }
+                  >
+                    {sccmDetectionEnabled ? "Enabled" : "Disabled"}
+                  </span>
+                </div>
+                <p className="mt-1 max-w-2xl text-[12px] leading-relaxed text-[var(--pc-text-muted)]">
+                  Reads Intune's <span className="font-mono">managementAgent</span> value and shows
+                  whether a device is reporting a Configuration Manager client. This does not run
+                  SCCM actions or change devices; it only adds visibility to the device-detail
+                  enrollment tab and custom rule fields.
+                </p>
+                {!isAuthed ? (
+                  <p className="mt-2 text-[11px] text-[var(--pc-warning)]">
+                    Admin sign-in is required to change this setting.
+                  </p>
+                ) : null}
+              </div>
+            </div>
+            <Button
+              variant={sccmDetectionEnabled ? "secondary" : "default"}
+              disabled={!isAuthed || featureFlagMutation.isPending}
+              title={!isAuthed ? "Sign in as an admin to change feature flags" : undefined}
+              onClick={() =>
+                featureFlagMutation.mutate(
+                  { key: "sccm_detection", enabled: !sccmDetectionEnabled },
+                  {
+                    onSuccess: () =>
+                      toast.push({
+                        variant: "success",
+                        title: !sccmDetectionEnabled
+                          ? "SCCM detection enabled"
+                          : "SCCM detection disabled",
+                        description: "Device pages will reflect the setting immediately."
+                      }),
+                    onError: (error) =>
+                      toast.push({
+                        variant: "error",
+                        title: "Could not update SCCM detection",
+                        description:
+                          error instanceof Error ? error.message : "The setting was not saved."
+                      })
+                  }
+                )
+              }
+            >
+              {sccmDetectionEnabled ? (
+                <ToggleRight className="h-3.5 w-3.5 text-[var(--pc-healthy)]" />
+              ) : (
+                <ToggleLeft className="h-3.5 w-3.5" />
+              )}
+              {featureFlagMutation.isPending
+                ? "Saving..."
+                : sccmDetectionEnabled
+                  ? "Disable"
+                  : "Enable"}
+            </Button>
+          </div>
+        </Card>
+      </section>
+
+      {/* Section 4: Sources */}
+      <section className="space-y-3">
+        <div className="flex items-baseline gap-2">
+          <h2 className="text-[13px] font-semibold uppercase tracking-wide text-[var(--pc-text-secondary)]">
+            4. Data Sources
+          </h2>
+          <span className="text-[11px] text-[var(--pc-text-muted)]">
+            What Runway reads from each Microsoft service
           </span>
         </div>
         <Card className="p-5">
@@ -332,7 +435,8 @@ export function SettingsPage() {
                 "Managed devices",
                 "Deployment profiles",
                 "Compliance state",
-                "Primary user"
+                "Primary user",
+                "Management agent"
               ]}
             />
             <SourceCard
@@ -343,11 +447,11 @@ export function SettingsPage() {
         </Card>
       </section>
 
-      {/* Section 4: Tag mapping */}
+      {/* Section 5: Tag mapping */}
       <section className="space-y-3">
         <div className="flex flex-wrap items-center gap-2">
           <h2 className="text-[13px] font-semibold uppercase tracking-wide text-[var(--pc-text-secondary)]">
-            4. Group Tag → Profile Mapping
+            5. Group Tag → Profile Mapping
           </h2>
           <span className="text-[11px] text-[var(--pc-text-muted)]">
             Tells the engine what each Autopilot group tag should resolve to
@@ -500,7 +604,7 @@ export function SettingsPage() {
 
         {settings.data.tagConfig.length === 0 ? (
           <Card className="border-dashed px-5 py-8 text-center text-[12.5px] text-[var(--pc-text-muted)]">
-            No mappings yet. Without mappings, PilotCheck cannot detect{" "}
+            No mappings yet. Without mappings, Runway cannot detect{" "}
             <span className="text-[var(--pc-text-secondary)]">tag mismatch</span> or{" "}
             <span className="text-[var(--pc-text-secondary)]">not in target group</span> conditions.
           </Card>
@@ -555,10 +659,10 @@ export function SettingsPage() {
         )}
       </section>
 
-      {/* Section 5: System health & retention */}
+      {/* Section 6: System health & retention */}
       <SystemHealthSection />
 
-      {/* Section 6: Custom rules */}
+      {/* Section 7: Custom rules */}
       <RulesSection />
 
       <ConfirmDialog

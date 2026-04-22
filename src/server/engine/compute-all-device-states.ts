@@ -6,6 +6,7 @@ import { loadStateEngineInput, replaceDeviceStates } from "../db/queries/devices
 import { listRules } from "../db/queries/rules.js";
 import type { GroupRow, ProfileRow } from "../db/types.js";
 import { computeOverallHealth } from "./compute-health.js";
+import { hasConfigMgrClient } from "./config-mgr.js";
 import { correlateDevices } from "./correlate.js";
 import { buildFlagExplanations, generateDiagnosis } from "./diagnostics.js";
 import { evaluateRules, type RuleContext } from "./evaluate-rules.js";
@@ -326,7 +327,9 @@ export function computeAllDeviceStates(db: Database.Database) {
       assignmentChainComplete: assignmentPath.chainComplete,
       assignmentBreakPoint: assignmentPath.breakPoint,
       flagCount: activeFlags.length,
-      osVersion: bundle.intuneRecord?.os_version ?? null
+      osVersion: bundle.intuneRecord?.os_version ?? null,
+      managementAgent: bundle.intuneRecord?.management_agent ?? null,
+      hasConfigMgrClient: hasConfigMgrClient(bundle.intuneRecord?.management_agent)
     };
     const ruleViolations = evaluateRules(rules, ruleContext);
     const ruleSeverities = new Set(ruleViolations.map((v) => v.severity));

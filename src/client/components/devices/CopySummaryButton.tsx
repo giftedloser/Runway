@@ -53,7 +53,7 @@ export function buildSummaryText(d: DeviceDetailResponse): string {
   lines.push(`Matched on: ${d.identity.matchedOn}`);
 
   lines.push("");
-  lines.push(`— Copied from PilotCheck`);
+  lines.push(`— Copied from Runway`);
 
   return lines.join("\n");
 }

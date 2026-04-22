@@ -46,7 +46,7 @@ export function useLogin() {
   const settings = useSettings();
   const canStart = settings.data?.graph.configured === true;
   const blockedReason = settings.isLoading
-    ? "PilotCheck is still loading its Graph configuration."
+    ? "Runway is still loading its Graph configuration."
     : canStart
       ? null
       : `Microsoft Graph sign-in is unavailable in mock mode. Missing: ${(settings.data?.graph.missing ?? []).join(", ")}.`;
@@ -60,7 +60,7 @@ export function useLogin() {
       const { loginUrl } = await apiRequest<{ loginUrl: string }>("/api/auth/login");
       const popup = window.open(loginUrl, "_blank", "popup=yes,width=640,height=760");
       if (!popup) {
-        throw new Error("PilotCheck could not open the Microsoft sign-in window.");
+        throw new Error("Runway could not open the Microsoft sign-in window.");
       }
       popup.focus();
       return popup;
@@ -88,7 +88,7 @@ export function useLogin() {
           toast.push({
             variant: "warning",
             title: "Sign-in still pending",
-            description: "PilotCheck did not receive a completed admin session yet."
+            description: "Runway did not receive a completed admin session yet."
           });
         }
       })();

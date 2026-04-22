@@ -130,7 +130,7 @@ export function IdentityPanel({ device }: { device: DeviceDetailResponse }) {
         >
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-[var(--pc-warning)]" />
           <div className="text-[12px] leading-relaxed text-[var(--pc-warning)]">
-            <span className="font-semibold">Name-only correlation.</span> PilotCheck could only
+            <span className="font-semibold">Name-only correlation.</span> Runway could only
             link these Autopilot, Intune, and Entra records by display name — no shared serial,
             Entra device ID, or Intune device ID was found. This is the weakest possible
             correlation signal. Verify the records really belong to the same physical device

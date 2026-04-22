@@ -41,9 +41,11 @@ const FIELD_OPTIONS: FieldOption[] = [
   { id: "complianceState", label: "complianceState", type: "string" },
   { id: "lastCheckinAt", label: "lastCheckinAt", type: "timestamp" },
   { id: "osVersion", label: "osVersion", type: "string" },
+  { id: "managementAgent", label: "managementAgent", type: "string" },
   { id: "hasAutopilotRecord", label: "hasAutopilotRecord", type: "boolean" },
   { id: "hasIntuneRecord", label: "hasIntuneRecord", type: "boolean" },
   { id: "hasEntraRecord", label: "hasEntraRecord", type: "boolean" },
+  { id: "hasConfigMgrClient", label: "hasConfigMgrClient", type: "boolean" },
   { id: "hybridJoinConfigured", label: "hybridJoinConfigured", type: "boolean" },
   { id: "assignmentChainComplete", label: "assignmentChainComplete", type: "boolean" },
   { id: "flagCount", label: "flagCount", type: "number" }
@@ -199,7 +201,7 @@ export function RulesSection() {
     <section className="space-y-3">
       <div className="flex items-baseline gap-2">
         <h2 className="text-[13px] font-semibold uppercase tracking-wide text-[var(--pc-text-secondary)]">
-          6. Custom Rules
+          7. Custom Rules
         </h2>
         <span className="text-[11px] text-[var(--pc-text-muted)]">
           Encode your own join, configuration, and posture expectations
@@ -226,7 +228,7 @@ export function RulesSection() {
             <div>
               <label className="text-[11px] font-medium text-[var(--pc-text-muted)]">Name</label>
               <Input
-                placeholder="e.g. Win11 23H2 floor"
+                placeholder="e.g. Win11 23H2 floor…"
                 value={form.name}
                 onChange={(event) =>
                   setForm((previous) => ({ ...previous, name: event.target.value }))
@@ -244,7 +246,7 @@ export function RulesSection() {
                     severity: event.target.value as RuleSeverity
                   }))
                 }
-                className="mt-1 h-9 w-full rounded-lg border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-3 text-[13px] text-[var(--pc-text)] outline-none hover:border-[var(--pc-border-hover)] focus:border-[var(--pc-accent)] focus:ring-1 focus:ring-[var(--pc-accent)]/30 transition-all duration-150"
+                className="mt-1 h-9 w-full rounded-lg border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-3 text-[13px] text-[var(--pc-text)] outline-none transition-[border-color,box-shadow,background-color,color] duration-150 hover:border-[var(--pc-border-hover)] focus:border-[var(--pc-accent)] focus:ring-1 focus:ring-[var(--pc-accent)]/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]"
               >
                 <option value="info">Info</option>
                 <option value="warning">Warning</option>
@@ -256,7 +258,7 @@ export function RulesSection() {
                 Description
               </label>
               <Input
-                placeholder="Why this rule matters and what to do when it fires"
+                placeholder="Why this rule matters and what to do when it fires…"
                 value={form.description}
                 onChange={(event) =>
                   setForm((previous) => ({ ...previous, description: event.target.value }))
@@ -285,7 +287,7 @@ export function RulesSection() {
                           : previous.value
                   }));
                 }}
-                className="mt-1 h-9 w-full rounded-lg border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-3 text-[13px] text-[var(--pc-text)] outline-none hover:border-[var(--pc-border-hover)] focus:border-[var(--pc-accent)] focus:ring-1 focus:ring-[var(--pc-accent)]/30 transition-all duration-150"
+                className="mt-1 h-9 w-full rounded-lg border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-3 text-[13px] text-[var(--pc-text)] outline-none transition-[border-color,box-shadow,background-color,color] duration-150 hover:border-[var(--pc-border-hover)] focus:border-[var(--pc-accent)] focus:ring-1 focus:ring-[var(--pc-accent)]/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]"
               >
                 {FIELD_OPTIONS.map((field) => (
                   <option key={field.id} value={field.id}>
@@ -302,7 +304,7 @@ export function RulesSection() {
                 onChange={(event) =>
                   setForm((previous) => ({ ...previous, op: event.target.value as RuleOp }))
                 }
-                className="mt-1 h-9 w-full rounded-lg border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-3 text-[13px] text-[var(--pc-text)] outline-none hover:border-[var(--pc-border-hover)] focus:border-[var(--pc-accent)] focus:ring-1 focus:ring-[var(--pc-accent)]/30 transition-all duration-150"
+                className="mt-1 h-9 w-full rounded-lg border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-3 text-[13px] text-[var(--pc-text)] outline-none transition-[border-color,box-shadow,background-color,color] duration-150 hover:border-[var(--pc-border-hover)] focus:border-[var(--pc-accent)] focus:ring-1 focus:ring-[var(--pc-accent)]/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]"
               >
                 {OP_OPTIONS.map((op) => (
                   <option key={op.value} value={op.value}>
@@ -320,7 +322,7 @@ export function RulesSection() {
                     onChange={(event) =>
                       setForm((previous) => ({ ...previous, value: event.target.value }))
                     }
-                    className="mt-1 h-9 w-full rounded-lg border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-3 text-[13px] text-[var(--pc-text)] outline-none hover:border-[var(--pc-border-hover)] focus:border-[var(--pc-accent)] focus:ring-1 focus:ring-[var(--pc-accent)]/30 transition-all duration-150"
+                    className="mt-1 h-9 w-full rounded-lg border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-3 text-[13px] text-[var(--pc-text)] outline-none transition-[border-color,box-shadow,background-color,color] duration-150 hover:border-[var(--pc-border-hover)] focus:border-[var(--pc-accent)] focus:ring-1 focus:ring-[var(--pc-accent)]/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]"
                   >
                     <option value="true">true</option>
                     <option value="false">false</option>

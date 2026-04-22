@@ -30,7 +30,7 @@ export function GroupMembershipsPanel({ device }: { device: DeviceDetailResponse
               key={g.groupId}
               to="/groups"
               search={{ groupId: g.groupId }}
-              className="flex items-center justify-between rounded-lg border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-3.5 py-2.5 transition-all duration-150 hover:border-[var(--pc-accent)]/40 hover:bg-[var(--pc-surface-overlay)] hover:translate-x-0.5"
+              className="flex items-center justify-between rounded-lg border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-3.5 py-2.5 transition-[background-color,border-color,transform] duration-150 hover:border-[var(--pc-accent)]/40 hover:bg-[var(--pc-surface-overlay)] hover:translate-x-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]"
             >
               <span className="truncate text-[12.5px] text-[var(--pc-text)]">{g.groupName}</span>
               <span className="shrink-0 rounded-md bg-[var(--pc-tint-subtle)] px-1.5 py-0.5 text-[10px] font-medium capitalize text-[var(--pc-text-muted)]">

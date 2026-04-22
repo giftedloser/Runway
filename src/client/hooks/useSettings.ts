@@ -1,7 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import type { SettingsResponse, TagConfigRecord } from "../lib/types.js";
+import type { FeatureFlagMap, SettingsResponse, TagConfigRecord } from "../lib/types.js";
 import { apiRequest } from "../lib/api.js";
+
+type FeatureFlagKey = keyof FeatureFlagMap;
 
 export interface GraphCredentialsInput {
   tenantId: string;
@@ -46,6 +48,20 @@ export function useSaveGraphCredentials() {
       }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["graph-env"] });
+      void queryClient.invalidateQueries({ queryKey: ["settings"] });
+    }
+  });
+}
+
+export function useSetFeatureFlag() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ key, enabled }: { key: FeatureFlagKey; enabled: boolean }) =>
+      apiRequest<FeatureFlagMap>(`/api/settings/feature-flags/${key}`, {
+        method: "PUT",
+        body: JSON.stringify({ enabled })
+      }),
+    onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["settings"] });
     }
   });

@@ -143,7 +143,7 @@ export function DeviceTable({
           <thead>
             <tr className="border-b border-[var(--pc-border)] text-[11px] font-medium text-[var(--pc-text-muted)]">
               {selectionEnabled && (
-                <th className="w-8 px-3 py-3 text-left">
+                <th scope="col" className="w-8 px-3 py-3 text-left">
                   <input
                     type="checkbox"
                     aria-label="Select all on page"
@@ -154,16 +154,16 @@ export function DeviceTable({
                         allSelectedOnPage
                       )
                     }
-                    className="h-3.5 w-3.5 cursor-pointer accent-[var(--pc-accent)]"
+                    className="h-3.5 w-3.5 cursor-pointer accent-[var(--pc-accent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]"
                   />
                 </th>
               )}
               {columns.map((col) => (
-                <th key={col.id} className="px-4 py-3 text-left">
+                <th key={col.id} scope="col" className="px-4 py-3 text-left">
                   {col.label}
                 </th>
               ))}
-              <th className="w-8 px-2 py-3" />
+              <th scope="col" className="w-8 px-2 py-3" />
             </tr>
           </thead>
           <tbody className="divide-y divide-[var(--pc-border)]">
@@ -176,8 +176,8 @@ export function DeviceTable({
                   data-device-key={device.deviceKey}
                   tabIndex={0}
                   className={cn(
-                    "outline-none transition-colors hover:bg-[var(--pc-tint-subtle)]",
-                    "focus:bg-[var(--pc-accent-muted)]/40 focus:ring-1 focus:ring-inset focus:ring-[var(--pc-accent)]/50",
+                    "pc-content-visibility outline-none transition-colors hover:bg-[var(--pc-tint-subtle)]",
+                    "focus-visible:bg-[var(--pc-accent-muted)]/40 focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-[var(--pc-accent)]/50",
                     isSelected && "bg-[var(--pc-accent-muted)]/30"
                   )}
                 >
@@ -189,7 +189,7 @@ export function DeviceTable({
                         checked={isSelected}
                         onChange={() => onToggleSelected?.(device.deviceKey)}
                         onClick={(event) => event.stopPropagation()}
-                        className="h-3.5 w-3.5 cursor-pointer accent-[var(--pc-accent)]"
+                        className="h-3.5 w-3.5 cursor-pointer accent-[var(--pc-accent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]"
                       />
                     </td>
                   )}
@@ -202,7 +202,8 @@ export function DeviceTable({
                     <Link
                       to="/devices/$deviceKey"
                       params={{ deviceKey: device.deviceKey }}
-                      className="text-[var(--pc-text-muted)] hover:text-[var(--pc-text)]"
+                      className="inline-flex rounded p-1 text-[var(--pc-text-muted)] transition-colors hover:bg-[var(--pc-tint-hover)] hover:text-[var(--pc-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]"
+                      aria-label={`Open ${device.deviceName ?? device.deviceKey}`}
                     >
                       <ChevronRight className="h-3.5 w-3.5" />
                     </Link>

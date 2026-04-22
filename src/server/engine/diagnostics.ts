@@ -211,7 +211,7 @@ const flagCopy: Record<
       "Compare the Entra device object IDs reported by Autopilot, Intune, and Entra — they should all reference the same object.",
       "Check for stale records after a device reimage — the old Intune/Entra record may still exist alongside the new one.",
       "If duplicate Autopilot records exist for the same serial number, delete the stale one in Intune → Devices → Enrollment → Autopilot devices.",
-      "After resolving the conflict, trigger a PilotCheck sync to re-correlate the device."
+      "After resolving the conflict, trigger a Runway sync to re-correlate the device."
     ],
     rawData: [`serial=${context.serialNumber ?? "unknown"}`, `device=${context.deviceName ?? "unknown"}`]
   }),
@@ -221,7 +221,7 @@ const flagCopy: Record<
     whyItMatters: "Group tags drive dynamic group membership which drives profile assignment. A wrong tag sends the device down the wrong provisioning path — it may receive the wrong deployment profile, apps, and policies.",
     checks: [
       "Verify the group tag set on the Autopilot device in Intune → Devices → Enrollment → Autopilot devices.",
-      "Compare the tag against the PilotCheck tag configuration — ensure the tag maps to the correct property, profile, and group.",
+      "Compare the tag against the Runway tag configuration — ensure the tag maps to the correct property, profile, and group.",
       "If the tag was set by the OEM or reseller, confirm it matches your naming convention exactly (tags are case-sensitive in dynamic group rules).",
       "To fix: update the group tag on the Autopilot device, wait for dynamic group re-evaluation (~30 min), then verify profile assignment updates."
     ],
