@@ -74,6 +74,11 @@ export function getSettings(db: Database.Database): SettingsResponse {
       configured: config.isGraphConfigured,
       missing: config.graphMissing
     },
+    appAccess: {
+      mode: config.APP_ACCESS_MODE,
+      required: config.isAppAccessRequired,
+      allowedUsersConfigured: config.appAccessAllowedUsers.length > 0
+    },
     tagConfig: listTagConfig(db),
     featureFlags: listFeatureFlags(db)
   };

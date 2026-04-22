@@ -15,6 +15,7 @@ const dashboardPayload = {
 
 const settingsPayload = {
   graph: { configured: true, missing: [] },
+  appAccess: { mode: "disabled", required: false, allowedUsersConfigured: false },
   featureFlags: { sccm_detection: true },
   tagConfig: [
     { groupTag: "Lodge", expectedProfileNames: ["Lodge-UD"], expectedGroupNames: [], propertyLabel: "Lodge" }
@@ -147,6 +148,18 @@ describe("client drilldown", () => {
       if (url.includes("/api/settings")) return jsonResponse(settingsPayload);
       if (url.includes("/api/sync/status"))
         return jsonResponse({ inProgress: false, lastError: null });
+      if (url.includes("/api/auth/access-status"))
+        return jsonResponse({
+          required: false,
+          configured: false,
+          mode: "disabled",
+          authenticated: false,
+          user: null,
+          name: null,
+          expiresAt: null,
+          allowedUsersConfigured: false,
+          reason: "App access enforcement is disabled."
+        });
       if (url.includes("/api/auth/status"))
         return jsonResponse({ authenticated: true, user: "test@example.com" });
       if (url.includes("/api/devices/ap:auto-1/related-devices")) return jsonResponse([]);
@@ -257,6 +270,18 @@ describe("client drilldown", () => {
       });
     global.fetch = vi.fn(async (input) => {
       const url = String(input);
+      if (url.includes("/api/auth/access-status"))
+        return jsonResponse({
+          required: false,
+          configured: false,
+          mode: "disabled",
+          authenticated: false,
+          user: null,
+          name: null,
+          expiresAt: null,
+          allowedUsersConfigured: false,
+          reason: "App access enforcement is disabled."
+        });
       if (url.includes("/api/settings")) return jsonResponse(settingsPayload);
       if (url.includes("/api/sync/status"))
         return jsonResponse({ inProgress: false, lastError: null });
@@ -286,5 +311,36 @@ describe("client drilldown", () => {
     await waitFor(() => {
       expect(popup.location.href).toBe("https://login.example.test/start");
     });
+  });
+
+  it("shows the Entra app-access gate when enforcement is required", async () => {
+    global.fetch = vi.fn(async (input) => {
+      const url = String(input);
+      if (url.includes("/api/auth/access-status")) {
+        return new Response(
+          JSON.stringify({
+            required: true,
+            configured: true,
+            mode: "entra",
+            authenticated: false,
+            user: null,
+            name: null,
+            expiresAt: null,
+            allowedUsersConfigured: true,
+            reason: null
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        );
+      }
+      return new Response(JSON.stringify({ message: "Not found" }), {
+        status: 404,
+        headers: { "Content-Type": "application/json" }
+      });
+    }) as typeof fetch;
+
+    await renderApp();
+
+    expect(await screen.findByText("Continue with Entra ID")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /sign in with microsoft/i })).toBeInTheDocument();
   });
 });

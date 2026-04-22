@@ -8,6 +8,7 @@ import type Database from "better-sqlite3";
 
 import { config } from "./config.js";
 import { logger } from "./logger.js";
+import { requireAppAccess } from "./auth/auth-middleware.js";
 import { actionsRouter } from "./routes/actions.js";
 import { autopilotImportRouter } from "./routes/autopilot-import.js";
 import { authRouter } from "./routes/auth.js";
@@ -63,6 +64,9 @@ export function createApp(db: Database.Database) {
   app.get("/healthz", healthzHandler(db));
   app.use("/api/health", healthRouter(db));
   app.use("/api/auth", authRouter());
+  if (config.isAppAccessRequired) {
+    app.use("/api", requireAppAccess);
+  }
   app.use("/api/dashboard", dashboardRouter(db));
   app.use("/api/devices", devicesRouter(db));
   app.use("/api/profiles", profilesRouter(db));

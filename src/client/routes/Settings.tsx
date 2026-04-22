@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   Download,
   KeyRound,
+  LockKeyhole,
   Plus,
   Tag,
   ToggleLeft,
@@ -80,6 +81,7 @@ export function SettingsPage() {
   const graphConfigured = settings.data.graph.configured;
   const missing = settings.data.graph.missing;
   const isAuthed = auth.data?.authenticated === true;
+  const appAccess = settings.data.appAccess;
   const sccmDetectionEnabled = settings.data.featureFlags.sccm_detection;
 
   const exportTagConfig = () => {
@@ -238,11 +240,86 @@ export function SettingsPage() {
         </Card>
       </section>
 
-      {/* Section 2: Delegated sign-in */}
+      {/* Section 2: App access gate */}
       <section className="space-y-3">
         <div className="flex items-baseline gap-2">
           <h2 className="text-[13px] font-semibold uppercase tracking-wide text-[var(--pc-text-secondary)]">
-            2. Admin Sign-In
+            2. App Access
+          </h2>
+          <span className="text-[11px] text-[var(--pc-text-muted)]">
+            Optional Entra login before the workspace opens
+          </span>
+        </div>
+        <Card className="p-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex items-start gap-3">
+              <div
+                className={
+                  appAccess.required
+                    ? "flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--pc-healthy-muted)]"
+                    : "flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--pc-tint-subtle)]"
+                }
+              >
+                <LockKeyhole
+                  className={
+                    appAccess.required
+                      ? "h-4 w-4 text-[var(--pc-healthy)]"
+                      : "h-4 w-4 text-[var(--pc-text-muted)]"
+                  }
+                />
+              </div>
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="text-[13px] font-semibold text-[var(--pc-text)]">
+                    {appAccess.required ? "Entra gate active" : "Entra gate not enforced"}
+                  </div>
+                  <span
+                    className={
+                      appAccess.required
+                        ? "rounded-md bg-[var(--pc-healthy-muted)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--pc-healthy)]"
+                        : "rounded-md bg-[var(--pc-tint-subtle)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--pc-text-muted)]"
+                    }
+                  >
+                    APP_ACCESS_MODE={appAccess.mode}
+                  </span>
+                </div>
+                <p className="mt-1 max-w-2xl text-[12px] leading-relaxed text-[var(--pc-text-muted)]">
+                  Set <span className="font-mono">APP_ACCESS_MODE=entra</span> to require a
+                  tenant sign-in before Runway loads. It only becomes enforceable after Graph
+                  credentials are configured, so first-run setup remains reachable.
+                </p>
+                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                  <div className="rounded-lg border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] p-3">
+                    <div className="font-mono text-[11px] text-[var(--pc-text-secondary)]">
+                      APP_ACCESS_ALLOWED_USERS
+                    </div>
+                    <div className="mt-1 text-[11px] text-[var(--pc-text-muted)]">
+                      {appAccess.allowedUsersConfigured
+                        ? "Allow-list configured."
+                        : "Blank: any user in the configured tenant can enter."}
+                    </div>
+                  </div>
+                  <div className="rounded-lg border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] p-3">
+                    <div className="font-mono text-[11px] text-[var(--pc-text-secondary)]">
+                      Recovery path
+                    </div>
+                    <div className="mt-1 text-[11px] text-[var(--pc-text-muted)]">
+                      Set <span className="font-mono">APP_ACCESS_MODE=disabled</span> in .env and
+                      restart if an allow-list ever locks you out.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Card>
+      </section>
+
+      {/* Section 3: Delegated sign-in */}
+      <section className="space-y-3">
+        <div className="flex items-baseline gap-2">
+          <h2 className="text-[13px] font-semibold uppercase tracking-wide text-[var(--pc-text-secondary)]">
+            3. Admin Sign-In
           </h2>
           <span className="text-[11px] text-[var(--pc-text-muted)]">
             Required for remote actions and LAPS
@@ -319,11 +396,11 @@ export function SettingsPage() {
         </Card>
       </section>
 
-      {/* Section 3: SCCM / ConfigMgr */}
+      {/* Section 4: SCCM / ConfigMgr */}
       <section className="space-y-3">
         <div className="flex items-baseline gap-2">
           <h2 className="text-[13px] font-semibold uppercase tracking-wide text-[var(--pc-text-secondary)]">
-            3. SCCM / ConfigMgr Signal
+            4. SCCM / ConfigMgr Signal
           </h2>
           <span className="text-[11px] text-[var(--pc-text-muted)]">
             Optional join-picture check on device pages
@@ -417,11 +494,11 @@ export function SettingsPage() {
         </Card>
       </section>
 
-      {/* Section 4: Sources */}
+      {/* Section 5: Sources */}
       <section className="space-y-3">
         <div className="flex items-baseline gap-2">
           <h2 className="text-[13px] font-semibold uppercase tracking-wide text-[var(--pc-text-secondary)]">
-            4. Data Sources
+            5. Data Sources
           </h2>
           <span className="text-[11px] text-[var(--pc-text-muted)]">
             What Runway reads from each Microsoft service
@@ -459,11 +536,11 @@ export function SettingsPage() {
         </Card>
       </section>
 
-      {/* Section 5: Tag mapping */}
+      {/* Section 6: Tag mapping */}
       <section className="space-y-3">
         <div className="flex flex-wrap items-center gap-2">
           <h2 className="text-[13px] font-semibold uppercase tracking-wide text-[var(--pc-text-secondary)]">
-            5. Group Tag → Profile Mapping
+            6. Group Tag → Profile Mapping
           </h2>
           <span className="text-[11px] text-[var(--pc-text-muted)]">
             Tells the engine what each Autopilot group tag should resolve to
@@ -685,10 +762,10 @@ export function SettingsPage() {
         )}
       </section>
 
-      {/* Section 6: System health & retention */}
+      {/* Section 7: System health & retention */}
       <SystemHealthSection />
 
-      {/* Section 7: Custom rules */}
+      {/* Section 8: Custom rules */}
       <RulesSection />
 
       <ConfirmDialog

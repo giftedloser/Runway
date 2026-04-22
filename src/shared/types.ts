@@ -285,6 +285,12 @@ export interface GraphReadiness {
   missing: string[];
 }
 
+export interface AppAccessSettings {
+  mode: "disabled" | "entra";
+  required: boolean;
+  allowedUsersConfigured: boolean;
+}
+
 /**
  * Simple on/off toggles stored server-side in the `feature_flags` table.
  * Keys are narrowly enumerated in `src/server/db/queries/settings.ts` so
@@ -302,6 +308,7 @@ export interface FeatureFlagMap {
 
 export interface SettingsResponse {
   graph: GraphReadiness;
+  appAccess: AppAccessSettings;
   tagConfig: TagConfigRecord[];
   featureFlags: FeatureFlagMap;
 }
@@ -383,6 +390,14 @@ export interface AuthStatus {
   user: string | null;
   name: string | null;
   expiresAt: string | null;
+}
+
+export interface AppAccessStatus extends AuthStatus {
+  required: boolean;
+  configured: boolean;
+  mode: "disabled" | "entra";
+  allowedUsersConfigured: boolean;
+  reason: string | null;
 }
 
 // --- Remote Actions ---

@@ -13,6 +13,8 @@ const envSchema = z.object({
   AZURE_REDIRECT_URI: z.string().default("http://localhost:3001/api/auth/callback"),
   HOST: z.string().default("127.0.0.1"),
   SESSION_SECRET: z.string().default(DEFAULT_SESSION_SECRET),
+  APP_ACCESS_MODE: z.enum(["disabled", "entra"]).default("disabled"),
+  APP_ACCESS_ALLOWED_USERS: z.string().default(""),
   PORT: z.coerce.number().default(3001),
   CLIENT_PORT: z.coerce.number().default(5173),
   DATABASE_PATH: z.string().default("./data/pilotcheck.sqlite"),
@@ -31,6 +33,9 @@ const envSchema = z.object({
 });
 
 const parsed = envSchema.parse(process.env);
+const appAccessAllowedUsers = parsed.APP_ACCESS_ALLOWED_USERS.split(",")
+  .map((user) => user.trim().toLowerCase())
+  .filter(Boolean);
 
 // Fail fast if running outside dev/test with the built-in default session secret.
 // With the default, anyone who knows the string can forge session cookies and
@@ -53,6 +58,12 @@ export const config = {
     Boolean(parsed.AZURE_TENANT_ID) &&
     Boolean(parsed.AZURE_CLIENT_ID) &&
     Boolean(parsed.AZURE_CLIENT_SECRET),
+  isAppAccessRequired:
+    parsed.APP_ACCESS_MODE === "entra" &&
+    Boolean(parsed.AZURE_TENANT_ID) &&
+    Boolean(parsed.AZURE_CLIENT_ID) &&
+    Boolean(parsed.AZURE_CLIENT_SECRET),
+  appAccessAllowedUsers,
   graphMissing: [
     !parsed.AZURE_TENANT_ID ? "AZURE_TENANT_ID" : null,
     !parsed.AZURE_CLIENT_ID ? "AZURE_CLIENT_ID" : null,

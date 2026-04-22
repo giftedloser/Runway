@@ -14,6 +14,8 @@ export const DELEGATED_SCOPES = [
   "DeviceManagementServiceConfig.ReadWrite.All"
 ];
 
+export const APP_ACCESS_SCOPES = ["openid", "profile", "email", "User.Read"];
+
 let msalInstance: ConfidentialClientApplication | null = null;
 
 function getMsal(): ConfidentialClientApplication {
@@ -32,9 +34,17 @@ function getMsal(): ConfidentialClientApplication {
 }
 
 export async function getAuthUrl(state?: string): Promise<string> {
+  return getMicrosoftAuthUrl(DELEGATED_SCOPES, state);
+}
+
+export async function getAppAccessAuthUrl(state?: string): Promise<string> {
+  return getMicrosoftAuthUrl(APP_ACCESS_SCOPES, state);
+}
+
+async function getMicrosoftAuthUrl(scopes: string[], state?: string): Promise<string> {
   const msal = getMsal();
   const request: AuthorizationUrlRequest = {
-    scopes: DELEGATED_SCOPES,
+    scopes,
     redirectUri: config.AZURE_REDIRECT_URI,
     state: state ?? createAuthState()
   };
@@ -64,6 +74,28 @@ export async function acquireDelegatedToken(code: string): Promise<{
     account: {
       username: result.account?.username ?? "unknown",
       name: result.account?.name ?? undefined
+    },
+    expiresOn: result.expiresOn ?? new Date(Date.now() + 3600 * 1000)
+  };
+}
+
+export async function acquireAppAccessToken(code: string): Promise<{
+  account: { username: string; name?: string };
+  expiresOn: Date;
+}> {
+  const msal = getMsal();
+  const result = await msal.acquireTokenByCode({
+    code,
+    scopes: APP_ACCESS_SCOPES,
+    redirectUri: config.AZURE_REDIRECT_URI
+  });
+  if (!result?.accessToken || !result.account?.username) {
+    throw new Error("Failed to complete Runway app sign-in.");
+  }
+  return {
+    account: {
+      username: result.account.username,
+      name: result.account.name ?? undefined
     },
     expiresOn: result.expiresOn ?? new Date(Date.now() + 3600 * 1000)
   };
