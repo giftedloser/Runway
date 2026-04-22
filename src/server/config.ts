@@ -36,12 +36,14 @@ const parsed = envSchema.parse(process.env);
 // With the default, anyone who knows the string can forge session cookies and
 // bypass delegated-auth on every desktop installation.
 const nodeEnv = process.env.NODE_ENV;
-const isDevOrTest = nodeEnv === "development" || nodeEnv === "test";
+const npmLifecycleEvent = process.env.npm_lifecycle_event;
+const isLocalDevServer = npmLifecycleEvent === "dev:server";
+const isDevOrTest = nodeEnv === "development" || nodeEnv === "test" || isLocalDevServer;
 if (!isDevOrTest && parsed.SESSION_SECRET === DEFAULT_SESSION_SECRET) {
   throw new Error(
     "SESSION_SECRET is set to the built-in development default. " +
       "Set SESSION_SECRET to a long random value in the Runway .env before starting the server. " +
-      "(Set NODE_ENV=development to bypass this check in local development.)"
+      "(npm run dev handles this automatically; set NODE_ENV=development only for manual local server runs.)"
   );
 }
 

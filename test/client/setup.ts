@@ -1,5 +1,6 @@
 import "@testing-library/jest-dom/vitest";
-import { vi } from "vitest";
+import { cleanup } from "@testing-library/react";
+import { afterEach, vi } from "vitest";
 
 // The real app relies on a Vite `define` to inject __APP_VERSION__ at build
 // time. vitest's project-level `define` doesn't cascade into jsdom's global
@@ -9,4 +10,8 @@ import { vi } from "vitest";
 Object.defineProperty(window, "scrollTo", {
   value: vi.fn(),
   writable: true
+});
+
+afterEach(() => {
+  cleanup();
 });
