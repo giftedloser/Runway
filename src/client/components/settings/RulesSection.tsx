@@ -201,10 +201,10 @@ export function RulesSection() {
           : "value";
 
   return (
-    <section className="space-y-3">
+    <section id="rules" className="scroll-mt-6 space-y-3">
       <div className="flex items-baseline gap-2">
         <h2 className="text-[13px] font-semibold uppercase tracking-wide text-[var(--pc-text-secondary)]">
-          7. Custom Rules
+          8. Custom Rules
         </h2>
         <span className="text-[11px] text-[var(--pc-text-muted)]">
           Encode your own join, configuration, and posture expectations
@@ -249,7 +249,7 @@ export function RulesSection() {
                     severity: event.target.value as RuleSeverity
                   }))
                 }
-                className="mt-1 h-9 w-full rounded-lg border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-3 text-[13px] text-[var(--pc-text)] outline-none transition-[border-color,box-shadow,background-color,color] duration-150 hover:border-[var(--pc-border-hover)] focus:border-[var(--pc-accent)] focus:ring-1 focus:ring-[var(--pc-accent)]/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]"
+                className="pc-select mt-1 w-full"
               >
                 <option value="info">Info</option>
                 <option value="warning">Warning</option>
@@ -290,7 +290,7 @@ export function RulesSection() {
                           : previous.value
                   }));
                 }}
-                className="mt-1 h-9 w-full rounded-lg border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-3 text-[13px] text-[var(--pc-text)] outline-none transition-[border-color,box-shadow,background-color,color] duration-150 hover:border-[var(--pc-border-hover)] focus:border-[var(--pc-accent)] focus:ring-1 focus:ring-[var(--pc-accent)]/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]"
+                className="pc-select mt-1 w-full"
               >
                 {FIELD_OPTIONS.map((field) => (
                   <option key={field.id} value={field.id}>
@@ -307,7 +307,7 @@ export function RulesSection() {
                 onChange={(event) =>
                   setForm((previous) => ({ ...previous, op: event.target.value as RuleOp }))
                 }
-                className="mt-1 h-9 w-full rounded-lg border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-3 text-[13px] text-[var(--pc-text)] outline-none transition-[border-color,box-shadow,background-color,color] duration-150 hover:border-[var(--pc-border-hover)] focus:border-[var(--pc-accent)] focus:ring-1 focus:ring-[var(--pc-accent)]/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]"
+                className="pc-select mt-1 w-full"
               >
                 {OP_OPTIONS.map((op) => (
                   <option key={op.value} value={op.value}>
@@ -325,7 +325,7 @@ export function RulesSection() {
                     onChange={(event) =>
                       setForm((previous) => ({ ...previous, value: event.target.value }))
                     }
-                    className="mt-1 h-9 w-full rounded-lg border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-3 text-[13px] text-[var(--pc-text)] outline-none transition-[border-color,box-shadow,background-color,color] duration-150 hover:border-[var(--pc-border-hover)] focus:border-[var(--pc-accent)] focus:ring-1 focus:ring-[var(--pc-accent)]/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]"
+                    className="pc-select mt-1 w-full"
                   >
                     <option value="true">true</option>
                     <option value="false">false</option>
@@ -436,7 +436,10 @@ export function RulesSection() {
         ) : (
           <ul className="divide-y divide-[var(--pc-border)]">
             {rules.data.map((rule) => (
-              <li key={rule.id} className="flex items-start gap-3 py-3">
+              <li
+                key={rule.id}
+                className="flex items-start gap-3 rounded-[var(--pc-radius-sm)] px-2 py-3 transition-colors duration-150 hover:bg-[var(--pc-tint-hover)]"
+              >
                 <button
                   type="button"
                   className="mt-0.5 text-[var(--pc-text-muted)] hover:text-[var(--pc-accent)]"

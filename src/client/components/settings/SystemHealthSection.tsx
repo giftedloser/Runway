@@ -74,10 +74,10 @@ export function SystemHealthSection() {
   };
 
   return (
-    <section className="space-y-3">
+    <section id="health" className="scroll-mt-6 space-y-3">
       <div className="flex items-baseline gap-2">
         <h2 className="text-[13px] font-semibold uppercase tracking-wide text-[var(--pc-text-secondary)]">
-          6. System Health & Retention
+          7. System Health & Retention
         </h2>
         <span className="text-[11px] text-[var(--pc-text-muted)]">
           Process status, sync freshness, and data pruning
@@ -217,7 +217,7 @@ function StatusTile({
   note: string;
 }) {
   return (
-    <div className="rounded-lg border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] p-3">
+    <div className="pc-interactive-lift rounded-[var(--pc-radius)] border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] p-3 hover:border-[var(--pc-border-hover)] hover:bg-[var(--pc-surface-overlay)]">
       <div className="flex items-center gap-2">
         {icon}
         <span className="text-[11px] font-medium uppercase tracking-wide text-[var(--pc-text-muted)]">

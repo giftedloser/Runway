@@ -22,7 +22,7 @@ export function AppShell() {
           <Sidebar />
           <main
             id="main-content"
-            className="min-w-0 flex-1 overflow-x-hidden bg-[radial-gradient(circle_at_top_right,var(--pc-accent-muted),transparent_32rem)]"
+            className="min-w-0 flex-1 overflow-x-hidden bg-[linear-gradient(180deg,var(--pc-tint-subtle),transparent_24rem)]"
           >
             <div className="pc-page-enter mx-auto w-full max-w-[1600px] px-4 pb-24 pt-5 sm:px-6 lg:px-8 lg:pb-24 lg:pt-8 xl:px-12">
               <Outlet />

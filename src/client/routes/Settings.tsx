@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import {
   AlertTriangle,
   Boxes,
@@ -48,6 +48,17 @@ const DELEGATED_SCOPES = [
   "DeviceManagementServiceConfig.ReadWrite.All",
   "User.Read"
 ];
+
+const SETTINGS_NAV = [
+  { href: "#graph", label: "Graph" },
+  { href: "#access", label: "Access" },
+  { href: "#admin", label: "Admin" },
+  { href: "#signals", label: "Signals" },
+  { href: "#sources", label: "Sources" },
+  { href: "#tags", label: "Tags" },
+  { href: "#health", label: "Health" },
+  { href: "#rules", label: "Rules" }
+] as const;
 
 export function SettingsPage() {
   const settings = useSettings();
@@ -158,7 +169,7 @@ export function SettingsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <PageHeader
         eyebrow="System"
         title="Settings"
@@ -173,16 +184,15 @@ export function SettingsPage() {
         hasTagMappings={settings.data.tagConfig.length > 0}
       />
 
+      <SettingsJumpNav />
+
       {/* Section 1: Graph integration */}
-      <section className="space-y-3">
-        <div className="flex items-baseline gap-2">
-          <h2 className="text-[13px] font-semibold uppercase tracking-wide text-[var(--pc-text-secondary)]">
-            1. Microsoft Graph Integration
-          </h2>
-          <span className="text-[11px] text-[var(--pc-text-muted)]">
-            Read-only ingestion - powers dashboards and device joins
-          </span>
-        </div>
+      <section id="graph" className="scroll-mt-6 space-y-3">
+        <SettingsSectionHeader
+          index="1"
+          title="Microsoft Graph Integration"
+          detail="Read-only ingestion - powers dashboards and device joins"
+        />
 
         <Card className="p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -251,15 +261,12 @@ export function SettingsPage() {
       </section>
 
       {/* Section 2: App access gate */}
-      <section className="space-y-3">
-        <div className="flex items-baseline gap-2">
-          <h2 className="text-[13px] font-semibold uppercase tracking-wide text-[var(--pc-text-secondary)]">
-            2. App Access
-          </h2>
-          <span className="text-[11px] text-[var(--pc-text-muted)]">
-            Optional Entra login before the workspace opens
-          </span>
-        </div>
+      <section id="access" className="scroll-mt-6 space-y-3">
+        <SettingsSectionHeader
+          index="2"
+          title="App Access"
+          detail="Optional Entra login before the workspace opens"
+        />
         <Card className="p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex items-start gap-3">
@@ -326,15 +333,12 @@ export function SettingsPage() {
       </section>
 
       {/* Section 3: Delegated sign-in */}
-      <section className="space-y-3">
-        <div className="flex items-baseline gap-2">
-          <h2 className="text-[13px] font-semibold uppercase tracking-wide text-[var(--pc-text-secondary)]">
-            3. Admin Sign-In
-          </h2>
-          <span className="text-[11px] text-[var(--pc-text-muted)]">
-            Required for remote actions, LAPS, BitLocker, and settings changes
-          </span>
-        </div>
+      <section id="admin" className="scroll-mt-6 space-y-3">
+        <SettingsSectionHeader
+          index="3"
+          title="Admin Sign-In"
+          detail="Required for remote actions, LAPS, BitLocker, and settings changes"
+        />
         <Card className="p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex items-start gap-3">
@@ -407,15 +411,12 @@ export function SettingsPage() {
       </section>
 
       {/* Section 4: SCCM / ConfigMgr */}
-      <section className="space-y-3">
-        <div className="flex items-baseline gap-2">
-          <h2 className="text-[13px] font-semibold uppercase tracking-wide text-[var(--pc-text-secondary)]">
-            4. SCCM / ConfigMgr Signal
-          </h2>
-          <span className="text-[11px] text-[var(--pc-text-muted)]">
-            Optional join-picture check on device pages
-          </span>
-        </div>
+      <section id="signals" className="scroll-mt-6 space-y-3">
+        <SettingsSectionHeader
+          index="4"
+          title="SCCM / ConfigMgr Signal"
+          detail="Optional join-picture check on device pages"
+        />
         <Card className="p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex items-start gap-3">
@@ -505,15 +506,12 @@ export function SettingsPage() {
       </section>
 
       {/* Section 5: Sources */}
-      <section className="space-y-3">
-        <div className="flex items-baseline gap-2">
-          <h2 className="text-[13px] font-semibold uppercase tracking-wide text-[var(--pc-text-secondary)]">
-            5. Data Sources
-          </h2>
-          <span className="text-[11px] text-[var(--pc-text-muted)]">
-            What Runway reads from each Microsoft service
-          </span>
-        </div>
+      <section id="sources" className="scroll-mt-6 space-y-3">
+        <SettingsSectionHeader
+          index="5"
+          title="Data Sources"
+          detail="What Runway reads from each Microsoft service"
+        />
         <Card className="p-5">
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             <SourceCard
@@ -547,51 +545,50 @@ export function SettingsPage() {
       </section>
 
       {/* Section 6: Tag mapping */}
-      <section className="space-y-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <h2 className="text-[13px] font-semibold uppercase tracking-wide text-[var(--pc-text-secondary)]">
-            6. Group Tag {"->"} Profile Mapping
-          </h2>
-          <span className="text-[11px] text-[var(--pc-text-muted)]">
-            Tells the engine what each Autopilot group tag should resolve to
-          </span>
-          <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="application/json,.json"
-              className="hidden"
-              onChange={(event) => {
-                const file = event.target.files?.[0];
-                if (file) void importTagConfig(file);
-              }}
-            />
-            <Button
-              variant="secondary"
-              className="h-8 px-2.5 text-[11.5px]"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={importing || !isAuthed}
-              title={
-                isAuthed
-                  ? "Import tag mappings from JSON (upserts by group tag)"
-                  : "Admin sign-in required to import tag mappings"
-              }
-            >
-              <Upload className="h-3.5 w-3.5" />
-              {importing ? "Importing…" : "Import JSON"}
-            </Button>
-            <Button
-              variant="secondary"
-              className="h-8 px-2.5 text-[11.5px]"
-              onClick={exportTagConfig}
-              disabled={(settings.data?.tagConfig.length ?? 0) === 0}
-              title="Download all tag mappings as JSON"
-            >
-              <Download className="h-3.5 w-3.5" />
-              Export JSON
-            </Button>
-          </div>
-        </div>
+      <section id="tags" className="scroll-mt-6 space-y-3">
+        <SettingsSectionHeader
+          index="6"
+          title="Group Tag -> Profile Mapping"
+          detail="Tells the engine what each Autopilot group tag should resolve to"
+          actions={
+            <div className="flex flex-wrap items-center gap-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="application/json,.json"
+                className="hidden"
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  if (file) void importTagConfig(file);
+                }}
+              />
+              <Button
+                variant="secondary"
+                className="h-8 px-2.5 text-[11.5px]"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={importing || !isAuthed}
+                title={
+                  isAuthed
+                    ? "Import tag mappings from JSON (upserts by group tag)"
+                    : "Admin sign-in required to import tag mappings"
+                }
+              >
+                <Upload className="h-3.5 w-3.5" />
+                {importing ? "Importing..." : "Import JSON"}
+              </Button>
+              <Button
+                variant="secondary"
+                className="h-8 px-2.5 text-[11.5px]"
+                onClick={exportTagConfig}
+                disabled={(settings.data?.tagConfig.length ?? 0) === 0}
+                title="Download all tag mappings as JSON"
+              >
+                <Download className="h-3.5 w-3.5" />
+                Export JSON
+              </Button>
+            </div>
+          }
+        />
 
         <Card className="p-5">
           <div className="mb-4 flex items-center gap-2">
@@ -715,14 +712,22 @@ export function SettingsPage() {
 
         {settings.data.tagConfig.length === 0 ? (
           <Card className="border-dashed px-5 py-8 text-center text-[12.5px] text-[var(--pc-text-muted)]">
-            No mappings yet. Without mappings, Runway cannot detect{" "}
-            <span className="text-[var(--pc-text-secondary)]">tag mismatch</span> or{" "}
-            <span className="text-[var(--pc-text-secondary)]">not in target group</span> conditions.
+            <Tag className="mx-auto mb-2 h-5 w-5 text-[var(--pc-accent)]" />
+            <div className="font-semibold text-[var(--pc-text-secondary)]">No mappings yet</div>
+            <div className="mx-auto mt-1 max-w-xl leading-5">
+              Without mappings, Runway cannot detect{" "}
+              <span className="text-[var(--pc-text-secondary)]">tag mismatch</span> or{" "}
+              <span className="text-[var(--pc-text-secondary)]">not in target group</span>{" "}
+              conditions.
+            </div>
           </Card>
         ) : (
           <div className="grid gap-3 2xl:grid-cols-2">
             {settings.data.tagConfig.map((row) => (
-              <Card key={row.groupTag} className="p-4">
+              <Card
+                key={row.groupTag}
+                className="pc-interactive-lift p-4 hover:border-[var(--pc-border-hover)] hover:bg-[var(--pc-surface-raised)]"
+              >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
@@ -790,6 +795,56 @@ export function SettingsPage() {
         }}
         onCancel={() => setDeleteTarget(null)}
       />
+    </div>
+  );
+}
+
+function SettingsJumpNav() {
+  return (
+    <nav
+      aria-label="Settings sections"
+      className="sticky top-2 z-10 rounded-[var(--pc-radius)] border border-[var(--pc-border)] bg-[var(--pc-surface-glass)] p-1 shadow-[var(--pc-shadow-card)] backdrop-blur supports-[backdrop-filter]:bg-[var(--pc-surface-glass)]"
+    >
+      <div className="flex gap-1 overflow-x-auto">
+        {SETTINGS_NAV.map((item) => (
+          <a
+            key={item.href}
+            href={item.href}
+            className="whitespace-nowrap rounded-[var(--pc-radius-sm)] px-3 py-1.5 text-[11.5px] font-medium text-[var(--pc-text-muted)] transition-[background-color,color] duration-150 hover:bg-[var(--pc-tint-hover)] hover:text-[var(--pc-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]"
+          >
+            {item.label}
+          </a>
+        ))}
+      </div>
+    </nav>
+  );
+}
+
+function SettingsSectionHeader({
+  index,
+  title,
+  detail,
+  actions
+}: {
+  index: string;
+  title: string;
+  detail: string;
+  actions?: ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+          <span className="font-mono text-[11px] font-semibold text-[var(--pc-accent)]">
+            {index.padStart(2, "0")}
+          </span>
+          <h2 className="text-[13px] font-semibold uppercase tracking-wide text-[var(--pc-text-secondary)]">
+            {title}
+          </h2>
+        </div>
+        <p className="mt-0.5 text-[11px] text-[var(--pc-text-muted)]">{detail}</p>
+      </div>
+      {actions ? <div className="shrink-0">{actions}</div> : null}
     </div>
   );
 }
@@ -878,7 +933,10 @@ function SettingsReadinessBanner({
       </div>
       <div className="grid gap-px bg-[var(--pc-border)] md:grid-cols-5">
         {items.map((item) => (
-          <div key={item.label} className="bg-[var(--pc-surface)] px-4 py-3">
+          <div
+            key={item.label}
+            className="bg-[var(--pc-surface)] px-4 py-3 transition-colors duration-150 hover:bg-[var(--pc-surface-raised)]"
+          >
             <div className="flex items-center justify-between gap-2">
               <div className="text-[10.5px] font-semibold uppercase tracking-wide text-[var(--pc-text-muted)]">
                 {item.label}
@@ -908,7 +966,7 @@ function SourceCard({
   items: string[];
 }) {
   return (
-    <div className="rounded-lg border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] p-4">
+    <div className="pc-interactive-lift rounded-[var(--pc-radius)] border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] p-4 hover:border-[var(--pc-border-hover)] hover:bg-[var(--pc-surface-overlay)]">
       <div className="flex items-center justify-between">
         <SourceBadge source={source} />
         <Boxes className="h-3.5 w-3.5 text-[var(--pc-text-muted)]" />
