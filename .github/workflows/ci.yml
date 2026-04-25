@@ -17,6 +17,9 @@ jobs:
   check:
     name: Lint, test, and build
     runs-on: ubuntu-latest
+    env:
+      NODE_ENV: test
+      SESSION_SECRET: runway-ci-session-secret-for-github-actions-only
     steps:
       - uses: actions/checkout@v4
 
