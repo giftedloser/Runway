@@ -73,12 +73,15 @@ export async function fullSync(
       syncProfiles(client)
     ]);
 
+    const syncWarnings: string[] = [];
     const conditionalAccessSync = await syncConditionalAccessPolicies(client).catch((error) => {
+      const message = "Conditional access sync failed; preserved previous policy snapshot.";
       logger.warn(
         { err: error },
-        "Conditional access sync failed; continuing without conditional access data."
+        message
       );
-      return { policies: [] };
+      syncWarnings.push(message);
+      return null;
     });
 
     // Compliance + config profile syncs need Intune device IDs, so they run after the initial fetch
@@ -99,7 +102,7 @@ export async function fullSync(
       profileAssignmentRows: profileSync.assignments,
       compliancePolicies: complianceSync.policies,
       deviceComplianceStates: complianceSync.deviceStates,
-      conditionalAccessPolicies: conditionalAccessSync.policies,
+      conditionalAccessPolicies: conditionalAccessSync?.policies,
       configProfiles: configProfileSync.profiles,
       deviceConfigStates: configProfileSync.deviceStates,
       mobileApps: appSync.apps,
@@ -107,7 +110,7 @@ export async function fullSync(
     });
 
     const devicesSynced = computeAllDeviceStates(db);
-    completeSyncLog(db, log.id, { devicesSynced });
+    completeSyncLog(db, log.id, { devicesSynced, errors: syncWarnings });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown sync failure";
     state.lastError = message;

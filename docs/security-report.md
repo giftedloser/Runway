@@ -24,7 +24,7 @@ There is no Runway cloud service, no telemetry, no analytics, and no third-party
 - App-only client credentials are stored in `.env` on the operator workstation.
 - Delegated admin sign-in uses Microsoft identity endpoints and a signed local session cookie.
 - `SESSION_SECRET` must be replaced before live testing; the server refuses to start in non-dev mode with the built-in default.
-- The optional app access gate can require Entra sign-in before fleet data is visible.
+- The app access gate requires Entra sign-in before fleet data is visible once Graph is configured, unless explicitly disabled for local/dev use.
 
 ## Network Model
 

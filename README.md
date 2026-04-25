@@ -33,6 +33,8 @@ Runway is ready for controlled live testing when:
 - Graph app credentials are configured and `SEED_MODE=none` is used for a
   clean live-data validation pass.
 - `SESSION_SECRET` has been replaced with a long random value.
+- The Entra app access gate is enabled, or an explicit local/dev exception is
+  documented.
 - At least five known devices match expected Autopilot, Intune, Entra, and
   ConfigMgr/SCCM states.
 - Admin sign-in, sign-out, and one low-risk delegated action such as Intune
@@ -74,8 +76,9 @@ Runway is ready for controlled live testing when:
 - **SCCM visibility** — optional ConfigMgr/SCCM status appears alongside
   Graph, Intune, and Entra signals on device detail pages using Intune's
   `managementAgent` value.
-- **Tenant access gate** — optional Entra sign-in gate locks the app before
-  operators can see fleet data; delegated admin consent remains separate.
+- **Tenant access gate** — Entra sign-in gate locks the app before operators
+  can see fleet data once Graph is configured; delegated admin consent remains
+  separate.
 - **Desktop polish** — Tauri shell with Runway branding, custom title bar,
   drag region, minimize/maximize/close controls, and Windows installers.
 - **Mock mode** — seeds realistic data when Graph credentials aren't
@@ -91,7 +94,7 @@ Runway is ready for controlled live testing when:
 | Routing | TanStack Router (URL-as-state), TanStack Query                         |
 | UI      | shadcn-style primitives, lucide-react icons                            |
 | Server  | Express 5, better-sqlite3, pino                                        |
-| Auth    | MSAL Node - app-only sync, delegated actions, optional app access gate |
+| Auth    | MSAL Node - app-only sync, delegated actions, Entra app access gate    |
 | Desktop | Tauri 2, custom Windows title bar, NSIS/MSI installers                 |
 | Tests   | Vitest (unit / api / e2e), Testing Library, supertest                  |
 
@@ -170,8 +173,8 @@ PROVISIONING_STALLED_HOURS=8
 # Force mock data even when credentials are present
 SEED_MODE=mock
 
-# Optional Entra app-access gate. Keep disabled until first-run setup works.
-APP_ACCESS_MODE=disabled
+# Entra app-access gate. Enforced by default once Graph is configured.
+APP_ACCESS_MODE=entra
 APP_ACCESS_ALLOWED_USERS=
 
 # SCCM/ConfigMgr detection is toggled in Settings.

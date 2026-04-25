@@ -112,8 +112,8 @@ step at the end. See `src/server/sync/sync-service.ts` for the flow.
 - **Wave 1 (hard-fail, `Promise.all`)** — Autopilot, Intune, Entra, groups,
   profiles. If any one rejects, the whole sync aborts, the error is written
   to `sync_log.errors`, and the exception is rethrown.
-- **Best-effort** — conditional access. A failure here is logged at `warn`
-  level and the sync continues with an empty policy list.
+- **Best-effort** — conditional access. A failure here is logged at `warn`,
+  recorded in the sync log, and the previous policy snapshot is preserved.
 - **Wave 2 (hard-fail)** — compliance, config profiles, apps. Same
   hard-fail semantics as wave 1.
 
@@ -123,7 +123,7 @@ step at the end. See `src/server/sync/sync-service.ts` for the flow.
    expandable and shows the raw Graph message.
 2. **DB:** `SELECT id, started_at, errors FROM sync_log ORDER BY id DESC LIMIT 10;`
 3. **Logs:** The server logs via `pino`. Errors are at `error` level; the
-   best-effort CA failure is at `warn`.
+   best-effort CA failure is at `warn` and also appears in `sync_log.errors`.
 
 ### Symptom → fix
 
@@ -132,7 +132,7 @@ step at the end. See `src/server/sync/sync-service.ts` for the flow.
 | Sync log shows `Graph request failed: 429 Too Many Requests`   | Tenant is being throttled                                        | `graph-client.ts` already retries with `Retry-After`; if it still fails, reduce `SYNC_INTERVAL_MINUTES` |
 | Sync log shows `Graph request failed: 5xx` after 3 retries     | Transient Graph outage                                           | Wait; if persistent, check <https://status.cloud.microsoft>      |
 | Sync aborts on Intune but Entra completed                      | Intune Graph returned 4xx/5xx; wave-1 `Promise.all` aborts       | Inspect `errors` for the specific status; if 403, re-check Intune permissions |
-| Conditional access missing from dashboard but sync "succeeded" | CA sync failed and was swallowed (best-effort)                   | Check server logs at `warn`; usually a permissions issue         |
+| Conditional access looks stale after sync "succeeded"          | CA sync failed and Runway preserved the previous snapshot        | Check server logs and sync log warnings; usually a permissions issue |
 | Sync completes but `devices_synced` is 0                       | No Windows devices matched the `$filter`, or all Intune IDs were stale | Confirm at least one Windows device is Intune-enrolled and visible in the admin centre |
 | `A sync is already in progress.` on manual click               | Previous sync is still running (or state leaked after a crash)   | Wait for it; if truly stuck, restart the server                  |
 | Sync succeeds but dashboard looks empty                        | `computeAllDeviceStates` ran on zero rows                        | Check `device_state` count; confirm wave-1 fetches returned data |

@@ -7,6 +7,7 @@ function placeholders(columns: string[]) {
 }
 
 export function persistSnapshot(db: Database.Database, payload: SnapshotPayload) {
+  const shouldRefreshConditionalAccess = payload.conditionalAccessPolicies !== undefined;
   const existingAutopilot = new Map(
     (
       db
@@ -138,7 +139,9 @@ export function persistSnapshot(db: Database.Database, payload: SnapshotPayload)
     db.prepare("DELETE FROM device_config_states").run();
     db.prepare("DELETE FROM mobile_apps").run();
     db.prepare("DELETE FROM device_app_install_states").run();
-    db.prepare("DELETE FROM conditional_access_policies").run();
+    if (shouldRefreshConditionalAccess) {
+      db.prepare("DELETE FROM conditional_access_policies").run();
+    }
 
     for (const row of payload.autopilotRows) {
       const existing = existingAutopilot.get(row.id);
@@ -188,8 +191,10 @@ export function persistSnapshot(db: Database.Database, payload: SnapshotPayload)
     for (const row of payload.deviceAppInstallStates ?? []) {
       insertDeviceAppInstallState.run(row);
     }
-    for (const row of payload.conditionalAccessPolicies ?? []) {
-      insertConditionalAccessPolicy.run(row);
+    if (shouldRefreshConditionalAccess) {
+      for (const row of payload.conditionalAccessPolicies ?? []) {
+        insertConditionalAccessPolicy.run(row);
+      }
     }
     for (const row of payload.tagConfigRows ?? []) {
       upsertTagConfig.run(

@@ -1,4 +1,5 @@
 import { requestWithDelegatedToken } from "../auth/delegated-auth.js";
+import { escapeODataString, graphPathSegment } from "./graph-url.js";
 
 export interface BitLockerKey {
   id: string;
@@ -30,7 +31,7 @@ export async function getBitLockerKeys(
   // Step 1: List recovery keys for this device
   const listResult = await requestWithDelegatedToken<GraphBitLockerKeyListResponse>(
     token,
-    `/informationProtection/bitlocker/recoveryKeys?$filter=deviceId eq '${entraDeviceId}'`
+    `/informationProtection/bitlocker/recoveryKeys?$filter=deviceId eq '${escapeODataString(entraDeviceId)}'`
   );
 
   if (listResult.status !== 200 || !listResult.data?.value?.length) {
@@ -50,7 +51,7 @@ export async function getBitLockerKeys(
   for (const entry of listResult.data.value) {
     const keyResult = await requestWithDelegatedToken<GraphBitLockerKeyResponse>(
       token,
-      `/informationProtection/bitlocker/recoveryKeys/${entry.id}?$select=key`
+      `/informationProtection/bitlocker/recoveryKeys/${graphPathSegment(entry.id)}?$select=key`
     );
     if (keyResult.status === 200 && keyResult.data?.key) {
       keys.push({

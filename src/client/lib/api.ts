@@ -1,4 +1,5 @@
 const DESKTOP_API_ORIGIN = "http://localhost:3001";
+const DESKTOP_TOKEN_HEADER = "X-Runway-Desktop-Token";
 
 // Emitted whenever the server rejects a request with 401. UnauthenticatedListener
 // subscribes so that the auth query is invalidated and the user is prompted to
@@ -10,6 +11,12 @@ export interface UnauthenticatedEventDetail {
   message: string;
 }
 
+interface TauriWindow {
+  __TAURI_INTERNALS__?: unknown;
+}
+
+let desktopTokenPromise: Promise<string | null> | null = null;
+
 function resolveRequestUrl(path: string) {
   if (/^https?:\/\//.test(path)) {
     return path;
@@ -20,6 +27,18 @@ function resolveRequestUrl(path: string) {
   }
 
   return path;
+}
+
+function isTauriRuntime() {
+  return typeof window !== "undefined" && "__TAURI_INTERNALS__" in (window as TauriWindow);
+}
+
+async function getDesktopApiToken() {
+  if (!isTauriRuntime()) return null;
+  desktopTokenPromise ??= import("@tauri-apps/api/core")
+    .then(({ invoke }) => invoke<string>("get_desktop_api_token"))
+    .catch(() => null);
+  return desktopTokenPromise;
 }
 
 function isJsonResponse(response: Response) {
@@ -47,15 +66,20 @@ function emitUnauthenticated(path: string, message: string) {
 
 export async function apiRequest<T>(path: string, init?: RequestInit) {
   const requestUrl = resolveRequestUrl(path);
+  const desktopToken = await getDesktopApiToken();
+  const headers = new Headers(init?.headers);
+  if (!headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+  if (desktopToken) {
+    headers.set(DESKTOP_TOKEN_HEADER, desktopToken);
+  }
 
   let response: Response;
   try {
     response = await fetch(requestUrl, {
-      headers: {
-        "Content-Type": "application/json",
-        ...(init?.headers ?? {})
-      },
-      ...init
+      ...init,
+      headers,
     });
   } catch {
     throw new Error(`Runway could not reach its local runtime for ${path}.`);

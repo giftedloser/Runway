@@ -10,7 +10,9 @@ Use this before connecting Runway to a real tenant. The goal is to prove the app
 - Run `npm run build`.
 - Confirm `.env` is not staged with `git status --short`.
 - Set `SESSION_SECRET` to a long random value before live testing.
-- Leave `APP_ACCESS_MODE=disabled` until Graph setup and first sync work.
+- Keep `APP_ACCESS_MODE=entra` for pilot runs. It activates once Graph
+  credentials are configured; use `disabled` only for a documented local/dev
+  exception.
 - Use `SEED_MODE=none` when you want to verify only live tenant data.
 - Keep `DATABASE_PATH` on an encrypted disk such as BitLocker-protected storage.
 
@@ -81,5 +83,6 @@ Ready for broader pilot when:
 - Live sync completes without unexpected permission errors.
 - Mock-only data is not mixed into the live database unless intentionally seeded.
 - At least five known devices match expected Graph/Intune/Entra/SCCM state.
-- App access gate has been enabled if non-admin technicians will open the app.
+- App access gate is enabled, or a documented single-operator/dev exception
+  has been approved.
 - Security review in `docs/security-report.md` has been accepted.

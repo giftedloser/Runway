@@ -19,6 +19,12 @@ vi.mock("../../src/server/config.js", () => ({
     PROVISIONING_STALLED_HOURS: 8,
     SEED_MODE: "mock",
     isGraphConfigured: true,
+    isAppAccessRequired: true,
+    APP_ACCESS_MODE: "entra",
+    APP_ACCESS_ALLOWED_USERS: "",
+    RUNWAY_DESKTOP_TOKEN: undefined,
+    appAccessAllowedUsers: [],
+    isDevOrTest: true,
     graphMissing: []
   }
 }));
@@ -146,16 +152,35 @@ describe("fullSync — partial failure handling", () => {
   });
 
   it("continues the sync when conditional-access fails (it is best-effort)", async () => {
+    db.prepare(
+      `INSERT INTO conditional_access_policies (
+        id, display_name, state, conditions_json, grant_controls_json, session_controls_json, last_synced_at, raw_json
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+    ).run(
+      "ca-existing",
+      "Require MFA",
+      "enabled",
+      "{}",
+      "{}",
+      "{}",
+      "2026-04-01T00:00:00.000Z",
+      "{}"
+    );
     caMock.mockRejectedValue(new Error("CA 403"));
 
     await fullSync(db, "manual");
 
     const logs = listSyncLogs(db);
     expect(logs.length).toBe(1);
-    // CA failure is swallowed → no errors recorded, completedAt populated.
-    expect(logs[0]!.errors).toEqual([]);
+    expect(logs[0]!.errors).toContain(
+      "Conditional access sync failed; preserved previous policy snapshot."
+    );
     expect(logs[0]!.completedAt).not.toBeNull();
     expect(getSyncState().lastError).toBeNull();
+    const remaining = db
+      .prepare("SELECT id FROM conditional_access_policies")
+      .all() as Array<{ id: string }>;
+    expect(remaining).toEqual([{ id: "ca-existing" }]);
   });
 
   it("records compliance-sync failure and rethrows (compliance runs after initial batch)", async () => {

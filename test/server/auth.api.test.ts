@@ -1,3 +1,7 @@
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
+
 import Database from "better-sqlite3";
 import request from "supertest";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -28,9 +32,11 @@ vi.mock("../../src/server/auth/delegated-auth.js", () => delegatedAuthMock);
 describe("delegated auth flow", () => {
   let db: Database.Database;
   let envBackup: NodeJS.ProcessEnv;
+  let tempDirs: string[];
 
   beforeEach(async () => {
     envBackup = { ...process.env };
+    tempDirs = [];
     process.env.NODE_ENV = "test";
     process.env.AZURE_TENANT_ID = "11111111-1111-1111-1111-111111111111";
     process.env.AZURE_CLIENT_ID = "22222222-2222-2222-2222-222222222222";
@@ -39,6 +45,8 @@ describe("delegated auth flow", () => {
     process.env.SESSION_SECRET = "test-session-secret";
     delete process.env.APP_ACCESS_MODE;
     delete process.env.APP_ACCESS_ALLOWED_USERS;
+    delete process.env.RUNWAY_DESKTOP_TOKEN;
+    delete process.env.PILOTCHECK_ENV_PATH;
 
     delegatedAuthMock.createAuthState.mockClear();
     delegatedAuthMock.getAuthUrl.mockClear();
@@ -53,6 +61,9 @@ describe("delegated auth flow", () => {
 
   afterEach(() => {
     db.close();
+    for (const dir of tempDirs) {
+      rmSync(dir, { recursive: true, force: true });
+    }
     vi.resetModules();
     process.env = envBackup;
   });
@@ -142,7 +153,23 @@ describe("delegated auth flow", () => {
     expect(status.body.user).toBeNull();
   });
 
-  it("does not require app access unless the Entra gate is enabled", async () => {
+  it("requires app access by default once Graph is configured", async () => {
+    const { createApp } = await import("../../src/server/app.js");
+    const app = createApp(db);
+
+    const status = await request(app).get("/api/auth/access-status").expect(200);
+    expect(status.body).toMatchObject({
+      required: true,
+      configured: true,
+      mode: "entra",
+      authenticated: false
+    });
+
+    await request(app).get("/api/settings").expect(401);
+  });
+
+  it("keeps the explicit disabled access mode available for local-only/dev runs", async () => {
+    process.env.APP_ACCESS_MODE = "disabled";
     const { createApp } = await import("../../src/server/app.js");
     const app = createApp(db);
 
@@ -153,12 +180,10 @@ describe("delegated auth flow", () => {
       mode: "disabled",
       authenticated: false
     });
-
     await request(app).get("/api/settings").expect(200);
   });
 
   it("requires app access for API routes when the Entra gate is enabled", async () => {
-    process.env.APP_ACCESS_MODE = "entra";
     const { createApp } = await import("../../src/server/app.js");
     const app = createApp(db);
     const agent = request.agent(app);
@@ -186,7 +211,6 @@ describe("delegated auth flow", () => {
   });
 
   it("denies app access when the signed-in user is outside the allow-list", async () => {
-    process.env.APP_ACCESS_MODE = "entra";
     process.env.APP_ACCESS_ALLOWED_USERS = "someone-else@example.com";
     const { createApp } = await import("../../src/server/app.js");
     const app = createApp(db);
@@ -201,5 +225,30 @@ describe("delegated auth flow", () => {
     const status = await agent.get("/api/auth/access-status").expect(200);
     expect(status.body.authenticated).toBe(false);
     await agent.get("/api/settings").expect(401);
+  });
+
+  it("requires the desktop session token for first-run Graph bootstrap when the token is configured", async () => {
+    delete process.env.AZURE_TENANT_ID;
+    delete process.env.AZURE_CLIENT_ID;
+    delete process.env.AZURE_CLIENT_SECRET;
+    process.env.RUNWAY_DESKTOP_TOKEN = "desktop-token-value-with-at-least-32-chars";
+    const dir = mkdtempSync(path.join(tmpdir(), "runway-env-"));
+    tempDirs.push(dir);
+    process.env.PILOTCHECK_ENV_PATH = path.join(dir, ".env");
+
+    const { createApp } = await import("../../src/server/app.js");
+    const app = createApp(db);
+    const payload = {
+      tenantId: "11111111-1111-1111-1111-111111111111",
+      clientId: "22222222-2222-2222-2222-222222222222",
+      clientSecret: "new-client-secret-value"
+    };
+
+    await request(app).post("/api/settings/graph").send(payload).expect(403);
+    await request(app)
+      .post("/api/settings/graph")
+      .set("X-Runway-Desktop-Token", "desktop-token-value-with-at-least-32-chars")
+      .send(payload)
+      .expect(202);
   });
 });

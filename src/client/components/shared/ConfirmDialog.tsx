@@ -16,6 +16,7 @@ interface ConfirmDialogProps {
   onConfirm: () => void;
   onCancel: () => void;
   isLoading?: boolean;
+  confirmDisabled?: boolean;
 }
 
 export function ConfirmDialog({
@@ -30,7 +31,8 @@ export function ConfirmDialog({
   onTypedChange,
   onConfirm,
   onCancel,
-  isLoading
+  isLoading,
+  confirmDisabled: confirmBlocked = false
 }: ConfirmDialogProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
 
@@ -74,7 +76,7 @@ export function ConfirmDialog({
   if (!open) return null;
 
   const confirmDisabled =
-    isLoading || (Boolean(requireTyped) && typedValue.trim() !== requireTyped);
+    isLoading || confirmBlocked || (Boolean(requireTyped) && typedValue.trim() !== requireTyped);
 
   return (
     <div

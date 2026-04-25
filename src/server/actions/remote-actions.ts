@@ -1,4 +1,5 @@
 import { requestWithDelegatedToken } from "../auth/delegated-auth.js";
+import { graphPathSegment, graphUserRef } from "./graph-url.js";
 
 export type RemoteActionType =
   | "sync_device"
@@ -23,7 +24,7 @@ export async function syncDevice(
 ): Promise<ActionResult> {
   const { status } = await requestWithDelegatedToken(
     token,
-    `/deviceManagement/managedDevices/${intuneId}/syncDevice`,
+    `/deviceManagement/managedDevices/${graphPathSegment(intuneId)}/syncDevice`,
     { method: "POST" }
   );
   return {
@@ -39,7 +40,7 @@ export async function rebootDevice(
 ): Promise<ActionResult> {
   const { status } = await requestWithDelegatedToken(
     token,
-    `/deviceManagement/managedDevices/${intuneId}/rebootNow`,
+    `/deviceManagement/managedDevices/${graphPathSegment(intuneId)}/rebootNow`,
     { method: "POST" }
   );
   return {
@@ -56,7 +57,7 @@ export async function renameDevice(
 ): Promise<ActionResult> {
   const { status } = await requestWithDelegatedToken(
     token,
-    `/deviceManagement/managedDevices/${intuneId}/setDeviceName`,
+    `/deviceManagement/managedDevices/${graphPathSegment(intuneId)}/setDeviceName`,
     { method: "POST", body: { deviceName: newName } }
   );
   return {
@@ -72,7 +73,7 @@ export async function autopilotReset(
 ): Promise<ActionResult> {
   const { status } = await requestWithDelegatedToken(
     token,
-    `/deviceManagement/managedDevices/${intuneId}/wipe`,
+    `/deviceManagement/managedDevices/${graphPathSegment(intuneId)}/wipe`,
     { method: "POST", body: { keepEnrollmentData: true, keepUserData: false } }
   );
   return {
@@ -88,7 +89,7 @@ export async function retireDevice(
 ): Promise<ActionResult> {
   const { status } = await requestWithDelegatedToken(
     token,
-    `/deviceManagement/managedDevices/${intuneId}/retire`,
+    `/deviceManagement/managedDevices/${graphPathSegment(intuneId)}/retire`,
     { method: "POST" }
   );
   return {
@@ -104,7 +105,7 @@ export async function wipeDevice(
 ): Promise<ActionResult> {
   const { status } = await requestWithDelegatedToken(
     token,
-    `/deviceManagement/managedDevices/${intuneId}/wipe`,
+    `/deviceManagement/managedDevices/${graphPathSegment(intuneId)}/wipe`,
     { method: "POST", body: { keepEnrollmentData: false, keepUserData: false } }
   );
   return {
@@ -120,7 +121,7 @@ export async function rotateLapsPassword(
 ): Promise<ActionResult> {
   const { status } = await requestWithDelegatedToken(
     token,
-    `/deviceManagement/managedDevices/${intuneId}/rotateLocalAdminPassword`,
+    `/deviceManagement/managedDevices/${graphPathSegment(intuneId)}/rotateLocalAdminPassword`,
     { method: "POST" }
   );
   return {
@@ -136,7 +137,7 @@ export async function deleteIntuneDevice(
 ): Promise<ActionResult> {
   const { status } = await requestWithDelegatedToken(
     token,
-    `/deviceManagement/managedDevices/${intuneId}`,
+    `/deviceManagement/managedDevices/${graphPathSegment(intuneId)}`,
     { method: "DELETE" }
   );
   return {
@@ -152,7 +153,7 @@ export async function deleteAutopilotDevice(
 ): Promise<ActionResult> {
   const { status } = await requestWithDelegatedToken(
     token,
-    `/deviceManagement/windowsAutopilotDeviceIdentities/${autopilotId}`,
+    `/deviceManagement/windowsAutopilotDeviceIdentities/${graphPathSegment(autopilotId)}`,
     { method: "DELETE" }
   );
   return {
@@ -170,7 +171,7 @@ export async function changePrimaryUser(
   // Step 1: Remove existing primary user reference
   const deleteResult = await requestWithDelegatedToken(
     token,
-    `/deviceManagement/managedDevices/${intuneId}/users/$ref`,
+    `/deviceManagement/managedDevices/${graphPathSegment(intuneId)}/users/$ref`,
     { method: "DELETE" }
   );
   // 204 = removed, 404 = no user was assigned — both are acceptable before re-assigning
@@ -185,11 +186,11 @@ export async function changePrimaryUser(
   // Step 2: Assign the new primary user
   const { status } = await requestWithDelegatedToken(
     token,
-    `/deviceManagement/managedDevices/${intuneId}/users/$ref`,
+    `/deviceManagement/managedDevices/${graphPathSegment(intuneId)}/users/$ref`,
     {
       method: "POST",
       body: {
-        "@odata.id": `https://graph.microsoft.com/v1.0/users/${userId}`
+        "@odata.id": graphUserRef(userId)
       }
     }
   );

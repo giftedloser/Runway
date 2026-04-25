@@ -9,7 +9,8 @@ import {
   Shield,
   Terminal,
   Trash2,
-  Type
+  Type,
+  UserRound
 } from "lucide-react";
 
 import type { DeviceDetailResponse, RemoteActionType } from "../../lib/types.js";
@@ -28,7 +29,7 @@ interface ActionSpec {
   description: string;
   destructive?: boolean;
   requireTyped?: boolean;
-  needsInput?: "newName";
+  needsInput?: "newName" | "primaryUser";
 }
 
 const ACTIONS: ActionSpec[] = [
@@ -56,6 +57,14 @@ const ACTIONS: ActionSpec[] = [
     label: "Rotate LAPS",
     icon: RotateCcw,
     description: "Trigger a LAPS password rotation. The new password will be available after next check-in."
+  },
+  {
+    type: "change-primary-user",
+    label: "Change Primary User",
+    icon: UserRound,
+    description:
+      "Update the Intune primary user reference. Enter an Entra user object ID or UPN, then confirm the assignment.",
+    needsInput: "primaryUser"
   },
   {
     type: "autopilot-reset",
@@ -110,6 +119,7 @@ const INTUNE_BACKED_ACTIONS = new Set<RemoteActionType>([
   "autopilot-reset",
   "retire",
   "wipe",
+  "change-primary-user",
   "delete-intune"
 ]);
 
@@ -135,6 +145,7 @@ export function ActionsToolbar({ device }: { device: DeviceDetailResponse }) {
   const [pending, setPending] = useState<ActionSpec | null>(null);
   const [typedConfirm, setTypedConfirm] = useState("");
   const [newName, setNewName] = useState("");
+  const [primaryUserId, setPrimaryUserId] = useState("");
 
   const isAuthed = auth.data?.authenticated === true;
   const deviceName = device.summary.deviceName ?? device.summary.serialNumber ?? "this device";
@@ -142,6 +153,7 @@ export function ActionsToolbar({ device }: { device: DeviceDetailResponse }) {
   const handleRequest = (spec: ActionSpec) => {
     setTypedConfirm("");
     setNewName(device.summary.deviceName ?? "");
+    setPrimaryUserId(device.summary.intunePrimaryUserUpn ?? "");
     setPending(spec);
   };
 
@@ -149,7 +161,12 @@ export function ActionsToolbar({ device }: { device: DeviceDetailResponse }) {
     if (!pending) return;
     const spec = pending;
     try {
-      const body = spec.needsInput === "newName" ? { deviceName: newName } : undefined;
+      const body =
+        spec.needsInput === "newName"
+          ? { deviceName: newName.trim() }
+          : spec.needsInput === "primaryUser"
+          ? { userId: primaryUserId.trim() }
+          : undefined;
       const result = await action.mutateAsync({
         deviceKey: device.summary.deviceKey,
         action: spec.type,
@@ -170,6 +187,13 @@ export function ActionsToolbar({ device }: { device: DeviceDetailResponse }) {
       setPending(null);
     }
   };
+
+  const inputBlocked =
+    pending?.needsInput === "newName"
+      ? !newName.trim()
+      : pending?.needsInput === "primaryUser"
+      ? !primaryUserId.trim()
+      : false;
 
   if (!isAuthed) {
     return (
@@ -253,18 +277,25 @@ export function ActionsToolbar({ device }: { device: DeviceDetailResponse }) {
         onConfirm={handleConfirm}
         onCancel={() => setPending(null)}
         isLoading={action.isPending}
+        confirmDisabled={inputBlocked}
       />
 
-      {pending?.needsInput === "newName" ? (
+      {pending?.needsInput ? (
         <div className="fixed inset-x-0 bottom-6 z-[60] mx-auto w-full max-w-md px-4">
           <div className="rounded-lg border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] p-3 shadow-xl">
             <label className="block text-[11px] font-medium uppercase tracking-wide text-[var(--pc-text-muted)]">
-              New device name
+              {pending.needsInput === "newName" ? "New device name" : "Primary user"}
             </label>
             <Input
-              value={newName}
-              onChange={(event) => setNewName(event.target.value)}
-              placeholder="e.g. CG-LOBBY-001"
+              value={pending.needsInput === "newName" ? newName : primaryUserId}
+              onChange={(event) =>
+                pending.needsInput === "newName"
+                  ? setNewName(event.target.value)
+                  : setPrimaryUserId(event.target.value)
+              }
+              placeholder={
+                pending.needsInput === "newName" ? "e.g. CG-LOBBY-001" : "user@contoso.com or object ID"
+              }
               className="mt-1.5 w-full"
               autoFocus
             />

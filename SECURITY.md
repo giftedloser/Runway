@@ -43,8 +43,9 @@ The relevant trust boundaries are:
 - **The Express API** bound to localhost. By default it does not listen on
   external interfaces, but a misconfigured reverse proxy could expose it.
 - **First-run Graph bootstrap**, which is only accepted when the server is
-  bound to loopback and the request also originates from a loopback
-  address. Non-local deployments must provision Graph credentials through
+  bound to loopback, the request also originates from a loopback address,
+  and packaged desktop builds include the active Runway desktop session
+  token. Non-local deployments must provision Graph credentials through
   `.env` instead of the setup form.
 - **Microsoft Graph credentials** in the per-user app data `.env`. The
   client secret lives only on the operator's machine. Rotate it on the
@@ -54,11 +55,14 @@ The relevant trust boundaries are:
   to a long random string before shipping. `src/server/config.ts` refuses
   to start outside `NODE_ENV=development`/`test` if the built-in default
   session secret is still in use.
-- **The optional app access gate**, controlled by `APP_ACCESS_MODE=entra`,
-  requires an Entra sign-in before operators can view fleet data. Keep it
-  disabled during first-run setup, then enable it before broader pilot use.
+- **The app access gate**, controlled by `APP_ACCESS_MODE=entra`, requires an
+  Entra sign-in before operators can view fleet data once Graph credentials
+  are configured. This is the default; set `APP_ACCESS_MODE=disabled` only
+  for local/dev or documented single-operator runs.
 - **The Tauri desktop shell**, which loads the local web runtime only and
-  grants a narrow window-control capability for the custom title bar.
+  grants a narrow window-control capability for the custom title bar. The
+  shell also applies a restrictive CSP and mints the per-session desktop
+  token used by first-run setup.
 - **SCCM / ConfigMgr visibility**, which is read-only and derived from
   Intune's `managementAgent` value. Runway does not store SCCM credentials
   and does not execute SCCM actions.

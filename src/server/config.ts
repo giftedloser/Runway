@@ -13,8 +13,9 @@ const envSchema = z.object({
   AZURE_REDIRECT_URI: z.string().default("http://localhost:3001/api/auth/callback"),
   HOST: z.string().default("127.0.0.1"),
   SESSION_SECRET: z.string().default(DEFAULT_SESSION_SECRET),
-  APP_ACCESS_MODE: z.enum(["disabled", "entra"]).default("disabled"),
+  APP_ACCESS_MODE: z.enum(["disabled", "entra"]).default("entra"),
   APP_ACCESS_ALLOWED_USERS: z.string().default(""),
+  RUNWAY_DESKTOP_TOKEN: z.string().min(32).optional(),
   PORT: z.coerce.number().default(3001),
   CLIENT_PORT: z.coerce.number().default(5173),
   DATABASE_PATH: z.string().default("./data/pilotcheck.sqlite"),
@@ -64,6 +65,7 @@ export const config = {
     Boolean(parsed.AZURE_CLIENT_ID) &&
     Boolean(parsed.AZURE_CLIENT_SECRET),
   appAccessAllowedUsers,
+  isDevOrTest,
   graphMissing: [
     !parsed.AZURE_TENANT_ID ? "AZURE_TENANT_ID" : null,
     !parsed.AZURE_CLIENT_ID ? "AZURE_CLIENT_ID" : null,

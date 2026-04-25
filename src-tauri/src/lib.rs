@@ -4,6 +4,7 @@ use std::path::PathBuf;
 use std::process::{Child, Command, Stdio};
 use std::sync::Mutex;
 
+use rand::RngCore;
 use tauri::path::BaseDirectory;
 use tauri::Manager;
 
@@ -16,6 +17,18 @@ const API_PORT: &str = "3001";
 const CREATE_NO_WINDOW: u32 = 0x08000000;
 
 struct BackendState(Mutex<Option<Child>>);
+struct DesktopApiToken(String);
+
+fn create_desktop_api_token() -> String {
+  let mut bytes = [0u8; 32];
+  rand::thread_rng().fill_bytes(&mut bytes);
+  bytes.iter().map(|byte| format!("{byte:02x}")).collect()
+}
+
+#[tauri::command]
+fn get_desktop_api_token(token: tauri::State<'_, DesktopApiToken>) -> String {
+  token.0.clone()
+}
 
 #[cfg(target_os = "windows")]
 fn normalize_resource_path(path: PathBuf) -> PathBuf {
@@ -35,6 +48,7 @@ fn normalize_resource_path(path: PathBuf) -> PathBuf {
 fn spawn_backend(app: &tauri::AppHandle) -> tauri::Result<Child> {
   let runtime_root = normalize_resource_path(app.path().resolve("runtime", BaseDirectory::Resource)?);
   let app_root = runtime_root.join("app");
+  let desktop_api_token = app.state::<DesktopApiToken>().0.clone();
   let node_binary = runtime_root.join(if cfg!(target_os = "windows") {
     "node.exe"
   } else {
@@ -62,6 +76,7 @@ fn spawn_backend(app: &tauri::AppHandle) -> tauri::Result<Child> {
     .env("NODE_ENV", "production")
     .env("HOST", API_HOST)
     .env("PORT", API_PORT)
+    .env("RUNWAY_DESKTOP_TOKEN", desktop_api_token)
     .env("PILOTCHECK_APP_DATA_DIR", &app_data_dir)
     .env("DATABASE_PATH", app_data_dir.join("pilotcheck.sqlite"))
     .stdout(Stdio::from(log_file.try_clone()?))
@@ -92,6 +107,8 @@ fn stop_backend(app: &tauri::AppHandle) {
 pub fn run() {
   let app = tauri::Builder::default()
     .manage(BackendState(Mutex::new(None)))
+    .manage(DesktopApiToken(create_desktop_api_token()))
+    .invoke_handler(tauri::generate_handler![get_desktop_api_token])
     .setup(|app| {
       if cfg!(debug_assertions) {
         app.handle().plugin(

@@ -1,4 +1,5 @@
 import { requestWithDelegatedToken } from "../auth/delegated-auth.js";
+import { graphDirectoryObjectRef, graphPathSegment } from "./graph-url.js";
 
 interface ActionResult {
   success: boolean;
@@ -46,7 +47,7 @@ export async function updateMembershipRule(
 ): Promise<ActionResult> {
   const { status } = await requestWithDelegatedToken(
     token,
-    `/groups/${groupId}`,
+    `/groups/${graphPathSegment(groupId)}`,
     {
       method: "PATCH",
       body: {
@@ -70,11 +71,11 @@ export async function addDeviceToGroup(
 ): Promise<ActionResult> {
   const { status } = await requestWithDelegatedToken(
     token,
-    `/groups/${groupId}/members/$ref`,
+    `/groups/${graphPathSegment(groupId)}/members/$ref`,
     {
       method: "POST",
       body: {
-        "@odata.id": `https://graph.microsoft.com/v1.0/directoryObjects/${entraDeviceId}`
+        "@odata.id": graphDirectoryObjectRef(entraDeviceId)
       }
     }
   );
@@ -93,7 +94,7 @@ export async function removeDeviceFromGroup(
 ): Promise<ActionResult> {
   const { status } = await requestWithDelegatedToken(
     token,
-    `/groups/${groupId}/members/${entraDeviceId}/$ref`,
+    `/groups/${graphPathSegment(groupId)}/members/${graphPathSegment(entraDeviceId)}/$ref`,
     { method: "DELETE" }
   );
 

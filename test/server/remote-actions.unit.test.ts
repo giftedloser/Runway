@@ -105,6 +105,17 @@ describe("remote-actions — request shape", () => {
     );
     expect(result.message).toContain("DESKTOP-ACME");
   });
+
+  it("encodes path identifiers before sending Graph requests", async () => {
+    requestWithDelegatedTokenMock.mockResolvedValueOnce({ status: 204, data: null });
+    await actions.syncDevice("tok", "intune/id with space");
+
+    expect(requestWithDelegatedTokenMock).toHaveBeenCalledWith(
+      "tok",
+      "/deviceManagement/managedDevices/intune%2Fid%20with%20space/syncDevice",
+      { method: "POST" }
+    );
+  });
 });
 
 describe("remote-actions — failure handling", () => {
@@ -155,6 +166,26 @@ describe("changePrimaryUser — two-step sequence", () => {
       }
     );
     expect(result.success).toBe(true);
+  });
+
+  it("encodes UPN primary-user references in @odata.id", async () => {
+    requestWithDelegatedTokenMock
+      .mockResolvedValueOnce({ status: 204, data: null })
+      .mockResolvedValueOnce({ status: 204, data: null });
+
+    await actions.changePrimaryUser("tok", "intune-123", "jane.doe+pilot@example.com");
+
+    expect(requestWithDelegatedTokenMock).toHaveBeenNthCalledWith(
+      2,
+      "tok",
+      "/deviceManagement/managedDevices/intune-123/users/$ref",
+      {
+        method: "POST",
+        body: {
+          "@odata.id": "https://graph.microsoft.com/v1.0/users/jane.doe%2Bpilot%40example.com"
+        }
+      }
+    );
   });
 
   it("tolerates 404 on the DELETE step (no user was assigned) and still assigns", async () => {

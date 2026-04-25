@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, type Request } from "express";
 import { z } from "zod";
 
 import type Database from "better-sqlite3";
@@ -38,6 +38,13 @@ const graphConfigSchema = z.object({
 function isLoopbackAddress(address: string | undefined) {
   if (!address) return false;
   return address === "127.0.0.1" || address === "::1" || address === "::ffff:127.0.0.1";
+}
+
+function hasDesktopSetupToken(request: Request) {
+  return (
+    Boolean(config.RUNWAY_DESKTOP_TOKEN) &&
+    request.get("x-runway-desktop-token") === config.RUNWAY_DESKTOP_TOKEN
+  );
 }
 
 export function settingsRouter(db: Database.Database) {
@@ -132,6 +139,15 @@ export function settingsRouter(db: Database.Database) {
       response.status(403).json({
         message:
           "First-run Graph bootstrap is only allowed from a loopback-only Runway server. Set credentials manually in .env for non-local deployments."
+      });
+    } else if (config.RUNWAY_DESKTOP_TOKEN && !hasDesktopSetupToken(request)) {
+      response.status(403).json({
+        message: "First-run Graph bootstrap requires the active Runway desktop session."
+      });
+    } else if (!config.RUNWAY_DESKTOP_TOKEN && !config.isDevOrTest) {
+      response.status(403).json({
+        message:
+          "First-run Graph bootstrap requires the Runway desktop session token. Set credentials manually in .env for server-only production runs."
       });
     } else {
       next();

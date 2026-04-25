@@ -30,10 +30,12 @@ function isLoopbackHost(host: string) {
   return host === "127.0.0.1" || host === "::1" || host === "localhost";
 }
 
+const JSON_BODY_LIMIT = "1mb";
+
 export function createApp(db: Database.Database) {
   const app = express();
 
-  app.use(express.json());
+  app.use(express.json({ limit: JSON_BODY_LIMIT }));
   app.use(pinoHttp({ logger }));
 
   // Session middleware for delegated auth.
