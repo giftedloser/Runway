@@ -1,18 +1,31 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
-import { Download, Filter, KeyRound, Loader2, RefreshCw, RotateCcw, Rows2, Rows3, X } from "lucide-react";
+import {
+  Download,
+  Filter,
+  KeyRound,
+  Loader2,
+  RefreshCw,
+  RotateCcw,
+  Rows2,
+  Rows3,
+  X,
+} from "lucide-react";
 import { useState } from "react";
 
 import {
   BulkActionConfirm,
   type BulkActionType,
-  type BulkDeviceResult
+  type BulkDeviceResult,
 } from "../components/devices/BulkActionConfirm.js";
 import { ColumnPicker } from "../components/devices/ColumnPicker.js";
 import { DeviceFilters } from "../components/devices/DeviceFilters.js";
-import { DeviceTable, type DeviceTableDensity } from "../components/devices/DeviceTable.js";
+import {
+  DeviceTable,
+  type DeviceTableDensity,
+} from "../components/devices/DeviceTable.js";
 import {
   DEFAULT_VISIBLE_COLUMNS,
-  type DeviceColumnId
+  type DeviceColumnId,
 } from "../components/devices/DeviceTableColumns.js";
 import { SavedViews } from "../components/devices/SavedViews.js";
 import { PageHeader } from "../components/layout/PageHeader.js";
@@ -32,18 +45,19 @@ export function DeviceListPage() {
   const devices = useDevices(search);
   const [density, setDensity] = usePreference<DeviceTableDensity>(
     "device-density",
-    "comfortable"
+    "comfortable",
   );
-  const [visibleColumnIds, setVisibleColumnIds] = usePreference<DeviceColumnId[]>(
-    "device-columns",
-    DEFAULT_VISIBLE_COLUMNS
-  );
+  const [visibleColumnIds, setVisibleColumnIds] = usePreference<
+    DeviceColumnId[]
+  >("device-columns", DEFAULT_VISIBLE_COLUMNS);
 
   const toast = useToast();
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
   const [bulkBusy, setBulkBusy] = useState<null | BulkActionType>(null);
   const [pendingBulk, setPendingBulk] = useState<null | BulkActionType>(null);
-  const [bulkPhase, setBulkPhase] = useState<"confirming" | "running" | "completed">("confirming");
+  const [bulkPhase, setBulkPhase] = useState<
+    "confirming" | "running" | "completed"
+  >("confirming");
   const [bulkResults, setBulkResults] = useState<BulkDeviceResult[]>([]);
 
   const toggleSelected = (deviceKey: string) => {
@@ -70,7 +84,7 @@ export function DeviceListPage() {
   const ACTION_LABELS: Record<BulkActionType, string> = {
     sync: "Sync",
     reboot: "Reboot",
-    "rotate-laps": "Rotate LAPS"
+    "rotate-laps": "Rotate LAPS",
   };
 
   const requestBulk = (action: BulkActionType) => {
@@ -102,8 +116,8 @@ export function DeviceListPage() {
         method: "POST",
         body: JSON.stringify({
           action,
-          deviceKeys: Array.from(selectedKeys)
-        })
+          deviceKeys: Array.from(selectedKeys),
+        }),
       });
       setBulkResults(result.results);
       setBulkPhase("completed");
@@ -111,7 +125,7 @@ export function DeviceListPage() {
         toast.push({
           variant: "success",
           title: `Bulk ${label.toLowerCase()} queued`,
-          description: `${result.successCount} of ${result.total} devices accepted.`
+          description: `${result.successCount} of ${result.total} devices accepted.`,
         });
         clearSelection();
       } else {
@@ -119,7 +133,7 @@ export function DeviceListPage() {
           variant: "warning",
           title: `Bulk ${label.toLowerCase()} partially completed`,
           description: `${result.successCount} succeeded, ${result.failureCount} failed.`,
-          durationMs: 8000
+          durationMs: 8000,
         });
       }
     } catch (error) {
@@ -127,7 +141,8 @@ export function DeviceListPage() {
       toast.push({
         variant: "error",
         title: `${label} failed`,
-        description: error instanceof Error ? error.message : "Bulk action failed."
+        description:
+          error instanceof Error ? error.message : "Bulk action failed.",
       });
     } finally {
       setBulkBusy(null);
@@ -149,7 +164,7 @@ export function DeviceListPage() {
     toast.push({
       variant: "success",
       title: "CSV exported",
-      description: `${devices.data.items.length} devices saved.`
+      description: `${devices.data.items.length} devices saved.`,
     });
   };
 
@@ -163,32 +178,56 @@ export function DeviceListPage() {
       <SavedViews />
       <DeviceFilters />
 
-      <div className="flex flex-col gap-3 rounded-xl border border-[var(--pc-border)] bg-[var(--pc-surface)] px-3 py-2.5 text-[11px] text-[var(--pc-text-muted)] sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-2.5 rounded-[var(--pc-radius)] border border-[var(--pc-border)] bg-[var(--pc-surface)] px-3 py-2.5 text-[11px] text-[var(--pc-text-muted)] sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 flex-wrap items-center gap-3">
           <span className="inline-flex items-center gap-1.5">
-            {Boolean(search.search || search.health || search.flag || search.property || search.profile) && (
-              <Filter className="h-3 w-3 text-[var(--pc-accent)]" />
-            )}
+            {Boolean(
+              search.search ||
+              search.health ||
+              search.flag ||
+              search.property ||
+              search.profile,
+            ) && <Filter className="h-3 w-3 text-[var(--pc-accent)]" />}
             {devices.data
               ? `${devices.data.total.toLocaleString()} device${devices.data.total === 1 ? "" : "s"}`
               : ""}
-            {devices.data && Boolean(search.search || search.health || search.flag || search.property || search.profile) && (
-              <span className="text-[var(--pc-accent)]">filtered</span>
-            )}
+            {devices.data &&
+              Boolean(
+                search.search ||
+                search.health ||
+                search.flag ||
+                search.property ||
+                search.profile,
+              ) && <span className="text-[var(--pc-accent)]">filtered</span>}
           </span>
           <span className="text-[var(--pc-text-muted)]/60">·</span>
           <span className="hidden sm:inline">
-            <kbd className="rounded border border-[var(--pc-border)] px-1 py-px font-mono text-[10px]">j</kbd>{" "}
-            <kbd className="rounded border border-[var(--pc-border)] px-1 py-px font-mono text-[10px]">k</kbd>{" "}
+            <kbd className="rounded border border-[var(--pc-border)] px-1 py-px font-mono text-[10px]">
+              j
+            </kbd>{" "}
+            <kbd className="rounded border border-[var(--pc-border)] px-1 py-px font-mono text-[10px]">
+              k
+            </kbd>{" "}
             move,{" "}
-            <kbd className="rounded border border-[var(--pc-border)] px-1 py-px font-mono text-[10px]">Enter</kbd>{" "}
+            <kbd className="rounded border border-[var(--pc-border)] px-1 py-px font-mono text-[10px]">
+              Enter
+            </kbd>{" "}
             open,{" "}
-            <kbd className="rounded border border-[var(--pc-border)] px-1 py-px font-mono text-[10px]">Space</kbd>{" "}
+            <kbd className="rounded border border-[var(--pc-border)] px-1 py-px font-mono text-[10px]">
+              Space
+            </kbd>{" "}
             select
+          </span>
+          <span className="pc-helper-text hidden xl:inline">
+            Open a row for source-level diagnostics, or select rows to run
+            guarded remote actions.
           </span>
         </div>
         <div className="flex w-full items-center gap-2 overflow-x-auto sm:w-auto sm:justify-end">
-          <ColumnPicker value={visibleColumnIds} onChange={setVisibleColumnIds} />
+          <ColumnPicker
+            value={visibleColumnIds}
+            onChange={setVisibleColumnIds}
+          />
           <button
             type="button"
             onClick={exportCsv}
@@ -240,7 +279,11 @@ export function DeviceListPage() {
             onToggleSelected={toggleSelected}
             onToggleAll={toggleAll}
             hasActiveFilters={Boolean(
-              search.search || search.health || search.flag || search.property || search.profile
+              search.search ||
+              search.health ||
+              search.flag ||
+              search.property ||
+              search.profile,
             )}
             onClearFilters={() =>
               navigate({
@@ -251,8 +294,8 @@ export function DeviceListPage() {
                   property: undefined,
                   profile: undefined,
                   page: 1,
-                  pageSize: search.pageSize ?? 25
-                })
+                  pageSize: search.pageSize ?? 25,
+                }),
               })
             }
           />
@@ -264,7 +307,9 @@ export function DeviceListPage() {
               navigate({ search: (previous) => ({ ...previous, page }) })
             }
             onPageSizeChange={(pageSize) =>
-              navigate({ search: (previous) => ({ ...previous, page: 1, pageSize }) })
+              navigate({
+                search: (previous) => ({ ...previous, page: 1, pageSize }),
+              })
             }
           />
         </>
@@ -349,7 +394,7 @@ function DensityButton({
   active,
   onClick,
   label,
-  children
+  children,
 }: {
   active: boolean;
   onClick: () => void;
@@ -367,7 +412,7 @@ function DensityButton({
         "inline-flex h-6 w-7 items-center justify-center rounded transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]",
         active
           ? "bg-[var(--pc-accent-muted)] text-[var(--pc-accent)]"
-          : "text-[var(--pc-text-muted)] hover:bg-[var(--pc-tint-subtle)] hover:text-[var(--pc-text)]"
+          : "text-[var(--pc-text-muted)] hover:bg-[var(--pc-tint-subtle)] hover:text-[var(--pc-text)]",
       )}
     >
       {children}

@@ -15,7 +15,7 @@ import {
   ShieldCheck,
   Sun,
   TabletSmartphone,
-  UsersRound
+  UsersRound,
 } from "lucide-react";
 
 import { useSettings } from "../../hooks/useSettings.js";
@@ -32,21 +32,21 @@ declare const __APP_VERSION__: string;
 const appVersion =
   typeof __APP_VERSION__ !== "undefined"
     ? __APP_VERSION__
-    : (globalThis as { __APP_VERSION__?: string }).__APP_VERSION__ ?? "dev";
+    : ((globalThis as { __APP_VERSION__?: string }).__APP_VERSION__ ?? "dev");
 
 const themeIcons: Record<Theme, typeof Sun> = {
   light: Sun,
   dark: Moon,
   ocean: Palette,
   copper: Flame,
-  system: Monitor
+  system: Monitor,
 };
 const themeLabels: Record<Theme, string> = {
   light: "Light",
   dark: "Dark",
   ocean: "Ocean",
   copper: "Copper",
-  system: "System"
+  system: "System",
 };
 
 interface NavItem {
@@ -65,29 +65,31 @@ const navGroups: NavGroup[] = [
     label: "Triage",
     items: [
       { to: "/", label: "Overview", icon: LayoutDashboard },
-      { to: "/devices", label: "Devices", icon: TabletSmartphone }
-    ]
+      { to: "/devices", label: "Devices", icon: TabletSmartphone },
+    ],
   },
   {
     label: "Inspect",
     items: [
       { to: "/profiles", label: "Profiles", icon: ShieldCheck },
       { to: "/groups", label: "Groups", icon: UsersRound },
-      { to: "/provisioning", label: "Provisioning", icon: GitBranch }
-    ]
+      { to: "/provisioning", label: "Provisioning", icon: GitBranch },
+    ],
   },
   {
     label: "System",
     items: [
       { to: "/sync", label: "Sync", icon: DatabaseZap },
       { to: "/actions", label: "Action Audit", icon: History },
-      { to: "/settings", label: "Settings", icon: Settings2 }
-    ]
-  }
+      { to: "/settings", label: "Settings", icon: Settings2 },
+    ],
+  },
 ];
 
 export function Sidebar() {
-  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const pathname = useRouterState({
+    select: (state) => state.location.pathname,
+  });
   const settings = useSettings();
   const [theme, cycleTheme] = useTheme();
 
@@ -106,18 +108,18 @@ export function Sidebar() {
   })();
 
   return (
-    <aside className="flex h-auto w-full shrink-0 flex-col border-b border-[var(--pc-border)] bg-[var(--pc-surface)] lg:sticky lg:top-0 lg:h-[calc(100vh-var(--pc-titlebar-height,0px))] lg:w-[248px] lg:self-start lg:border-b-0 lg:border-r">
+    <aside className="flex h-auto w-full shrink-0 flex-col border-b border-[var(--pc-border)] bg-[var(--pc-surface)] lg:sticky lg:top-0 lg:h-[calc(100vh-var(--pc-titlebar-height,0px))] lg:w-[218px] lg:self-start lg:border-b-0 lg:border-r">
       {/* Logo */}
-      <div className="flex items-center gap-3 px-4 py-3.5 lg:px-5 lg:py-5">
+      <div className="flex items-center gap-2.5 px-3 py-3 lg:px-4 lg:py-4">
         <img
           src="/runway.png"
           alt=""
-          width={38}
-          height={38}
-          className="h-9.5 w-9.5 shrink-0 object-contain drop-shadow-[0_6px_18px_rgba(0,0,0,0.18)]"
+          width={32}
+          height={32}
+          className="h-8 w-8 shrink-0 object-contain drop-shadow-[0_5px_14px_rgba(0,0,0,0.18)]"
         />
         <div className="min-w-0">
-          <div className="font-brand text-[25px] uppercase leading-none tracking-[0.18em] text-[var(--pc-text)]">
+          <div className="font-brand text-[21px] uppercase leading-none tracking-[0.16em] text-[var(--pc-text)]">
             Runway
           </div>
           <div className="truncate pl-[0.08em] text-[10.5px] uppercase tracking-[0.18em] text-[var(--pc-text-muted)]">
@@ -140,11 +142,11 @@ export function Sidebar() {
         })()}
       </div>
 
-      <div className="hidden px-3.5 pb-2 lg:block">
+      <div className="hidden px-3 pb-2 lg:block">
         <button
           type="button"
           onClick={requestCommandPaletteOpen}
-          className="flex w-full items-center justify-between rounded-xl border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-3 py-2.5 text-left transition-[border-color,background-color,color] hover:border-[var(--pc-border-hover)] hover:bg-[var(--pc-surface-overlay)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]"
+          className="flex w-full items-center justify-between rounded-[var(--pc-radius)] border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-2.5 py-2 text-left transition-[border-color,background-color,color] hover:border-[var(--pc-border-hover)] hover:bg-[var(--pc-surface-overlay)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]"
           aria-label="Open command search"
         >
           <span className="flex items-center gap-2 text-[12px] text-[var(--pc-text-secondary)]">
@@ -152,32 +154,35 @@ export function Sidebar() {
             Search devices
           </span>
           <span className="flex items-center gap-1 text-[10px] text-[var(--pc-text-muted)]">
-            <Command className="h-3 w-3" />
-            K
+            <Command className="h-3 w-3" />K
           </span>
         </button>
       </div>
 
       {/* Nav */}
-      <nav className="flex flex-1 gap-1.5 overflow-x-auto overscroll-x-contain px-3 pb-3 lg:mt-1 lg:flex-col lg:gap-3 lg:overflow-y-auto lg:px-3.5">
+      <nav className="flex flex-1 gap-1.5 overflow-x-auto overscroll-x-contain px-3 pb-3 lg:mt-1 lg:flex-col lg:gap-2.5 lg:overflow-y-auto lg:px-3">
         {navGroups.map((group) => (
-          <div key={group.label} className="contents lg:flex lg:shrink-0 lg:flex-col lg:gap-0.5">
+          <div
+            key={group.label}
+            className="contents lg:flex lg:shrink-0 lg:flex-col lg:gap-0.5"
+          >
             <div className="mb-1 hidden px-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--pc-text-muted)] lg:block">
               {group.label}
             </div>
             {group.items.map((item) => {
               const Icon = item.icon;
               const active =
-                pathname === item.to || (item.to !== "/" && pathname.startsWith(item.to));
+                pathname === item.to ||
+                (item.to !== "/" && pathname.startsWith(item.to));
               return (
                 <Link
                   key={item.to}
                   to={item.to}
                   className={cn(
-                    "group flex shrink-0 items-center gap-2.5 whitespace-nowrap rounded-lg px-3 py-2 text-[13px] font-medium transition-[background-color,color,transform] duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)] lg:gap-3 lg:whitespace-normal",
+                    "group flex shrink-0 items-center gap-2 whitespace-nowrap rounded-[var(--pc-radius-sm)] px-2.5 py-1.5 text-[12px] font-medium transition-[background-color,color,transform] duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)] lg:gap-2.5 lg:whitespace-normal",
                     active
                       ? "bg-[var(--pc-accent-muted)] text-[var(--pc-accent-hover)]"
-                      : "text-[var(--pc-text-secondary)] hover:bg-[var(--pc-tint-hover)] hover:text-[var(--pc-text)] hover:translate-x-0.5"
+                      : "text-[var(--pc-text-secondary)] hover:bg-[var(--pc-tint-hover)] hover:text-[var(--pc-text)] hover:translate-x-0.5",
                   )}
                 >
                   <Icon
@@ -197,11 +202,13 @@ export function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="hidden space-y-3 border-t border-[var(--pc-border)] px-3 py-4 lg:block">
+      <div className="hidden space-y-2.5 border-t border-[var(--pc-border)] px-3 py-3 lg:block">
         <AuthIndicator />
         <div className="flex items-center justify-between px-2 text-[10.5px]">
           <span className="text-[var(--pc-text-muted)]">Engine</span>
-          <span className="font-mono text-[var(--pc-text-secondary)]">v{appVersion}</span>
+          <span className="font-mono text-[var(--pc-text-secondary)]">
+            v{appVersion}
+          </span>
         </div>
         <div className="flex items-center justify-between gap-2 px-2 text-[10.5px] text-[var(--pc-text-muted)]">
           <span>Theme</span>
@@ -245,7 +252,7 @@ export function Sidebar() {
  */
 function PropertiesGroup({
   properties,
-  pathname
+  pathname,
 }: {
   properties: string[];
   pathname: string;
@@ -254,7 +261,9 @@ function PropertiesGroup({
   // matched route has — so we get the active property only when we're on
   // /devices, otherwise an empty object.
   const search = useSearch({ strict: false }) as { property?: string };
-  const activeProperty = pathname.startsWith("/devices") ? search.property : undefined;
+  const activeProperty = pathname.startsWith("/devices")
+    ? search.property
+    : undefined;
 
   return (
     <div className="hidden flex-col gap-0.5 lg:flex">
@@ -274,17 +283,20 @@ function PropertiesGroup({
               property,
               profile: undefined,
               page: 1,
-              pageSize: 25
+              pageSize: 25,
             }}
             className={cn(
               "flex items-center gap-3 rounded-lg px-3 py-1.5 text-[12px] font-medium transition-[background-color,color,transform] duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]",
               active
                 ? "bg-[var(--pc-accent-muted)] text-[var(--pc-accent-hover)]"
-                : "text-[var(--pc-text-secondary)] hover:bg-[var(--pc-tint-hover)] hover:text-[var(--pc-text)] hover:translate-x-0.5"
+                : "text-[var(--pc-text-secondary)] hover:bg-[var(--pc-tint-hover)] hover:text-[var(--pc-text)] hover:translate-x-0.5",
             )}
             title={`Filter device queue to ${property}`}
           >
-            <Building2 aria-hidden="true" className="h-3.5 w-3.5 shrink-0 opacity-70" />
+            <Building2
+              aria-hidden="true"
+              className="h-3.5 w-3.5 shrink-0 opacity-70"
+            />
             <span className="truncate">{property}</span>
           </Link>
         );

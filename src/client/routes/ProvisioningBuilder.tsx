@@ -17,7 +17,7 @@ import {
   Tag,
   Upload,
   Users,
-  XCircle
+  XCircle,
 } from "lucide-react";
 
 import { PageHeader } from "../components/layout/PageHeader.js";
@@ -63,7 +63,7 @@ interface ValidateResult {
 const operatorChecklist = [
   "Search the exact Autopilot group tag in use on the device record.",
   "Confirm the targeting group references the same operational tag.",
-  "Validate that the assigned deployment profile matches the intended lane."
+  "Validate that the assigned deployment profile matches the intended lane.",
 ];
 
 export function ProvisioningBuilderPage() {
@@ -71,16 +71,18 @@ export function ProvisioningBuilderPage() {
   const [groupTag, setGroupTag] = useState("");
   const [searchTag, setSearchTag] = useState("");
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
-  const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
+  const [selectedProfileId, setSelectedProfileId] = useState<string | null>(
+    null,
+  );
   const [compact, setCompact] = useState(false);
 
   const discover = useQuery({
     queryKey: ["provisioning-discover", searchTag],
     queryFn: () =>
       apiRequest<DiscoverResult>(
-        `/api/provisioning/discover?groupTag=${encodeURIComponent(searchTag)}`
+        `/api/provisioning/discover?groupTag=${encodeURIComponent(searchTag)}`,
       ),
-    enabled: searchTag.length > 0
+    enabled: searchTag.length > 0,
   });
 
   const validate = useMutation({
@@ -92,8 +94,8 @@ export function ProvisioningBuilderPage() {
       apiRequest<ValidateResult>("/api/provisioning/validate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      })
+        body: JSON.stringify(payload),
+      }),
   });
 
   const handleDiscover = () => {
@@ -109,18 +111,23 @@ export function ProvisioningBuilderPage() {
     validate.mutate({
       groupTag: searchTag,
       groupId: selectedGroupId,
-      profileId: selectedProfileId
+      profileId: selectedProfileId,
     });
   };
 
   const data = discover.data;
   const selectedGroup =
-    data?.matchingGroups.find((group) => group.groupId === selectedGroupId) ?? null;
+    data?.matchingGroups.find((group) => group.groupId === selectedGroupId) ??
+    null;
   const selectedProfile =
-    data?.matchingProfiles.find((profile) => profile.profileId === selectedProfileId) ?? null;
+    data?.matchingProfiles.find(
+      (profile) => profile.profileId === selectedProfileId,
+    ) ?? null;
   const selectedProfileViaGroup =
     selectedProfile &&
-    data?.matchingGroups.find((group) => group.groupId === selectedProfile.viaGroupId);
+    data?.matchingGroups.find(
+      (group) => group.groupId === selectedProfile.viaGroupId,
+    );
   const expectedGroups = data?.existingConfig?.expectedGroupNames ?? [];
   const expectedProfiles = data?.existingConfig?.expectedProfileNames ?? [];
   const isSelectedGroupExpected = selectedGroup
@@ -130,7 +137,10 @@ export function ProvisioningBuilderPage() {
     ? expectedProfiles.includes(selectedProfile.profileName)
     : null;
 
-  const handleCopy = async (label: string, value: string | null | undefined) => {
+  const handleCopy = async (
+    label: string,
+    value: string | null | undefined,
+  ) => {
     if (!value) return;
 
     try {
@@ -138,13 +148,13 @@ export function ProvisioningBuilderPage() {
       toast.push({
         variant: "success",
         title: `${label} copied`,
-        description: `${label} copied to clipboard for ticketing or chat.`
+        description: `${label} copied to clipboard for ticketing or chat.`,
       });
     } catch {
       toast.push({
         variant: "error",
         title: "Copy failed",
-        description: `Could not copy ${label.toLowerCase()} to clipboard.`
+        description: `Could not copy ${label.toLowerCase()} to clipboard.`,
       });
     }
   };
@@ -164,10 +174,12 @@ export function ProvisioningBuilderPage() {
       `  Deployment mode:  ${selectedProfile ? formatDeploymentMode(selectedProfile.deploymentMode) : "—"}`,
       `  Profile ID:       ${selectedProfile?.profileId ?? "—"}`,
       `  Assigned via:     ${selectedProfileViaGroup?.groupName ?? selectedProfile?.viaGroupId ?? "—"}`,
-      ``
+      ``,
     ];
     if (validate.data) {
-      lines.push(`Validation:         ${validate.data.valid ? "PASS" : "FAIL"}`);
+      lines.push(
+        `Validation:         ${validate.data.valid ? "PASS" : "FAIL"}`,
+      );
       for (const e of validate.data.errors) lines.push(`  ERROR: ${e}`);
       for (const w of validate.data.warnings) lines.push(`  WARN:  ${w}`);
     } else {
@@ -175,9 +187,17 @@ export function ProvisioningBuilderPage() {
     }
     try {
       await navigator.clipboard.writeText(lines.join("\n"));
-      toast.push({ variant: "success", title: "Summary copied", description: "Paste into a ticket or change request." });
+      toast.push({
+        variant: "success",
+        title: "Summary copied",
+        description: "Paste into a ticket or change request.",
+      });
     } catch {
-      toast.push({ variant: "error", title: "Copy failed", description: "Could not write to clipboard." });
+      toast.push({
+        variant: "error",
+        title: "Copy failed",
+        description: "Could not write to clipboard.",
+      });
     }
   };
 
@@ -196,9 +216,17 @@ export function ProvisioningBuilderPage() {
               type="button"
               onClick={() => setCompact((p) => !p)}
               className="inline-flex items-center gap-1.5 rounded-md border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-2.5 py-1.5 text-[11px] font-medium text-[var(--pc-text-secondary)] transition-colors hover:border-[var(--pc-border-hover)] hover:text-[var(--pc-text)]"
-              title={compact ? "Switch to comfortable view" : "Switch to compact view"}
+              title={
+                compact
+                  ? "Switch to comfortable view"
+                  : "Switch to compact view"
+              }
             >
-              {compact ? <StretchHorizontal className="h-3 w-3" /> : <Rows3 className="h-3 w-3" />}
+              {compact ? (
+                <StretchHorizontal className="h-3 w-3" />
+              ) : (
+                <Rows3 className="h-3 w-3" />
+              )}
               {compact ? "Comfortable" : "Compact"}
             </button>
             {data ? (
@@ -230,8 +258,9 @@ export function ProvisioningBuilderPage() {
                     Validate a tag-to-profile provisioning path
                   </div>
                   <div className="mt-1 text-[13px] leading-relaxed text-[var(--pc-text-secondary)]">
-                    Search by operational tag, inspect discovered targets, then validate the
-                    selected chain. This view is tuned for fast admin review, not authoring.
+                    Search by operational tag, inspect discovered targets, then
+                    validate the selected chain. This view is tuned for fast
+                    admin review, not authoring.
                   </div>
                 </div>
 
@@ -256,6 +285,11 @@ export function ProvisioningBuilderPage() {
                 <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--pc-text-muted)]">
                   <Tag className="h-3.5 w-3.5" />
                   Tag Search
+                </div>
+                <div className="mb-2 pc-helper-text">
+                  Enter the exact Autopilot group tag from the device record.
+                  Discovery shows matching groups, assigned profiles, and any
+                  existing tag configuration.
                 </div>
                 <div className="flex flex-col gap-3 sm:flex-row">
                   <div className="relative flex-1">
@@ -284,7 +318,8 @@ export function ProvisioningBuilderPage() {
                   </Button>
                 </div>
                 <div className="mt-2 text-[11.5px] text-[var(--pc-text-muted)]">
-                  Searches current synced Autopilot, Entra group, and profile assignment data.
+                  Searches current synced Autopilot, Entra group, and profile
+                  assignment data.
                 </div>
               </div>
 
@@ -326,25 +361,32 @@ export function ProvisioningBuilderPage() {
             <MetricCard
               label="Matching Groups"
               value={data ? String(data.matchingGroups.length) : "—"}
-              tone={data && data.matchingGroups.length > 0 ? "healthy" : "warning"}
+              tone={
+                data && data.matchingGroups.length > 0 ? "healthy" : "warning"
+              }
               hint="Discovered Entra groups referencing the tag."
             />
             <MetricCard
               label="Matching Profiles"
               value={data ? String(data.matchingProfiles.length) : "—"}
-              tone={data && data.matchingProfiles.length > 0 ? "healthy" : "warning"}
+              tone={
+                data && data.matchingProfiles.length > 0 ? "healthy" : "warning"
+              }
               hint="Deployment profiles assigned through those groups."
             />
           </div>
 
-          {data && data.deviceCount === 0 && data.matchingGroups.length === 0 ? (
+          {data &&
+          data.deviceCount === 0 &&
+          data.matchingGroups.length === 0 ? (
             <Card className="border-dashed px-5 py-6 text-center">
               <div className="text-[13px] font-semibold text-[var(--pc-text-secondary)]">
                 No devices or groups match this tag
               </div>
               <div className="mx-auto mt-2 max-w-md text-[12px] leading-relaxed text-[var(--pc-text-muted)]">
-                Check the tag spelling matches your Autopilot hardware order ID. If the tag is new,
-                devices may not have synced yet — run a sync from the Sync page and try again.
+                Check the tag spelling matches your Autopilot hardware order ID.
+                If the tag is new, devices may not have synced yet — run a sync
+                from the Sync page and try again.
               </div>
             </Card>
           ) : null}
@@ -375,7 +417,8 @@ export function ProvisioningBuilderPage() {
                       </div>
                     </div>
                     <div className="mt-1 text-[12px] text-[var(--pc-text-secondary)]">
-                      Stored expectations from `tag_config` for this operational tag.
+                      Stored expectations from `tag_config` for this operational
+                      tag.
                     </div>
                   </div>
                   <div className="grid gap-4 px-5 py-5 lg:grid-cols-[220px_minmax(0,1fr)_minmax(0,1fr)]">
@@ -410,10 +453,14 @@ export function ProvisioningBuilderPage() {
                           </div>
                         </div>
                         <div className="mt-1 text-[12px] text-[var(--pc-text-secondary)]">
-                          Review the group that should receive devices carrying this tag.
+                          Review the group that should receive devices carrying
+                          this tag.
                         </div>
                       </div>
-                      <CountPill value={data.matchingGroups.length} label="found" />
+                      <CountPill
+                        value={data.matchingGroups.length}
+                        label="found"
+                      />
                     </div>
                   </div>
 
@@ -425,7 +472,9 @@ export function ProvisioningBuilderPage() {
                   ) : (
                     <div className="max-h-[520px] space-y-2 overflow-auto px-3 py-3">
                       <div className="sticky top-0 z-10 -mx-3 -mt-3 mb-2 border-b border-[var(--pc-border)] bg-[var(--pc-surface)] px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-[var(--pc-text-muted)]">
-                        {data.matchingGroups.length} group{data.matchingGroups.length !== 1 ? "s" : ""} — click to select
+                        {data.matchingGroups.length} group
+                        {data.matchingGroups.length !== 1 ? "s" : ""} — click to
+                        select
                       </div>
                       {data.matchingGroups.map((group) => (
                         <button
@@ -433,7 +482,9 @@ export function ProvisioningBuilderPage() {
                           type="button"
                           onClick={() =>
                             setSelectedGroupId(
-                              group.groupId === selectedGroupId ? null : group.groupId
+                              group.groupId === selectedGroupId
+                                ? null
+                                : group.groupId,
                             )
                           }
                           className={cn(
@@ -441,27 +492,42 @@ export function ProvisioningBuilderPage() {
                             compact ? "px-3 py-2" : "px-4 py-3",
                             selectedGroupId === group.groupId
                               ? "border-[var(--pc-accent)] bg-[var(--pc-accent-muted)]"
-                              : "border-[var(--pc-border)] bg-[var(--pc-surface-raised)]/55 hover:border-[var(--pc-border-hover)] hover:bg-[var(--pc-surface-raised)]"
+                              : "border-[var(--pc-border)] bg-[var(--pc-surface-raised)]/55 hover:border-[var(--pc-border-hover)] hover:bg-[var(--pc-surface-raised)]",
                           )}
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
-                              <div className={cn("font-medium text-[var(--pc-text)]", compact ? "text-[12px]" : "text-[13px]")}>
+                              <div
+                                className={cn(
+                                  "font-medium text-[var(--pc-text)]",
+                                  compact ? "text-[12px]" : "text-[13px]",
+                                )}
+                              >
                                 {group.groupName}
                               </div>
                               <div className="mt-1 flex flex-wrap items-center gap-2 text-[10.5px] uppercase tracking-wide text-[var(--pc-text-muted)]">
-                                <span>{formatMembershipType(group.membershipType)}</span>
+                                <span>
+                                  {formatMembershipType(group.membershipType)}
+                                </span>
                                 <span>•</span>
-                                <span>{selectedGroupId === group.groupId ? "Selected" : "Available"}</span>
+                                <span>
+                                  {selectedGroupId === group.groupId
+                                    ? "Selected"
+                                    : "Available"}
+                                </span>
                                 {expectedGroups.includes(group.groupName) ? (
                                   <>
                                     <span>•</span>
-                                    <span className="text-[var(--pc-healthy)]">Expected</span>
+                                    <span className="text-[var(--pc-healthy)]">
+                                      Expected
+                                    </span>
                                   </>
                                 ) : null}
                               </div>
                             </div>
-                            <SelectionBadge active={selectedGroupId === group.groupId} />
+                            <SelectionBadge
+                              active={selectedGroupId === group.groupId}
+                            />
                           </div>
                           {!compact && (
                             <div className="mt-3 rounded-lg border border-white/6 bg-black/10 px-3 py-2">
@@ -469,7 +535,8 @@ export function ProvisioningBuilderPage() {
                                 Membership Rule
                               </div>
                               <div className="font-mono text-[11px] leading-relaxed text-[var(--pc-text-secondary)]">
-                                {group.membershipRule ?? "No dynamic rule stored for this group."}
+                                {group.membershipRule ??
+                                  "No dynamic rule stored for this group."}
                               </div>
                             </div>
                           )}
@@ -490,10 +557,14 @@ export function ProvisioningBuilderPage() {
                           </div>
                         </div>
                         <div className="mt-1 text-[12px] text-[var(--pc-text-secondary)]">
-                          Confirm which profile is reachable from the discovered group path.
+                          Confirm which profile is reachable from the discovered
+                          group path.
                         </div>
                       </div>
-                      <CountPill value={data.matchingProfiles.length} label="found" />
+                      <CountPill
+                        value={data.matchingProfiles.length}
+                        label="found"
+                      />
                     </div>
                   </div>
 
@@ -509,12 +580,14 @@ export function ProvisioningBuilderPage() {
                   ) : (
                     <div className="max-h-[520px] space-y-2 overflow-auto px-3 py-3">
                       <div className="sticky top-0 z-10 -mx-3 -mt-3 mb-2 border-b border-[var(--pc-border)] bg-[var(--pc-surface)] px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-[var(--pc-text-muted)]">
-                        {data.matchingProfiles.length} profile{data.matchingProfiles.length !== 1 ? "s" : ""} — click to select
+                        {data.matchingProfiles.length} profile
+                        {data.matchingProfiles.length !== 1 ? "s" : ""} — click
+                        to select
                       </div>
                       {data.matchingProfiles.map((profile) => {
                         const viaGroup =
                           data.matchingGroups.find(
-                            (group) => group.groupId === profile.viaGroupId
+                            (group) => group.groupId === profile.viaGroupId,
                           )?.groupName ?? profile.viaGroupId;
 
                         return (
@@ -525,7 +598,7 @@ export function ProvisioningBuilderPage() {
                               setSelectedProfileId(
                                 profile.profileId === selectedProfileId
                                   ? null
-                                  : profile.profileId
+                                  : profile.profileId,
                               )
                             }
                             className={cn(
@@ -533,20 +606,29 @@ export function ProvisioningBuilderPage() {
                               compact ? "px-3 py-2" : "px-4 py-3",
                               selectedProfileId === profile.profileId
                                 ? "border-[var(--pc-accent)] bg-[var(--pc-accent-muted)]"
-                                : "border-[var(--pc-border)] bg-[var(--pc-surface-raised)]/55 hover:border-[var(--pc-border-hover)] hover:bg-[var(--pc-surface-raised)]"
+                                : "border-[var(--pc-border)] bg-[var(--pc-surface-raised)]/55 hover:border-[var(--pc-border-hover)] hover:bg-[var(--pc-surface-raised)]",
                             )}
                           >
                             <div className="flex items-start justify-between gap-3">
                               <div className="min-w-0">
-                                <div className={cn("font-medium text-[var(--pc-text)]", compact ? "text-[12px]" : "text-[13px]")}>
+                                <div
+                                  className={cn(
+                                    "font-medium text-[var(--pc-text)]",
+                                    compact ? "text-[12px]" : "text-[13px]",
+                                  )}
+                                >
                                   {profile.profileName}
                                 </div>
                                 <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-[var(--pc-text-secondary)]">
                                   <span>
                                     Assigned via{" "}
-                                    <span className="text-[var(--pc-text)]">{viaGroup}</span>
+                                    <span className="text-[var(--pc-text)]">
+                                      {viaGroup}
+                                    </span>
                                   </span>
-                                  {expectedProfiles.includes(profile.profileName) ? (
+                                  {expectedProfiles.includes(
+                                    profile.profileName,
+                                  ) ? (
                                     <span className="rounded-full bg-[var(--pc-healthy-muted)] px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[var(--pc-healthy)]">
                                       Expected
                                     </span>
@@ -556,10 +638,16 @@ export function ProvisioningBuilderPage() {
                               <div className="flex shrink-0 items-center gap-2">
                                 {profile.deploymentMode ? (
                                   <span className="rounded-md bg-[var(--pc-tint-hover)] px-2 py-1 text-[10.5px] font-medium text-[var(--pc-text-secondary)]">
-                                    {formatDeploymentMode(profile.deploymentMode)}
+                                    {formatDeploymentMode(
+                                      profile.deploymentMode,
+                                    )}
                                   </span>
                                 ) : null}
-                                <SelectionBadge active={selectedProfileId === profile.profileId} />
+                                <SelectionBadge
+                                  active={
+                                    selectedProfileId === profile.profileId
+                                  }
+                                />
                               </div>
                             </div>
                           </button>
@@ -583,7 +671,8 @@ export function ProvisioningBuilderPage() {
                 </div>
               </div>
               <div className="mt-1 text-[12px] text-[var(--pc-text-secondary)]">
-                Windows operator checklist for whether this path is ready for review.
+                Windows operator checklist for whether this path is ready for
+                review.
               </div>
             </div>
 
@@ -641,8 +730,9 @@ export function ProvisioningBuilderPage() {
                   emptyLabel="Select a profile to compare it against tag_config."
                 />
                 <div className="mt-3 rounded-lg border border-white/6 bg-black/10 px-3 py-2 text-[11px] leading-relaxed text-[var(--pc-text-secondary)]">
-                  Stored expectations are advisory reference values from `tag_config`. They help
-                  Windows admins spot drift before validating the chain.
+                  Stored expectations are advisory reference values from
+                  `tag_config`. They help Windows admins spot drift before
+                  validating the chain.
                 </div>
               </div>
             </div>
@@ -657,7 +747,8 @@ export function ProvisioningBuilderPage() {
                 </div>
               </div>
               <div className="mt-1 text-[12px] text-[var(--pc-text-secondary)]">
-                Operator summary of the tag, target group, and selected deployment profile.
+                Operator summary of the tag, target group, and selected
+                deployment profile.
               </div>
             </div>
 
@@ -674,12 +765,19 @@ export function ProvisioningBuilderPage() {
                 detailRows={
                   data
                     ? [
-                        { label: "Operational use", value: "Windows Autopilot group tag" },
-                        { label: "Current value", value: data.groupTag }
+                        {
+                          label: "Operational use",
+                          value: "Windows Autopilot group tag",
+                        },
+                        { label: "Current value", value: data.groupTag },
                       ]
                     : []
                 }
-                onCopy={data ? () => void handleCopy("Group tag", data.groupTag) : undefined}
+                onCopy={
+                  data
+                    ? () => void handleCopy("Group tag", data.groupTag)
+                    : undefined
+                }
               />
               <SelectionSummary
                 icon={<Users className="h-3.5 w-3.5" />}
@@ -693,7 +791,12 @@ export function ProvisioningBuilderPage() {
                 detailRows={
                   selectedGroup
                     ? [
-                        { label: "Membership type", value: formatMembershipType(selectedGroup.membershipType) },
+                        {
+                          label: "Membership type",
+                          value: formatMembershipType(
+                            selectedGroup.membershipType,
+                          ),
+                        },
                         { label: "Group ID", value: selectedGroup.groupId },
                         {
                           label: "Expected config",
@@ -702,8 +805,8 @@ export function ProvisioningBuilderPage() {
                               ? "Not checked"
                               : isSelectedGroupExpected
                                 ? "Matches stored expected group"
-                                : "Not listed in stored expected groups"
-                        }
+                                : "Not listed in stored expected groups",
+                        },
                       ]
                     : []
                 }
@@ -720,21 +823,27 @@ export function ProvisioningBuilderPage() {
                 helper={
                   selectedProfile?.deploymentMode
                     ? formatDeploymentMode(selectedProfile.deploymentMode)
-                    :
-                  "Choose the profile expected to land on devices in this path."
+                    : "Choose the profile expected to land on devices in this path."
                 }
                 detailRows={
                   selectedProfile
                     ? [
                         {
                           label: "Deployment mode",
-                          value: formatDeploymentMode(selectedProfile.deploymentMode)
+                          value: formatDeploymentMode(
+                            selectedProfile.deploymentMode,
+                          ),
                         },
                         {
                           label: "Assigned via",
-                          value: selectedProfileViaGroup?.groupName ?? selectedProfile.viaGroupId
+                          value:
+                            selectedProfileViaGroup?.groupName ??
+                            selectedProfile.viaGroupId,
                         },
-                        { label: "Profile ID", value: selectedProfile.profileId },
+                        {
+                          label: "Profile ID",
+                          value: selectedProfile.profileId,
+                        },
                         {
                           label: "Expected config",
                           value:
@@ -742,14 +851,15 @@ export function ProvisioningBuilderPage() {
                               ? "Not checked"
                               : isSelectedProfileExpected
                                 ? "Matches stored expected profile"
-                                : "Not listed in stored expected profiles"
-                        }
+                                : "Not listed in stored expected profiles",
+                        },
                       ]
                     : []
                 }
                 onCopy={
                   selectedProfile
-                    ? () => void handleCopy("Profile ID", selectedProfile.profileId)
+                    ? () =>
+                        void handleCopy("Profile ID", selectedProfile.profileId)
                     : undefined
                 }
               />
@@ -776,8 +886,8 @@ export function ProvisioningBuilderPage() {
                   )}
                 </Button>
                 <div className="mt-2 text-[11.5px] leading-relaxed text-[var(--pc-text-muted)]">
-                  Uses the current tag, selected group, and selected profile exactly as shown
-                  above.
+                  Uses the current tag, selected group, and selected profile
+                  exactly as shown above.
                 </div>
               </div>
             </div>
@@ -785,17 +895,20 @@ export function ProvisioningBuilderPage() {
 
           <Card className="overflow-hidden">
             <div className="border-b border-[var(--pc-border)] px-5 py-4">
-              <div className="text-[13px] font-semibold text-[var(--pc-text)]">Validation Output</div>
+              <div className="text-[13px] font-semibold text-[var(--pc-text)]">
+                Validation Output
+              </div>
               <div className="mt-1 text-[12px] text-[var(--pc-text-secondary)]">
-                Review errors and warnings before treating the chain as production-ready.
+                Review errors and warnings before treating the chain as
+                production-ready.
               </div>
             </div>
 
             <div className="space-y-3 px-5 py-5">
               {!validate.data ? (
                 <div className="rounded-xl border border-dashed border-[var(--pc-border)] bg-[var(--pc-surface-raised)]/35 px-4 py-5 text-[12px] leading-relaxed text-[var(--pc-text-muted)]">
-                  No validation has been run yet. Execute the chain review once you have loaded a
-                  tag and inspected the discovered targets.
+                  No validation has been run yet. Execute the chain review once
+                  you have loaded a tag and inspected the discovered targets.
                 </div>
               ) : (
                 <>
@@ -817,7 +930,8 @@ export function ProvisioningBuilderPage() {
                   {validate.data.errors.length === 0 &&
                   validate.data.warnings.length === 0 ? (
                     <div className="rounded-xl border border-[var(--pc-border)] bg-[var(--pc-surface-raised)]/55 px-4 py-4 text-[12px] text-[var(--pc-text-secondary)]">
-                      No warnings were returned for the current validation response.
+                      No warnings were returned for the current validation
+                      response.
                     </div>
                   ) : null}
                 </>
@@ -876,8 +990,8 @@ function HardwareHashImport() {
         "/api/autopilot-import/parse-csv",
         {
           method: "POST",
-          body: JSON.stringify({ csvText })
-        }
+          body: JSON.stringify({ csvText }),
+        },
       ),
     onSuccess: (data) => {
       if (data) {
@@ -885,40 +999,66 @@ function HardwareHashImport() {
         setParseErrors(data.errors);
         setImportResult(null);
         if (data.entries.length === 0 && data.errors.length === 0) {
-          toast.push({ variant: "error", title: "Empty CSV", description: "No data rows found in the file." });
+          toast.push({
+            variant: "error",
+            title: "Empty CSV",
+            description: "No data rows found in the file.",
+          });
         }
       }
     },
     onError: (error) => {
-      toast.push({ variant: "error", title: "Parse failed", description: error instanceof Error ? error.message : "Could not parse CSV." });
-    }
+      toast.push({
+        variant: "error",
+        title: "Parse failed",
+        description:
+          error instanceof Error ? error.message : "Could not parse CSV.",
+      });
+    },
   });
 
   const importEntries = useMutation({
     mutationFn: (payload: ParsedEntry[]) =>
       apiRequest<ImportResponse>("/api/autopilot-import", {
         method: "POST",
-        body: JSON.stringify({ entries: payload })
+        body: JSON.stringify({ entries: payload }),
       }),
     onSuccess: (data) => {
       if (data) {
         setImportResult(data);
         if (data.failureCount === 0) {
-          toast.push({ variant: "success", title: "Import complete", description: `${data.successCount} device${data.successCount !== 1 ? "s" : ""} imported successfully.` });
+          toast.push({
+            variant: "success",
+            title: "Import complete",
+            description: `${data.successCount} device${data.successCount !== 1 ? "s" : ""} imported successfully.`,
+          });
         } else {
-          toast.push({ variant: "error", title: "Import finished with errors", description: `${data.successCount} succeeded, ${data.failureCount} failed.` });
+          toast.push({
+            variant: "error",
+            title: "Import finished with errors",
+            description: `${data.successCount} succeeded, ${data.failureCount} failed.`,
+          });
         }
       }
     },
     onError: (error) => {
-      toast.push({ variant: "error", title: "Import failed", description: error instanceof Error ? error.message : "Could not complete import." });
-    }
+      toast.push({
+        variant: "error",
+        title: "Import failed",
+        description:
+          error instanceof Error ? error.message : "Could not complete import.",
+      });
+    },
   });
 
   const handleFile = useCallback(
     (file: File) => {
       if (!file.name.toLowerCase().endsWith(".csv")) {
-        toast.push({ variant: "error", title: "Invalid file", description: "Please select a .csv file." });
+        toast.push({
+          variant: "error",
+          title: "Invalid file",
+          description: "Please select a .csv file.",
+        });
         return;
       }
       setFileName(file.name);
@@ -931,7 +1071,7 @@ function HardwareHashImport() {
       };
       reader.readAsText(file);
     },
-    [parseCsv, toast]
+    [parseCsv, toast],
   );
 
   const handleDrop = useCallback(
@@ -941,7 +1081,7 @@ function HardwareHashImport() {
       const file = event.dataTransfer.files[0];
       if (file) handleFile(file);
     },
-    [handleFile]
+    [handleFile],
   );
 
   const handleReset = () => {
@@ -972,10 +1112,12 @@ function HardwareHashImport() {
             <div className="flex items-start gap-3">
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-[var(--pc-warning)]" />
               <div>
-                <div className="text-[12.5px] font-medium text-[var(--pc-text)]">Admin sign-in required</div>
+                <div className="text-[12.5px] font-medium text-[var(--pc-text)]">
+                  Admin sign-in required
+                </div>
                 <div className="mt-0.5 text-[11.5px] text-[var(--pc-text-muted)]">
-                  Importing hardware hashes requires a delegated Microsoft account with
-                  Autopilot device management permissions.
+                  Importing hardware hashes requires a delegated Microsoft
+                  account with Autopilot device management permissions.
                 </div>
               </div>
             </div>
@@ -985,7 +1127,11 @@ function HardwareHashImport() {
               title={login.blockedReason ?? undefined}
               className="shrink-0"
             >
-              {!login.canStart ? "Unavailable" : login.isPending ? "Opening…" : "Sign in"}
+              {!login.canStart
+                ? "Unavailable"
+                : login.isPending
+                  ? "Opening…"
+                  : "Sign in"}
             </Button>
           </div>
         </div>
@@ -1005,8 +1151,9 @@ function HardwareHashImport() {
               </div>
             </div>
             <div className="mt-1 text-[12px] text-[var(--pc-text-secondary)]">
-              Upload an Autopilot hardware hash CSV to register new devices with Windows Autopilot.
-              Standard format: Device Serial Number, Windows Product ID, Hardware Hash, Group Tag (optional).
+              Upload an Autopilot hardware hash CSV to register new devices with
+              Windows Autopilot. Standard format: Device Serial Number, Windows
+              Product ID, Hardware Hash, Group Tag (optional).
             </div>
           </div>
           {fileName && (
@@ -1026,7 +1173,10 @@ function HardwareHashImport() {
         {/* Drop zone / file picker */}
         {!fileName && (
           <div
-            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragOver(true);
+            }}
             onDragLeave={() => setDragOver(false)}
             onDrop={handleDrop}
             onClick={() => fileInputRef.current?.click()}
@@ -1034,7 +1184,7 @@ function HardwareHashImport() {
               "flex cursor-pointer flex-col items-center gap-3 rounded-xl border-2 border-dashed px-6 py-10 text-center transition-colors",
               dragOver
                 ? "border-[var(--pc-accent)] bg-[var(--pc-accent-muted)]/35"
-                : "border-[var(--pc-border)] bg-[var(--pc-surface-raised)]/35 hover:border-[var(--pc-border-hover)] hover:bg-[var(--pc-surface-raised)]/55"
+                : "border-[var(--pc-border)] bg-[var(--pc-surface-raised)]/35 hover:border-[var(--pc-border-hover)] hover:bg-[var(--pc-surface-raised)]/55",
             )}
           >
             <div className="rounded-full border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] p-3">
@@ -1045,7 +1195,8 @@ function HardwareHashImport() {
                 Drop a CSV file here or click to browse
               </div>
               <div className="mt-1 text-[11.5px] text-[var(--pc-text-muted)]">
-                Accepts the standard Windows Autopilot hardware hash export format (.csv)
+                Accepts the standard Windows Autopilot hardware hash export
+                format (.csv)
               </div>
             </div>
             <input
@@ -1066,7 +1217,9 @@ function HardwareHashImport() {
           <div className="flex items-center gap-3 rounded-lg border border-[var(--pc-border)] bg-[var(--pc-surface-raised)]/55 px-4 py-3">
             <FileText className="h-4 w-4 shrink-0 text-[var(--pc-accent)]" />
             <div className="min-w-0 flex-1">
-              <div className="truncate text-[12.5px] font-medium text-[var(--pc-text)]">{fileName}</div>
+              <div className="truncate text-[12.5px] font-medium text-[var(--pc-text)]">
+                {fileName}
+              </div>
               <div className="mt-0.5 text-[11px] text-[var(--pc-text-muted)]">
                 {parseCsv.isPending
                   ? "Parsing…"
@@ -1089,7 +1242,9 @@ function HardwareHashImport() {
                   className="flex items-start gap-2 rounded-lg border border-[var(--pc-warning)]/20 bg-[var(--pc-warning-muted)]/55 px-3 py-2"
                 >
                   <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--pc-warning)]" />
-                  <div className="text-[11.5px] text-[var(--pc-text)]">{error}</div>
+                  <div className="text-[11.5px] text-[var(--pc-text)]">
+                    {error}
+                  </div>
                 </div>
               ))}
             </div>
@@ -1138,7 +1293,9 @@ function HardwareHashImport() {
                         key={`${entry.serialNumber}-${index}`}
                         className="bg-[var(--pc-surface)] transition-colors hover:bg-[var(--pc-surface-raised)]/55"
                       >
-                        <td className="px-3 py-2 text-[var(--pc-text-muted)]">{index + 1}</td>
+                        <td className="px-3 py-2 text-[var(--pc-text-muted)]">
+                          {index + 1}
+                        </td>
                         <td className="px-3 py-2 font-medium text-[var(--pc-text)]">
                           {entry.serialNumber}
                         </td>
@@ -1162,14 +1319,16 @@ function HardwareHashImport() {
                                     "text-[11px]",
                                     result.success
                                       ? "text-[var(--pc-healthy)]"
-                                      : "text-[var(--pc-critical)]"
+                                      : "text-[var(--pc-critical)]",
                                   )}
                                 >
                                   {result.success ? "Imported" : result.message}
                                 </span>
                               </div>
                             ) : (
-                              <span className="text-[11px] text-[var(--pc-text-muted)]">Pending</span>
+                              <span className="text-[11px] text-[var(--pc-text-muted)]">
+                                Pending
+                              </span>
                             )}
                           </td>
                         )}
@@ -1195,7 +1354,8 @@ function HardwareHashImport() {
                 ) : (
                   <>
                     <Upload className="h-3.5 w-3.5" />
-                    Upload {Math.min(entries.length, 50)} Device{Math.min(entries.length, 50) !== 1 ? "s" : ""} to Autopilot
+                    Upload {Math.min(entries.length, 50)} Device
+                    {Math.min(entries.length, 50) !== 1 ? "s" : ""} to Autopilot
                   </>
                 )}
               </Button>
@@ -1212,12 +1372,14 @@ function HardwareHashImport() {
                     {importResult.total}
                   </div>
                 </div>
-                <div className={cn(
-                  "rounded-xl border p-3 text-center",
-                  importResult.successCount > 0
-                    ? "border-[var(--pc-healthy)]/25 bg-[var(--pc-healthy-muted)]/55"
-                    : "border-[var(--pc-border)] bg-[var(--pc-surface-raised)]/55"
-                )}>
+                <div
+                  className={cn(
+                    "rounded-xl border p-3 text-center",
+                    importResult.successCount > 0
+                      ? "border-[var(--pc-healthy)]/25 bg-[var(--pc-healthy-muted)]/55"
+                      : "border-[var(--pc-border)] bg-[var(--pc-surface-raised)]/55",
+                  )}
+                >
                   <div className="text-[10.5px] font-semibold uppercase tracking-wide text-[var(--pc-text-muted)]">
                     Succeeded
                   </div>
@@ -1225,12 +1387,14 @@ function HardwareHashImport() {
                     {importResult.successCount}
                   </div>
                 </div>
-                <div className={cn(
-                  "rounded-xl border p-3 text-center",
-                  importResult.failureCount > 0
-                    ? "border-[var(--pc-critical)]/25 bg-[var(--pc-critical-muted)]/55"
-                    : "border-[var(--pc-border)] bg-[var(--pc-surface-raised)]/55"
-                )}>
+                <div
+                  className={cn(
+                    "rounded-xl border p-3 text-center",
+                    importResult.failureCount > 0
+                      ? "border-[var(--pc-critical)]/25 bg-[var(--pc-critical-muted)]/55"
+                      : "border-[var(--pc-border)] bg-[var(--pc-surface-raised)]/55",
+                  )}
+                >
                   <div className="text-[10.5px] font-semibold uppercase tracking-wide text-[var(--pc-text-muted)]">
                     Failed
                   </div>
@@ -1251,7 +1415,7 @@ function MetricCard({
   label,
   value,
   hint,
-  tone
+  tone,
 }: {
   label: string;
   value: string;
@@ -1270,7 +1434,9 @@ function MetricCard({
       <div className="text-[11px] font-semibold uppercase tracking-wide text-[var(--pc-text-muted)]">
         {label}
       </div>
-      <div className="mt-2 text-[28px] font-semibold tracking-tight text-[var(--pc-text)]">{value}</div>
+      <div className="mt-2 text-[28px] font-semibold tracking-tight text-[var(--pc-text)]">
+        {value}
+      </div>
       <div className="mt-1 text-[11.5px] leading-relaxed text-[var(--pc-text-secondary)]">
         {hint}
       </div>
@@ -1281,7 +1447,7 @@ function MetricCard({
 function SummaryBlock({
   label,
   value,
-  hint
+  hint,
 }: {
   label: string;
   value: string;
@@ -1292,8 +1458,12 @@ function SummaryBlock({
       <div className="text-[10.5px] font-semibold uppercase tracking-wide text-[var(--pc-text-muted)]">
         {label}
       </div>
-      <div className="mt-2 text-[15px] font-semibold text-[var(--pc-text)]">{value}</div>
-      <div className="mt-1 text-[11.5px] text-[var(--pc-text-secondary)]">{hint}</div>
+      <div className="mt-2 text-[15px] font-semibold text-[var(--pc-text)]">
+        {value}
+      </div>
+      <div className="mt-1 text-[11.5px] text-[var(--pc-text-secondary)]">
+        {hint}
+      </div>
     </div>
   );
 }
@@ -1301,7 +1471,7 @@ function SummaryBlock({
 function ChipList({
   title,
   items,
-  emptyLabel
+  emptyLabel,
 }: {
   title: string;
   items: string[];
@@ -1313,7 +1483,9 @@ function ChipList({
         {title}
       </div>
       {items.length === 0 ? (
-        <div className="mt-2 text-[11.5px] text-[var(--pc-text-secondary)]">{emptyLabel}</div>
+        <div className="mt-2 text-[11.5px] text-[var(--pc-text-secondary)]">
+          {emptyLabel}
+        </div>
       ) : (
         <div className="mt-3 flex flex-wrap gap-2">
           {items.map((item) => (
@@ -1341,7 +1513,7 @@ function CountPill({ value, label }: { value: number; label: string }) {
 function IconButton({
   children,
   label,
-  onClick
+  onClick,
 }: {
   children: ReactNode;
   label: string;
@@ -1367,7 +1539,7 @@ function SelectionBadge({ active }: { active: boolean }) {
         "rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide",
         active
           ? "bg-[var(--pc-accent)] text-[var(--pc-text)]"
-          : "bg-[var(--pc-tint-hover)] text-[var(--pc-text-muted)]"
+          : "bg-[var(--pc-tint-hover)] text-[var(--pc-text-muted)]",
       )}
     >
       {active ? "Selected" : "Pick"}
@@ -1375,7 +1547,13 @@ function SelectionBadge({ active }: { active: boolean }) {
   );
 }
 
-function EmptyPanel({ message, guidance }: { message: string; guidance?: string }) {
+function EmptyPanel({
+  message,
+  guidance,
+}: {
+  message: string;
+  guidance?: string;
+}) {
   return (
     <div className="px-5 py-8">
       <div className="text-[12px] leading-relaxed text-[var(--pc-text-muted)]">
@@ -1396,7 +1574,7 @@ function SelectionSummary({
   value,
   helper,
   detailRows = [],
-  onCopy
+  onCopy,
 }: {
   icon: ReactNode;
   label: string;
@@ -1418,7 +1596,9 @@ function SelectionSummary({
           </IconButton>
         ) : null}
       </div>
-      <div className="mt-2 text-[14px] font-semibold text-[var(--pc-text)]">{value}</div>
+      <div className="mt-2 text-[14px] font-semibold text-[var(--pc-text)]">
+        {value}
+      </div>
       <div className="mt-1 text-[11.5px] leading-relaxed text-[var(--pc-text-secondary)]">
         {helper}
       </div>
@@ -1445,7 +1625,7 @@ function StatusRow({
   label,
   status,
   helper,
-  tone = "default"
+  tone = "default",
 }: {
   label: string;
   status: boolean;
@@ -1463,11 +1643,13 @@ function StatusRow({
         "rounded-xl border px-3.5 py-3",
         status
           ? activeClass
-          : "border-[var(--pc-border)] bg-[var(--pc-surface-raised)]/55"
+          : "border-[var(--pc-border)] bg-[var(--pc-surface-raised)]/55",
       )}
     >
       <div className="flex items-center justify-between gap-3">
-        <div className="text-[12px] font-semibold text-[var(--pc-text)]">{label}</div>
+        <div className="text-[12px] font-semibold text-[var(--pc-text)]">
+          {label}
+        </div>
         <span
           className={cn(
             "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
@@ -1475,7 +1657,7 @@ function StatusRow({
               ? tone === "info"
                 ? "bg-[var(--pc-info)]/18 text-sky-100"
                 : "bg-[var(--pc-healthy)]/18 text-emerald-100"
-              : "bg-[var(--pc-tint-hover)] text-[var(--pc-text-muted)]"
+              : "bg-[var(--pc-tint-hover)] text-[var(--pc-text-muted)]",
           )}
         >
           {status ? "Ready" : "Pending"}
@@ -1491,7 +1673,7 @@ function StatusRow({
 function CompareRow({
   label,
   state,
-  emptyLabel
+  emptyLabel,
 }: {
   label: string;
   state: boolean | null;
@@ -1500,7 +1682,9 @@ function CompareRow({
   return (
     <div className="flex items-start justify-between gap-3 border-b border-white/6 py-2 last:border-b-0 last:pb-0">
       <div>
-        <div className="text-[11.5px] font-medium text-[var(--pc-text)]">{label}</div>
+        <div className="text-[11.5px] font-medium text-[var(--pc-text)]">
+          {label}
+        </div>
         <div className="mt-0.5 text-[11px] text-[var(--pc-text-secondary)]">
           {state === null
             ? emptyLabel
@@ -1516,7 +1700,7 @@ function CompareRow({
             ? "bg-[var(--pc-tint-hover)] text-[var(--pc-text-muted)]"
             : state
               ? "bg-[var(--pc-healthy)]/18 text-emerald-100"
-              : "bg-[var(--pc-warning)]/18 text-[var(--pc-warning)]"
+              : "bg-[var(--pc-warning)]/18 text-[var(--pc-warning)]",
         )}
       >
         {state === null ? "Open" : state ? "Match" : "Review"}
@@ -1556,7 +1740,7 @@ function ResultBanner({ valid }: { valid: boolean }) {
 function IssueList({
   title,
   items,
-  tone
+  tone,
 }: {
   title: string;
   items: string[];
@@ -1582,10 +1766,15 @@ function IssueList({
       {items.map((item, index) => (
         <div
           key={`${title}-${index}`}
-          className={cn("flex items-start gap-2 rounded-xl border px-3 py-2.5", classes)}
+          className={cn(
+            "flex items-start gap-2 rounded-xl border px-3 py-2.5",
+            classes,
+          )}
         >
           {icon}
-          <div className="text-[11.5px] leading-relaxed text-[var(--pc-text)]">{item}</div>
+          <div className="text-[11.5px] leading-relaxed text-[var(--pc-text)]">
+            {item}
+          </div>
         </div>
       ))}
     </div>

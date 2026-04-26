@@ -24,7 +24,7 @@ export function AppShell() {
             id="main-content"
             className="min-w-0 flex-1 overflow-x-hidden bg-[linear-gradient(180deg,var(--pc-tint-subtle),transparent_24rem)]"
           >
-            <div className="pc-page-enter mx-auto w-full max-w-[1600px] px-4 pb-24 pt-5 sm:px-6 lg:px-8 lg:pb-24 lg:pt-8 xl:px-12">
+            <div className="pc-page-enter mx-auto w-full max-w-[1680px] px-3 pb-16 pt-4 sm:px-5 lg:px-6 lg:pb-20 lg:pt-6 xl:px-8">
               <Outlet />
             </div>
           </main>

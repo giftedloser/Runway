@@ -2,7 +2,12 @@
 
 :root {
   color-scheme: dark;
-  font-family: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-family:
+    "IBM Plex Sans",
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    sans-serif;
 
   /* Backgrounds */
   --pc-bg: #0b0d12;
@@ -44,17 +49,22 @@
 
   /* Elevation */
   --pc-shadow-soft: 0 18px 60px rgba(0, 0, 0, 0.18);
-  --pc-shadow-card: 0 18px 48px rgba(0, 0, 0, 0.16);
+  --pc-shadow-card: 0 12px 34px rgba(0, 0, 0, 0.15);
   --pc-shadow-float: 0 26px 90px rgba(0, 0, 0, 0.32);
   --pc-ring: 0 0 0 1px color-mix(in srgb, var(--pc-accent) 36%, transparent);
-  --pc-gradient-page: linear-gradient(140deg, rgba(124, 140, 255, 0.08), transparent 28rem),
+  --pc-gradient-page:
+    linear-gradient(140deg, rgba(124, 140, 255, 0.08), transparent 28rem),
     linear-gradient(220deg, rgba(45, 212, 191, 0.055), transparent 30rem);
-  --pc-gradient-panel: linear-gradient(155deg, color-mix(in srgb, var(--pc-surface) 92%, white), var(--pc-surface));
+  --pc-gradient-panel: linear-gradient(
+    155deg,
+    color-mix(in srgb, var(--pc-surface) 92%, white),
+    var(--pc-surface)
+  );
 
   /* Radius */
   --pc-radius: 8px;
   --pc-radius-sm: 6px;
-  --pc-radius-lg: 12px;
+  --pc-radius-lg: 10px;
 }
 
 /* Light theme overrides */
@@ -99,10 +109,11 @@
   --pc-tint-subtle: rgba(0, 0, 0, 0.03);
   --pc-tint-hover: rgba(0, 0, 0, 0.05);
   --pc-shadow-soft: 0 18px 60px rgba(15, 23, 42, 0.08);
-  --pc-shadow-card: 0 14px 42px rgba(15, 23, 42, 0.08);
+  --pc-shadow-card: 0 10px 30px rgba(15, 23, 42, 0.08);
   --pc-shadow-float: 0 28px 90px rgba(15, 23, 42, 0.18);
   --pc-ring: 0 0 0 1px color-mix(in srgb, var(--pc-accent) 28%, transparent);
-  --pc-gradient-page: linear-gradient(140deg, rgba(79, 70, 229, 0.055), transparent 28rem),
+  --pc-gradient-page:
+    linear-gradient(140deg, rgba(79, 70, 229, 0.055), transparent 28rem),
     linear-gradient(220deg, rgba(15, 118, 110, 0.04), transparent 30rem);
   --pc-gradient-panel: linear-gradient(155deg, #ffffff, #f8fafc);
 }
@@ -143,12 +154,17 @@
   --pc-tint-subtle: rgba(177, 240, 236, 0.05);
   --pc-tint-hover: rgba(177, 240, 236, 0.08);
   --pc-shadow-soft: 0 18px 60px rgba(0, 0, 0, 0.2);
-  --pc-shadow-card: 0 18px 48px rgba(0, 0, 0, 0.18);
+  --pc-shadow-card: 0 12px 34px rgba(0, 0, 0, 0.17);
   --pc-shadow-float: 0 26px 90px rgba(0, 0, 0, 0.34);
   --pc-ring: 0 0 0 1px color-mix(in srgb, var(--pc-accent) 34%, transparent);
-  --pc-gradient-page: linear-gradient(140deg, rgba(20, 184, 166, 0.075), transparent 28rem),
+  --pc-gradient-page:
+    linear-gradient(140deg, rgba(20, 184, 166, 0.075), transparent 28rem),
     linear-gradient(220deg, rgba(96, 165, 250, 0.055), transparent 30rem);
-  --pc-gradient-panel: linear-gradient(155deg, color-mix(in srgb, var(--pc-surface) 90%, white), var(--pc-surface));
+  --pc-gradient-panel: linear-gradient(
+    155deg,
+    color-mix(in srgb, var(--pc-surface) 90%, white),
+    var(--pc-surface)
+  );
 }
 
 /* Copper theme: warmer dark palette with clear amber focus affordances. */
@@ -187,16 +203,22 @@
   --pc-tint-subtle: rgba(255, 221, 186, 0.05);
   --pc-tint-hover: rgba(255, 221, 186, 0.08);
   --pc-shadow-soft: 0 18px 60px rgba(0, 0, 0, 0.2);
-  --pc-shadow-card: 0 18px 48px rgba(0, 0, 0, 0.18);
+  --pc-shadow-card: 0 12px 34px rgba(0, 0, 0, 0.17);
   --pc-shadow-float: 0 26px 90px rgba(0, 0, 0, 0.34);
   --pc-ring: 0 0 0 1px color-mix(in srgb, var(--pc-accent) 34%, transparent);
-  --pc-gradient-page: linear-gradient(140deg, rgba(249, 115, 22, 0.075), transparent 28rem),
+  --pc-gradient-page:
+    linear-gradient(140deg, rgba(249, 115, 22, 0.075), transparent 28rem),
     linear-gradient(220deg, rgba(34, 197, 94, 0.04), transparent 30rem);
-  --pc-gradient-panel: linear-gradient(155deg, color-mix(in srgb, var(--pc-surface) 90%, white), var(--pc-surface));
+  --pc-gradient-panel: linear-gradient(
+    155deg,
+    color-mix(in srgb, var(--pc-surface) 90%, white),
+    var(--pc-surface)
+  );
 }
 
 html {
   background: var(--pc-bg);
+  font-size: 14px;
   overflow-x: hidden;
 }
 
@@ -226,11 +248,14 @@ body {
 }
 
 .font-display {
-  font-family: "Barlow Condensed", "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  font-family:
+    "Barlow Condensed", "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
 }
 
 .font-brand {
-  font-family: "Oswald Variable", "Barlow Condensed", "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  font-family:
+    "Oswald Variable", "Barlow Condensed", "IBM Plex Sans", ui-sans-serif,
+    system-ui, sans-serif;
   font-variation-settings: "wght" 540;
 }
 
@@ -356,8 +381,13 @@ p {
 
 /* Pulse glow for status indicators */
 @keyframes pc-pulse-glow {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
 }
 .pc-pulse-glow {
   animation: pc-pulse-glow 2s ease-in-out infinite;
@@ -405,14 +435,30 @@ p {
   box-shadow: var(--pc-shadow-card);
 }
 
+.pc-helper-text {
+  color: var(--pc-text-muted);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.pc-section-note {
+  border: 1px solid var(--pc-border);
+  border-radius: var(--pc-radius);
+  background: var(--pc-tint-subtle);
+  color: var(--pc-text-secondary);
+  font-size: 0.8rem;
+  line-height: 1.45;
+  padding: 0.6rem 0.75rem;
+}
+
 .pc-select {
-  height: 2.25rem;
+  height: 2rem;
   border-radius: var(--pc-radius-sm);
   border: 1px solid var(--pc-border);
   background: var(--pc-surface-raised);
   color: var(--pc-text);
-  padding: 0 0.75rem;
-  font-size: 13px;
+  padding: 0 0.625rem;
+  font-size: 12px;
   outline: none;
   transition:
     border-color 150ms ease,

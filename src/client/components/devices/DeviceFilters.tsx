@@ -16,19 +16,22 @@ const HEALTH_OPTIONS: Array<Exclude<HealthLevel, "unknown">> = [
   "critical",
   "warning",
   "info",
-  "healthy"
+  "healthy",
 ];
 
 const HEALTH_STYLES: Record<Exclude<HealthLevel, "unknown">, string> = {
-  critical: "bg-[var(--pc-critical-muted)] text-[var(--pc-critical)] ring-1 ring-[var(--pc-critical)]/40",
-  warning: "bg-[var(--pc-warning-muted)] text-[var(--pc-warning)] ring-1 ring-[var(--pc-warning)]/40",
+  critical:
+    "bg-[var(--pc-critical-muted)] text-[var(--pc-critical)] ring-1 ring-[var(--pc-critical)]/40",
+  warning:
+    "bg-[var(--pc-warning-muted)] text-[var(--pc-warning)] ring-1 ring-[var(--pc-warning)]/40",
   info: "bg-[var(--pc-info-muted)] text-[var(--pc-info)] ring-1 ring-[var(--pc-info)]/40",
-  healthy: "bg-[var(--pc-healthy-muted)] text-[var(--pc-healthy)] ring-1 ring-[var(--pc-healthy)]/40"
+  healthy:
+    "bg-[var(--pc-healthy-muted)] text-[var(--pc-healthy)] ring-1 ring-[var(--pc-healthy)]/40",
 };
 
 const FLAG_OPTIONS = (Object.keys(FLAG_INFO) as FlagCode[]).map((code) => ({
   code,
-  ...FLAG_INFO[code]
+  ...FLAG_INFO[code],
 }));
 
 export function DeviceFilters() {
@@ -36,12 +39,18 @@ export function DeviceFilters() {
   const search = useSearch({ from: "/devices" });
 
   const hasAnyFilter = Boolean(
-    search.search || search.health || search.flag || search.property || search.profile
+    search.search ||
+    search.health ||
+    search.flag ||
+    search.property ||
+    search.profile,
   );
 
-  const setSearch = (updater: (previous: typeof search) => Partial<typeof search>) =>
+  const setSearch = (
+    updater: (previous: typeof search) => Partial<typeof search>,
+  ) =>
     navigate({
-      search: (previous) => ({ ...previous, ...updater(previous), page: 1 })
+      search: (previous) => ({ ...previous, ...updater(previous), page: 1 }),
     });
 
   // Local mirror of the URL search param so typing stays responsive while the
@@ -73,7 +82,16 @@ export function DeviceFilters() {
   };
 
   return (
-    <div className="space-y-3 rounded-xl border border-[var(--pc-border)] bg-[var(--pc-surface)] p-3 shadow-[0_18px_60px_rgba(0,0,0,0.10)]">
+    <div className="space-y-2.5 rounded-[var(--pc-radius)] border border-[var(--pc-border)] bg-[var(--pc-surface)] p-3 shadow-[0_12px_34px_rgba(0,0,0,0.10)]">
+      <div>
+        <div className="text-[11px] font-semibold uppercase tracking-wide text-[var(--pc-text-secondary)]">
+          Filter device queue
+        </div>
+        <div className="pc-helper-text">
+          Search narrows by device name, serial, or user. Health and flag
+          filters are best for building a focused fix list.
+        </div>
+      </div>
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
         <div className="relative flex-1 lg:max-w-lg">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--pc-text-muted)]" />
@@ -97,7 +115,7 @@ export function DeviceFilters() {
                 type="button"
                 onClick={() =>
                   setSearch((previous) => ({
-                    health: previous.health === health ? undefined : health
+                    health: previous.health === health ? undefined : health,
                   }))
                 }
                 aria-label={`Filter by ${health} health`}
@@ -107,7 +125,7 @@ export function DeviceFilters() {
                   "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]",
                   active
                     ? HEALTH_STYLES[health]
-                    : "bg-[var(--pc-tint-subtle)] text-[var(--pc-text-secondary)] hover:bg-[var(--pc-tint-hover)]"
+                    : "bg-[var(--pc-tint-subtle)] text-[var(--pc-text-secondary)] hover:bg-[var(--pc-tint-hover)]",
                 )}
               >
                 {health}
@@ -144,8 +162,8 @@ export function DeviceFilters() {
                   property: undefined,
                   profile: undefined,
                   page: 1,
-                  pageSize: search.pageSize ?? 25
-                })
+                  pageSize: search.pageSize ?? 25,
+                }),
               })
             }
             className="inline-flex items-center gap-1 rounded-md border border-[var(--pc-border)] px-2.5 py-1.5 text-[12px] text-[var(--pc-text-secondary)] transition-colors hover:border-[var(--pc-critical)]/50 hover:text-[var(--pc-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]"
@@ -199,16 +217,19 @@ export function DeviceFilters() {
 }
 
 const CHIP_VARIANT_STYLES: Record<string, string> = {
-  critical: "border-[var(--pc-critical)]/30 bg-[var(--pc-critical-muted)] text-[var(--pc-critical)]",
-  warning: "border-[var(--pc-warning)]/30 bg-[var(--pc-warning-muted)] text-[var(--pc-warning)]",
+  critical:
+    "border-[var(--pc-critical)]/30 bg-[var(--pc-critical-muted)] text-[var(--pc-critical)]",
+  warning:
+    "border-[var(--pc-warning)]/30 bg-[var(--pc-warning-muted)] text-[var(--pc-warning)]",
   info: "border-[var(--pc-info)]/30 bg-[var(--pc-info-muted)] text-[var(--pc-info)]",
-  healthy: "border-[var(--pc-healthy)]/30 bg-[var(--pc-healthy-muted)] text-[var(--pc-healthy)]"
+  healthy:
+    "border-[var(--pc-healthy)]/30 bg-[var(--pc-healthy-muted)] text-[var(--pc-healthy)]",
 };
 
 function ActiveTag({
   label,
   variant,
-  onClear
+  onClear,
 }: {
   label: string;
   variant?: Exclude<HealthLevel, "unknown">;
@@ -220,7 +241,7 @@ function ActiveTag({
         "inline-flex items-center gap-1 rounded-full border px-2.5 py-1",
         variant && CHIP_VARIANT_STYLES[variant]
           ? CHIP_VARIANT_STYLES[variant]
-          : "border-[var(--pc-border)] bg-[var(--pc-tint-subtle)] text-[var(--pc-text-secondary)]"
+          : "border-[var(--pc-border)] bg-[var(--pc-tint-subtle)] text-[var(--pc-text-secondary)]",
       )}
     >
       {label}

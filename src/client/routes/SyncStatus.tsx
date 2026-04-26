@@ -1,5 +1,11 @@
 import { formatDistanceToNow } from "date-fns";
-import { AlertTriangle, CheckCircle, Clock, RefreshCcw, XCircle } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle,
+  Clock,
+  RefreshCcw,
+  XCircle,
+} from "lucide-react";
 
 import { PageHeader } from "../components/layout/PageHeader.js";
 import { ErrorState, LoadingState } from "../components/shared/ErrorState.js";
@@ -45,47 +51,69 @@ export function SyncStatusPage() {
       />
 
       {/* Status cards */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="pc-section-note">
+        Check this page after changing Graph credentials, tag mappings, or
+        feature flags. Failed runs keep the previous cached state so operators
+        are not left with partial data.
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Card className="px-4 py-3.5">
-          <div className="text-[11px] font-medium text-[var(--pc-text-muted)]">Status</div>
+          <div className="text-[11px] font-medium text-[var(--pc-text-muted)]">
+            Status
+          </div>
           <div className="mt-1.5 flex items-center gap-2">
             {status.data.inProgress ? (
               <>
                 <div className="h-2 w-2 animate-pulse rounded-full bg-[var(--pc-accent)]" />
-                <span className="text-[13px] font-medium text-[var(--pc-accent)]">Syncing</span>
+                <span className="text-[13px] font-medium text-[var(--pc-accent)]">
+                  Syncing
+                </span>
               </>
             ) : (
               <>
                 <div className="h-2 w-2 rounded-full bg-[var(--pc-healthy)]" />
-                <span className="text-[13px] font-medium text-[var(--pc-text)]">Idle</span>
+                <span className="text-[13px] font-medium text-[var(--pc-text)]">
+                  Idle
+                </span>
               </>
             )}
           </div>
         </Card>
         <Card className="px-4 py-3.5">
-          <div className="text-[11px] font-medium text-[var(--pc-text-muted)]">Graph Connected</div>
+          <div className="text-[11px] font-medium text-[var(--pc-text-muted)]">
+            Graph Connected
+          </div>
           <div className="mt-1.5 flex items-center gap-2">
             {status.data.graphConfigured ? (
               <>
                 <CheckCircle className="h-3.5 w-3.5 text-[var(--pc-healthy)]" />
-                <span className="text-[13px] font-medium text-[var(--pc-text)]">Yes</span>
+                <span className="text-[13px] font-medium text-[var(--pc-text)]">
+                  Yes
+                </span>
               </>
             ) : (
               <>
                 <XCircle className="h-3.5 w-3.5 text-[var(--pc-critical)]" />
-                <span className="text-[13px] font-medium text-[var(--pc-text)]">No</span>
+                <span className="text-[13px] font-medium text-[var(--pc-text)]">
+                  No
+                </span>
               </>
             )}
           </div>
         </Card>
         <Card className="px-4 py-3.5">
-          <div className="text-[11px] font-medium text-[var(--pc-text-muted)]">Last Sync Type</div>
+          <div className="text-[11px] font-medium text-[var(--pc-text-muted)]">
+            Last Sync Type
+          </div>
           <div className="mt-1.5 font-mono text-[13px] text-[var(--pc-text)]">
             {status.data.lastSyncType ?? "\u2014"}
           </div>
         </Card>
         <Card className="px-4 py-3.5">
-          <div className="text-[11px] font-medium text-[var(--pc-text-muted)]">Last Synced</div>
+          <div className="text-[11px] font-medium text-[var(--pc-text-muted)]">
+            Last Synced
+          </div>
           <div className="mt-1.5">
             <SyncIndicator
               lastSync={status.data.lastCompletedAt}
@@ -101,8 +129,12 @@ export function SyncStatusPage() {
           <div className="flex items-start gap-2">
             <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-[var(--pc-critical)]" />
             <div>
-              <div className="text-[13px] font-medium text-rose-200">Last Error</div>
-              <div className="mt-0.5 font-mono text-[12px] text-rose-300">{status.data.lastError}</div>
+              <div className="text-[13px] font-medium text-rose-200">
+                Last Error
+              </div>
+              <div className="mt-0.5 font-mono text-[12px] text-rose-300">
+                {status.data.lastError}
+              </div>
             </div>
           </div>
         </Card>
@@ -112,9 +144,12 @@ export function SyncStatusPage() {
       <Card className="overflow-hidden">
         <div className="flex items-center justify-between border-b border-[var(--pc-border)] px-5 py-4">
           <div>
-            <div className="text-[13px] font-semibold text-[var(--pc-text)]">Sync History</div>
+            <div className="text-[13px] font-semibold text-[var(--pc-text)]">
+              Sync History
+            </div>
             <div className="mt-0.5 text-[11px] text-[var(--pc-text-muted)]">
-              Most recent {status.data.logs.length} runs
+              Most recent {status.data.logs.length} runs. Expand error rows to
+              see the source failure captured during ingestion.
             </div>
           </div>
           {status.data.logs.length > 0 && (
@@ -139,11 +174,18 @@ export function SyncStatusPage() {
               <tbody className="divide-y divide-[var(--pc-border)]">
                 {status.data.logs.map((entry) => {
                   const started = new Date(entry.startedAt);
-                  const completed = entry.completedAt ? new Date(entry.completedAt) : null;
-                  const durationMs = completed ? completed.getTime() - started.getTime() : null;
+                  const completed = entry.completedAt
+                    ? new Date(entry.completedAt)
+                    : null;
+                  const durationMs = completed
+                    ? completed.getTime() - started.getTime()
+                    : null;
                   const hasErrors = entry.errors.length > 0;
                   return (
-                    <tr key={entry.id} className="transition-colors hover:bg-[var(--pc-tint-subtle)]">
+                    <tr
+                      key={entry.id}
+                      className="transition-colors hover:bg-[var(--pc-tint-subtle)]"
+                    >
                       <td className="px-5 py-3">
                         <div className="flex items-center gap-2">
                           {hasErrors ? (
@@ -153,7 +195,9 @@ export function SyncStatusPage() {
                           ) : (
                             <div className="h-2 w-2 animate-pulse rounded-full bg-[var(--pc-accent)]" />
                           )}
-                          <span className="font-mono text-[var(--pc-text)]">{entry.syncType}</span>
+                          <span className="font-mono text-[var(--pc-text)]">
+                            {entry.syncType}
+                          </span>
                         </div>
                       </td>
                       <td className="px-5 py-3 text-[var(--pc-text-muted)]">
@@ -168,14 +212,17 @@ export function SyncStatusPage() {
                         {durationMs !== null ? (
                           formatDuration(durationMs)
                         ) : (
-                          <span className="text-[var(--pc-accent)]">running…</span>
+                          <span className="text-[var(--pc-accent)]">
+                            running…
+                          </span>
                         )}
                       </td>
                       <td className="px-5 py-3 text-[var(--pc-text-secondary)]">
                         {hasErrors ? (
                           <details className="group">
                             <summary className="cursor-pointer text-[var(--pc-critical)] hover:text-rose-300">
-                              {entry.errors.length} error{entry.errors.length === 1 ? "" : "s"}
+                              {entry.errors.length} error
+                              {entry.errors.length === 1 ? "" : "s"}
                             </summary>
                             <ul className="mt-2 space-y-1 pl-3 text-[11.5px] text-rose-300/90">
                               {entry.errors.map((err, idx) => (
@@ -187,7 +234,9 @@ export function SyncStatusPage() {
                           </details>
                         ) : completed ? (
                           <span>
-                            <span className="font-medium text-[var(--pc-text)]">{entry.devicesSynced}</span>{" "}
+                            <span className="font-medium text-[var(--pc-text)]">
+                              {entry.devicesSynced}
+                            </span>{" "}
                             device{entry.devicesSynced === 1 ? "" : "s"}
                           </span>
                         ) : (
@@ -215,7 +264,11 @@ function formatDuration(ms: number): string {
   return `${minutes}m ${remainder}s`;
 }
 
-function SyncSummary({ logs }: { logs: NonNullable<ReturnType<typeof useSyncStatus>["data"]>["logs"] }) {
+function SyncSummary({
+  logs,
+}: {
+  logs: NonNullable<ReturnType<typeof useSyncStatus>["data"]>["logs"];
+}) {
   const completed = logs.filter((log) => log.completedAt !== null);
   if (completed.length === 0) return null;
   const successes = completed.filter((log) => log.errors.length === 0).length;
@@ -236,7 +289,9 @@ function SyncSummary({ logs }: { logs: NonNullable<ReturnType<typeof useSyncStat
       <div className="h-8 w-px bg-[var(--pc-border)]" />
       <div>
         <div className="text-[var(--pc-text-muted)]">Avg duration</div>
-        <div className="font-mono font-semibold text-[var(--pc-text)]">{formatDuration(avgMs)}</div>
+        <div className="font-mono font-semibold text-[var(--pc-text)]">
+          {formatDuration(avgMs)}
+        </div>
       </div>
     </div>
   );

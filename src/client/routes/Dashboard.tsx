@@ -6,7 +6,7 @@ import {
   Fingerprint,
   RefreshCcw,
   ShieldCheck,
-  TrendingDown
+  TrendingDown,
 } from "lucide-react";
 
 import { FailurePatterns } from "../components/dashboard/FailurePatterns.js";
@@ -42,13 +42,18 @@ export function DashboardPage() {
     );
   }
 
-  const totalDevices = Object.values(dashboard.data.counts).reduce((sum, value) => sum + value, 0);
+  const totalDevices = Object.values(dashboard.data.counts).reduce(
+    (sum, value) => sum + value,
+    0,
+  );
   const impactedDevices =
     dashboard.data.counts.critical +
     dashboard.data.counts.warning +
     dashboard.data.counts.info;
   const stabilityRate =
-    totalDevices > 0 ? Math.round((dashboard.data.counts.healthy / totalDevices) * 100) : 0;
+    totalDevices > 0
+      ? Math.round((dashboard.data.counts.healthy / totalDevices) * 100)
+      : 0;
   const topPattern = dashboard.data.failurePatterns[0];
 
   const countForFlags = (flags: string[]) =>
@@ -61,24 +66,29 @@ export function DashboardPage() {
       label: "Identity records",
       description: "Duplicate, missing, or weakly joined records",
       search: { flag: "identity_conflict" },
-      count: countForFlags(["identity_conflict", "no_autopilot_record", "missing_ztdid"]),
+      count: countForFlags([
+        "identity_conflict",
+        "no_autopilot_record",
+        "missing_ztdid",
+      ]),
       icon: ShieldCheck,
       color: "text-[var(--pc-info)]",
-      bgColor: "bg-[var(--pc-info-muted)]"
+      bgColor: "bg-[var(--pc-info-muted)]",
     },
     {
       label: "Targeting and profile",
-      description: "Group tag, group membership, or profile assignment failures",
+      description:
+        "Group tag, group membership, or profile assignment failures",
       search: { flag: "not_in_target_group" },
       count: countForFlags([
         "no_profile_assigned",
         "profile_assignment_failed",
         "not_in_target_group",
-        "tag_mismatch"
+        "tag_mismatch",
       ]),
       icon: AlertTriangle,
       color: "text-[var(--pc-warning)]",
-      bgColor: "bg-[var(--pc-warning-muted)]"
+      bgColor: "bg-[var(--pc-warning-muted)]",
     },
     {
       label: "Enrollment and join",
@@ -88,28 +98,32 @@ export function DashboardPage() {
         "hybrid_join_risk",
         "profile_assigned_not_enrolled",
         "provisioning_stalled",
-        "deployment_mode_mismatch"
+        "deployment_mode_mismatch",
       ]),
       icon: AlertTriangle,
       color: "text-[var(--pc-critical)]",
-      bgColor: "bg-[var(--pc-critical-muted)]"
+      bgColor: "bg-[var(--pc-critical-muted)]",
     },
     {
       label: "Ownership and drift",
       description: "Primary user mismatch or compliance changed",
       search: { flag: "user_mismatch" },
-      count: countForFlags(["user_mismatch", "compliance_drift", "orphaned_autopilot"]),
+      count: countForFlags([
+        "user_mismatch",
+        "compliance_drift",
+        "orphaned_autopilot",
+      ]),
       icon: TrendingDown,
       color: "text-[var(--pc-warning)]",
-      bgColor: "bg-[var(--pc-warning-muted)]"
-    }
+      bgColor: "bg-[var(--pc-warning-muted)]",
+    },
   ];
 
   const setupIncomplete =
     settings.data?.tagConfig.length === 0 || dashboard.data.lastSync === null;
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-5">
       {setupIncomplete ? (
         <Link
           to="/setup"
@@ -117,9 +131,12 @@ export function DashboardPage() {
         >
           <ShieldCheck className="h-4 w-4 text-[var(--pc-accent)]" />
           <span className="flex-1">
-            <span className="font-medium text-[var(--pc-text)]">Finish first-run setup</span>
+            <span className="font-medium text-[var(--pc-text)]">
+              Finish first-run setup
+            </span>
             <span className="ml-2 text-[var(--pc-text-muted)]">
-              Configure Graph credentials, run an initial sync, and add at least one tag mapping.
+              Configure Graph credentials, run an initial sync, and add at least
+              one tag mapping.
             </span>
           </span>
           <ChevronRight className="hidden h-3.5 w-3.5 text-[var(--pc-text-muted)] sm:block" />
@@ -150,13 +167,24 @@ export function DashboardPage() {
       <TriageCommandCenter dashboard={dashboard.data} />
 
       {/* Top KPI row */}
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
-        <Card className="min-h-[132px] px-4 py-4 sm:px-5">
-          <div className="text-[12px] font-medium text-[var(--pc-text-muted)]">Total Devices</div>
-          <div className="mt-1 text-3xl font-semibold tabular-nums text-[var(--pc-text)]">{totalDevices}</div>
-          <div className="mt-1 text-[11px] text-[var(--pc-text-muted)]">In current cache</div>
+      <div className="pc-section-note">
+        Use these fleet counters to size today&apos;s queue. Click deeper
+        sections below when you need the affected devices, not just the count.
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+        <Card className="min-h-[112px] px-3 py-3 sm:px-4">
+          <div className="text-[12px] font-medium text-[var(--pc-text-muted)]">
+            Total Devices
+          </div>
+          <div className="mt-1 text-3xl font-semibold tabular-nums text-[var(--pc-text)]">
+            {totalDevices}
+          </div>
+          <div className="mt-1 text-[11px] text-[var(--pc-text-muted)]">
+            In current cache
+          </div>
         </Card>
-        <Card className="min-h-[132px] px-4 py-4 sm:px-5">
+        <Card className="min-h-[112px] px-3 py-3 sm:px-4">
           <div className="text-[12px] font-medium text-[var(--pc-text-muted)]">
             Newly Unhealthy
           </div>
@@ -167,20 +195,28 @@ export function DashboardPage() {
             Devices that became unhealthy in 24h
           </div>
         </Card>
-        <Card className="min-h-[132px] px-4 py-4 sm:px-5">
+        <Card className="min-h-[112px] px-3 py-3 sm:px-4">
           <div className="text-[12px] font-medium text-[var(--pc-text-muted)]">
             Needs Attention
           </div>
-          <div className="mt-1 text-3xl font-semibold tabular-nums text-[var(--pc-text)]">{impactedDevices}</div>
-          <div className="mt-1 text-[11px] text-[var(--pc-text-muted)]">Outside expected state</div>
+          <div className="mt-1 text-3xl font-semibold tabular-nums text-[var(--pc-text)]">
+            {impactedDevices}
+          </div>
+          <div className="mt-1 text-[11px] text-[var(--pc-text-muted)]">
+            Outside expected state
+          </div>
         </Card>
-        <Card className="min-h-[132px] px-4 py-4 sm:px-5">
+        <Card className="min-h-[112px] px-3 py-3 sm:px-4">
           <div className="text-[12px] font-medium text-[var(--pc-text-muted)]">
             Healthy Rate
           </div>
           <div className="mt-1 flex items-end gap-1.5">
-            <span className="text-3xl font-semibold tabular-nums text-[var(--pc-text)]">{stabilityRate}</span>
-            <span className="mb-1 text-[15px] font-medium text-[var(--pc-text-muted)]">%</span>
+            <span className="text-3xl font-semibold tabular-nums text-[var(--pc-text)]">
+              {stabilityRate}
+            </span>
+            <span className="mb-1 text-[15px] font-medium text-[var(--pc-text-muted)]">
+              %
+            </span>
           </div>
           <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--pc-tint-hover)]">
             <div
@@ -189,7 +225,7 @@ export function DashboardPage() {
             />
           </div>
         </Card>
-        <Card className="min-h-[132px] px-4 py-4 sm:px-5">
+        <Card className="min-h-[112px] px-3 py-3 sm:px-4">
           <div className="text-[12px] font-medium text-[var(--pc-text-muted)]">
             Most Common Failure
           </div>
@@ -202,7 +238,7 @@ export function DashboardPage() {
               : "Fleet looks healthy"}
           </div>
         </Card>
-        <Card className="min-h-[132px] px-4 py-4 sm:px-5">
+        <Card className="min-h-[112px] px-3 py-3 sm:px-4">
           <div className="flex items-center gap-1.5 text-[12px] font-medium text-[var(--pc-text-muted)]">
             <Fingerprint className="h-3 w-3" />
             Correlation
@@ -274,16 +310,20 @@ export function DashboardPage() {
                     property: undefined,
                     profile: undefined,
                     page: 1,
-                    pageSize: 25
+                    pageSize: 25,
                   }}
                   className="flex cursor-pointer items-center gap-3 px-5 py-3.5 transition-colors hover:bg-[var(--pc-tint-subtle)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--pc-accent)]"
                   title={`Open devices with ${bucket.label.toLowerCase()} issues`}
                 >
-                  <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${bucket.bgColor}`}>
+                  <div
+                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${bucket.bgColor}`}
+                  >
                     <bucket.icon className={`h-4 w-4 ${bucket.color}`} />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="text-[13px] font-medium text-[var(--pc-text)]">{bucket.label}</div>
+                    <div className="text-[13px] font-medium text-[var(--pc-text)]">
+                      {bucket.label}
+                    </div>
                     <div className="mt-0.5 text-[11px] text-[var(--pc-text-muted)]">
                       {bucket.description}
                     </div>
@@ -300,19 +340,34 @@ export function DashboardPage() {
           {/* Quick links */}
           <Card className="overflow-hidden">
             <div className="border-b border-[var(--pc-border)] px-5 py-4">
-              <div className="text-[13px] font-semibold text-[var(--pc-text)]">Quick Actions</div>
+              <div className="text-[13px] font-semibold text-[var(--pc-text)]">
+                Quick Actions
+              </div>
+              <div className="mt-0.5 text-[12px] text-[var(--pc-text-muted)]">
+                Jump to the queues operators usually need during morning triage.
+              </div>
             </div>
             <div className="divide-y divide-[var(--pc-border)]">
               <Link
                 to="/devices"
-                search={{ search: undefined, health: "critical", flag: undefined, property: undefined, profile: undefined, page: 1, pageSize: 25 }}
+                search={{
+                  search: undefined,
+                  health: "critical",
+                  flag: undefined,
+                  property: undefined,
+                  profile: undefined,
+                  page: 1,
+                  pageSize: 25,
+                }}
                 className="flex items-center justify-between px-5 py-3 transition-colors hover:bg-[var(--pc-tint-subtle)]"
               >
                 <div className="flex items-center gap-3">
                   <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[var(--pc-critical-muted)]">
                     <AlertTriangle className="h-3.5 w-3.5 text-[var(--pc-critical)]" />
                   </div>
-                  <span className="text-[13px] font-medium text-[var(--pc-text)]">Critical Devices</span>
+                  <span className="text-[13px] font-medium text-[var(--pc-text)]">
+                    Critical Devices
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-[13px] font-semibold tabular-nums text-[var(--pc-text-secondary)]">
@@ -329,20 +384,32 @@ export function DashboardPage() {
                   <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[var(--pc-accent-muted)]">
                     <ShieldCheck className="h-3.5 w-3.5 text-[var(--pc-accent)]" />
                   </div>
-                  <span className="text-[13px] font-medium text-[var(--pc-text)]">Profile Audit</span>
+                  <span className="text-[13px] font-medium text-[var(--pc-text)]">
+                    Profile Audit
+                  </span>
                 </div>
                 <ChevronRight className="h-3.5 w-3.5 text-[var(--pc-text-muted)]" />
               </Link>
               <Link
                 to="/devices"
-                search={{ search: undefined, health: undefined, flag: undefined, property: undefined, profile: undefined, page: 1, pageSize: 25 }}
+                search={{
+                  search: undefined,
+                  health: undefined,
+                  flag: undefined,
+                  property: undefined,
+                  profile: undefined,
+                  page: 1,
+                  pageSize: 25,
+                }}
                 className="flex items-center justify-between px-5 py-3 transition-colors hover:bg-[var(--pc-tint-subtle)]"
               >
                 <div className="flex items-center gap-3">
                   <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[var(--pc-tint-hover)]">
                     <ArrowRight className="h-3.5 w-3.5 text-[var(--pc-text-secondary)]" />
                   </div>
-                  <span className="text-[13px] font-medium text-[var(--pc-text)]">All Devices</span>
+                  <span className="text-[13px] font-medium text-[var(--pc-text)]">
+                    All Devices
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-[13px] font-semibold tabular-nums text-[var(--pc-text-secondary)]">

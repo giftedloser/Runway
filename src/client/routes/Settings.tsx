@@ -15,7 +15,7 @@ import {
   ToggleRight,
   Trash2,
   Upload,
-  XCircle
+  XCircle,
 } from "lucide-react";
 
 import { useToast } from "../components/shared/toast.js";
@@ -35,14 +35,14 @@ import {
   usePreviewTagConfig,
   useSetFeatureFlag,
   useSettings,
-  useTagConfigMutations
+  useTagConfigMutations,
 } from "../hooks/useSettings.js";
 import type { TagConfigRecord } from "../lib/types.js";
 
 const REQUIRED_ENV = [
   { key: "AZURE_TENANT_ID", purpose: "Entra tenant" },
   { key: "AZURE_CLIENT_ID", purpose: "App registration" },
-  { key: "AZURE_CLIENT_SECRET", purpose: "Read-only Graph access" }
+  { key: "AZURE_CLIENT_SECRET", purpose: "Read-only Graph access" },
 ] as const;
 
 const DELEGATED_SCOPES = [
@@ -52,7 +52,7 @@ const DELEGATED_SCOPES = [
   "BitLockerKey.Read.All",
   "Group.ReadWrite.All",
   "DeviceManagementServiceConfig.ReadWrite.All",
-  "User.Read"
+  "User.Read",
 ];
 
 const SETTINGS_NAV = [
@@ -63,7 +63,7 @@ const SETTINGS_NAV = [
   { href: "#sources", label: "Sources" },
   { href: "#tags", label: "Tags" },
   { href: "#health", label: "Health" },
-  { href: "#rules", label: "Rules" }
+  { href: "#rules", label: "Rules" },
 ] as const;
 
 export function SettingsPage() {
@@ -82,7 +82,7 @@ export function SettingsPage() {
     groupTag: "",
     propertyLabel: "",
     expectedProfileNames: "",
-    expectedGroupNames: ""
+    expectedGroupNames: "",
   });
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
@@ -97,7 +97,7 @@ export function SettingsPage() {
     expectedGroupNames: form.expectedGroupNames
       .split(",")
       .map((value) => value.trim())
-      .filter(Boolean)
+      .filter(Boolean),
   });
 
   if (settings.isLoading) return <LoadingState label="Loading settings…" />;
@@ -131,7 +131,7 @@ export function SettingsPage() {
     toast.push({
       variant: "success",
       title: "Exported tag mappings",
-      description: `${settings.data?.tagConfig.length ?? 0} entries written to JSON.`
+      description: `${settings.data?.tagConfig.length ?? 0} entries written to JSON.`,
     });
   };
 
@@ -148,7 +148,10 @@ export function SettingsPage() {
           throw new Error(`Entry ${index} is not an object.`);
         }
         const obj = entry as Record<string, unknown>;
-        if (typeof obj.groupTag !== "string" || typeof obj.propertyLabel !== "string") {
+        if (
+          typeof obj.groupTag !== "string" ||
+          typeof obj.propertyLabel !== "string"
+        ) {
           throw new Error(`Entry ${index} missing groupTag or propertyLabel.`);
         }
         return {
@@ -156,14 +159,14 @@ export function SettingsPage() {
           propertyLabel: obj.propertyLabel,
           expectedProfileNames: Array.isArray(obj.expectedProfileNames)
             ? (obj.expectedProfileNames as unknown[]).filter(
-                (item): item is string => typeof item === "string"
+                (item): item is string => typeof item === "string",
               )
             : [],
           expectedGroupNames: Array.isArray(obj.expectedGroupNames)
             ? (obj.expectedGroupNames as unknown[]).filter(
-                (item): item is string => typeof item === "string"
+                (item): item is string => typeof item === "string",
               )
-            : []
+            : [],
         };
       });
       let succeeded = 0;
@@ -174,13 +177,14 @@ export function SettingsPage() {
       toast.push({
         variant: "success",
         title: "Tag mappings imported",
-        description: `${succeeded} of ${records.length} entries upserted.`
+        description: `${succeeded} of ${records.length} entries upserted.`,
       });
     } catch (error) {
       toast.push({
         variant: "error",
         title: "Import failed",
-        description: error instanceof Error ? error.message : "Could not parse the file."
+        description:
+          error instanceof Error ? error.message : "Could not parse the file.",
       });
     } finally {
       setImporting(false);
@@ -260,7 +264,9 @@ export function SettingsPage() {
                       <XCircle className="h-3.5 w-3.5 text-[var(--pc-critical)]" />
                     )}
                   </div>
-                  <div className="mt-1 text-[11px] text-[var(--pc-text-muted)]">{env.purpose}</div>
+                  <div className="mt-1 text-[11px] text-[var(--pc-text-muted)]">
+                    {env.purpose}
+                  </div>
                 </div>
               );
             })}
@@ -269,13 +275,17 @@ export function SettingsPage() {
           <div className="mt-5 border-t border-[var(--pc-border)] pt-5">
             <div className="mb-3 flex items-baseline gap-2">
               <div className="text-[12px] font-semibold uppercase tracking-wide text-[var(--pc-text-secondary)]">
-                {graphConfigured ? "Rotate credentials" : "Configure credentials"}
+                {graphConfigured
+                  ? "Rotate credentials"
+                  : "Configure credentials"}
               </div>
               <span className="text-[11px] text-[var(--pc-text-muted)]">
                 Writes to the server's .env — restart required
               </span>
             </div>
-            <GraphCredentialsWizard onDismissRestart={() => settings.refetch()} />
+            <GraphCredentialsWizard
+              onDismissRestart={() => settings.refetch()}
+            />
           </div>
         </Card>
       </section>
@@ -308,7 +318,9 @@ export function SettingsPage() {
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <div className="text-[13px] font-semibold text-[var(--pc-text)]">
-                    {appAccess.required ? "Entra gate active" : "Entra gate not enforced"}
+                    {appAccess.required
+                      ? "Entra gate active"
+                      : "Entra gate not enforced"}
                   </div>
                   <span
                     className={
@@ -321,9 +333,10 @@ export function SettingsPage() {
                   </span>
                 </div>
                 <p className="mt-1 max-w-2xl text-[12px] leading-relaxed text-[var(--pc-text-muted)]">
-                  Set <span className="font-mono">APP_ACCESS_MODE=entra</span> to require a
-                  tenant sign-in before Runway loads. It only becomes enforceable after Graph
-                  credentials are configured, so first-run setup remains reachable.
+                  Set <span className="font-mono">APP_ACCESS_MODE=entra</span>{" "}
+                  to require a tenant sign-in before Runway loads. It only
+                  becomes enforceable after Graph credentials are configured, so
+                  first-run setup remains reachable.
                 </p>
                 <div className="mt-3 grid gap-2 sm:grid-cols-2">
                   <div className="rounded-lg border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] p-3">
@@ -341,8 +354,11 @@ export function SettingsPage() {
                       Recovery path
                     </div>
                     <div className="mt-1 text-[11px] text-[var(--pc-text-muted)]">
-                      Set <span className="font-mono">APP_ACCESS_MODE=disabled</span> in .env and
-                      restart if an allow-list ever locks you out.
+                      Set{" "}
+                      <span className="font-mono">
+                        APP_ACCESS_MODE=disabled
+                      </span>{" "}
+                      in .env and restart if an allow-list ever locks you out.
                     </div>
                   </div>
                 </div>
@@ -384,7 +400,9 @@ export function SettingsPage() {
                 <div className="mt-0.5 text-[12px] text-[var(--pc-text-muted)]">
                   {isAuthed && auth.data ? (
                     <>
-                      <span className="text-[var(--pc-text-secondary)]">{auth.data.user}</span>
+                      <span className="text-[var(--pc-text-secondary)]">
+                        {auth.data.user}
+                      </span>
                       {auth.data.expiresAt ? (
                         <>
                           {" - token expires "}
@@ -422,7 +440,11 @@ export function SettingsPage() {
                   disabled={login.isPending || !login.canStart}
                   title={login.blockedReason ?? undefined}
                 >
-                  {!login.canStart ? "Unavailable" : login.isPending ? "Opening…" : "Sign in"}
+                  {!login.canStart
+                    ? "Unavailable"
+                    : login.isPending
+                      ? "Opening…"
+                      : "Sign in"}
                 </Button>
               )}
             </div>
@@ -471,10 +493,12 @@ export function SettingsPage() {
                   </span>
                 </div>
                 <p className="mt-1 max-w-2xl text-[12px] leading-relaxed text-[var(--pc-text-muted)]">
-                  Reads Intune's <span className="font-mono">managementAgent</span> value and shows
-                  whether a device is reporting a Configuration Manager client. This does not run
-                  SCCM actions or change devices; it only adds visibility to the device-detail
-                  enrollment tab and custom rule fields.
+                  Reads Intune's{" "}
+                  <span className="font-mono">managementAgent</span> value and
+                  shows whether a device is reporting a Configuration Manager
+                  client. This does not run SCCM actions or change devices; it
+                  only adds visibility to the device-detail enrollment tab and
+                  custom rule fields.
                 </p>
                 {!isAuthed ? (
                   <p className="mt-2 text-[11px] text-[var(--pc-warning)]">
@@ -486,7 +510,11 @@ export function SettingsPage() {
             <Button
               variant={sccmDetectionEnabled ? "secondary" : "default"}
               disabled={!isAuthed || featureFlagMutation.isPending}
-              title={!isAuthed ? "Sign in as an admin to change feature flags" : undefined}
+              title={
+                !isAuthed
+                  ? "Sign in as an admin to change feature flags"
+                  : undefined
+              }
               onClick={() =>
                 featureFlagMutation.mutate(
                   { key: "sccm_detection", enabled: !sccmDetectionEnabled },
@@ -497,16 +525,19 @@ export function SettingsPage() {
                         title: !sccmDetectionEnabled
                           ? "SCCM detection enabled"
                           : "SCCM detection disabled",
-                        description: "Device pages will reflect the setting immediately."
+                        description:
+                          "Device pages will reflect the setting immediately.",
                       }),
                     onError: (error) =>
                       toast.push({
                         variant: "error",
                         title: "Could not update SCCM detection",
                         description:
-                          error instanceof Error ? error.message : "The setting was not saved."
-                      })
-                  }
+                          error instanceof Error
+                            ? error.message
+                            : "The setting was not saved.",
+                      }),
+                  },
                 )
               }
             >
@@ -545,19 +576,23 @@ export function SettingsPage() {
                 "Deployment profiles",
                 "Compliance state",
                 "Primary user",
-                "Management agent"
+                "Management agent",
               ]}
             />
             <SourceCard
               source="entra"
-              items={["Devices", "Groups & members", "Dynamic membership rules"]}
+              items={[
+                "Devices",
+                "Groups & members",
+                "Dynamic membership rules",
+              ]}
             />
             <SourceCard
               source="sccm"
               items={[
                 "ConfigMgr client signal",
                 "Co-management indicator",
-                "Derived from Intune managementAgent"
+                "Derived from Intune managementAgent",
               ]}
             />
           </div>
@@ -613,7 +648,9 @@ export function SettingsPage() {
         <Card className="p-5">
           <div className="mb-4 flex items-center gap-2">
             <Plus className="h-4 w-4 text-[var(--pc-accent)]" />
-            <div className="text-[13px] font-semibold text-[var(--pc-text)]">Add mapping</div>
+            <div className="text-[13px] font-semibold text-[var(--pc-text)]">
+              Add mapping
+            </div>
             {!isAuthed ? (
               <span className="ml-auto text-[11px] text-[var(--pc-warning)]">
                 Admin sign-in required to change mappings.
@@ -629,14 +666,19 @@ export function SettingsPage() {
                 placeholder="e.g. CG-LOBBY"
                 value={form.groupTag}
                 onChange={(event) =>
-                  setForm((previous) => ({ ...previous, groupTag: event.target.value }))
+                  setForm((previous) => ({
+                    ...previous,
+                    groupTag: event.target.value,
+                  }))
                 }
                 onBlur={() => setTouched((p) => ({ ...p, groupTag: true }))}
                 aria-invalid={touched.groupTag && !form.groupTag.trim()}
                 className="w-full"
               />
               {touched.groupTag && !form.groupTag.trim() && (
-                <p className="text-[11px] text-[var(--pc-critical)]">Group tag is required.</p>
+                <p className="text-[11px] text-[var(--pc-critical)]">
+                  Group tag is required.
+                </p>
               )}
             </div>
             <div className="space-y-1">
@@ -647,14 +689,23 @@ export function SettingsPage() {
                 placeholder="e.g. Casino Grand Lobby"
                 value={form.propertyLabel}
                 onChange={(event) =>
-                  setForm((previous) => ({ ...previous, propertyLabel: event.target.value }))
+                  setForm((previous) => ({
+                    ...previous,
+                    propertyLabel: event.target.value,
+                  }))
                 }
-                onBlur={() => setTouched((p) => ({ ...p, propertyLabel: true }))}
-                aria-invalid={touched.propertyLabel && !form.propertyLabel.trim()}
+                onBlur={() =>
+                  setTouched((p) => ({ ...p, propertyLabel: true }))
+                }
+                aria-invalid={
+                  touched.propertyLabel && !form.propertyLabel.trim()
+                }
                 className="w-full"
               />
               {touched.propertyLabel && !form.propertyLabel.trim() && (
-                <p className="text-[11px] text-[var(--pc-critical)]">Property label is required.</p>
+                <p className="text-[11px] text-[var(--pc-critical)]">
+                  Property label is required.
+                </p>
               )}
             </div>
             <div className="space-y-1">
@@ -667,7 +718,7 @@ export function SettingsPage() {
                 onChange={(event) =>
                   setForm((previous) => ({
                     ...previous,
-                    expectedProfileNames: event.target.value
+                    expectedProfileNames: event.target.value,
                   }))
                 }
                 className="w-full"
@@ -683,7 +734,7 @@ export function SettingsPage() {
                 onChange={(event) =>
                   setForm((previous) => ({
                     ...previous,
-                    expectedGroupNames: event.target.value
+                    expectedGroupNames: event.target.value,
                   }))
                 }
                 className="w-full"
@@ -695,9 +746,16 @@ export function SettingsPage() {
               <Button
                 variant="secondary"
                 disabled={
-                  !isAuthed || !form.groupTag.trim() || !form.propertyLabel.trim() || preview.isPending
+                  !isAuthed ||
+                  !form.groupTag.trim() ||
+                  !form.propertyLabel.trim() ||
+                  preview.isPending
                 }
-                title={!isAuthed ? "Sign in as an admin to preview mappings" : undefined}
+                title={
+                  !isAuthed
+                    ? "Sign in as an admin to preview mappings"
+                    : undefined
+                }
                 onClick={() => preview.mutate(buildFormRecord())}
               >
                 <Search className="h-3.5 w-3.5" />
@@ -710,7 +768,9 @@ export function SettingsPage() {
                   !form.propertyLabel.trim() ||
                   mutations.create.isPending
                 }
-                title={!isAuthed ? "Sign in as an admin to save mappings" : undefined}
+                title={
+                  !isAuthed ? "Sign in as an admin to save mappings" : undefined
+                }
                 onClick={() =>
                   mutations.create.mutate(buildFormRecord(), {
                     onSuccess: () => {
@@ -718,11 +778,11 @@ export function SettingsPage() {
                         groupTag: "",
                         propertyLabel: "",
                         expectedProfileNames: "",
-                        expectedGroupNames: ""
+                        expectedGroupNames: "",
                       });
                       setTouched({});
                       preview.reset();
-                    }
+                    },
                   })
                 }
               >
@@ -735,7 +795,9 @@ export function SettingsPage() {
 
         {preview.isError ? (
           <Card className="border-[var(--pc-critical)]/30 bg-[var(--pc-critical-muted)]/30 p-4 text-[12px] text-[var(--pc-critical)]">
-            {preview.error instanceof Error ? preview.error.message : "Could not preview this mapping."}
+            {preview.error instanceof Error
+              ? preview.error.message
+              : "Could not preview this mapping."}
           </Card>
         ) : preview.data ? (
           <Card className="p-5">
@@ -745,7 +807,8 @@ export function SettingsPage() {
                   Preview for {preview.data.record.groupTag}
                 </div>
                 <div className="text-[11.5px] text-[var(--pc-text-muted)]">
-                  {preview.data.matchedDevices} devices currently carry this group tag.
+                  {preview.data.matchedDevices} devices currently carry this
+                  group tag.
                 </div>
               </div>
               <span className="rounded-md border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-2 py-1 text-[11px] text-[var(--pc-text-secondary)]">
@@ -761,22 +824,38 @@ export function SettingsPage() {
               <PreviewMetric
                 label="+ Tag mismatch"
                 value={preview.data.impact.addedTagMismatch}
-                tone={preview.data.impact.addedTagMismatch > 0 ? "warning" : "neutral"}
+                tone={
+                  preview.data.impact.addedTagMismatch > 0
+                    ? "warning"
+                    : "neutral"
+                }
               />
               <PreviewMetric
                 label="- Tag mismatch"
                 value={preview.data.impact.clearedTagMismatch}
-                tone={preview.data.impact.clearedTagMismatch > 0 ? "healthy" : "neutral"}
+                tone={
+                  preview.data.impact.clearedTagMismatch > 0
+                    ? "healthy"
+                    : "neutral"
+                }
               />
               <PreviewMetric
                 label="+ Target group"
                 value={preview.data.impact.addedNotInTargetGroup}
-                tone={preview.data.impact.addedNotInTargetGroup > 0 ? "warning" : "neutral"}
+                tone={
+                  preview.data.impact.addedNotInTargetGroup > 0
+                    ? "warning"
+                    : "neutral"
+                }
               />
               <PreviewMetric
                 label="- Target group"
                 value={preview.data.impact.clearedNotInTargetGroup}
-                tone={preview.data.impact.clearedNotInTargetGroup > 0 ? "healthy" : "neutral"}
+                tone={
+                  preview.data.impact.clearedNotInTargetGroup > 0
+                    ? "healthy"
+                    : "neutral"
+                }
               />
             </div>
 
@@ -791,14 +870,17 @@ export function SettingsPage() {
                       <div className="flex flex-wrap items-baseline justify-between gap-2">
                         <div className="min-w-0">
                           <div className="truncate text-[12.5px] font-semibold text-[var(--pc-text)]">
-                            {device.deviceName ?? device.serialNumber ?? device.deviceKey}
+                            {device.deviceName ??
+                              device.serialNumber ??
+                              device.deviceKey}
                           </div>
                           <div className="mt-0.5 text-[11px] text-[var(--pc-text-muted)]">
                             Profile: {device.assignedProfileName ?? "none"}
                           </div>
                         </div>
                         <div className="font-mono text-[10.5px] text-[var(--pc-text-muted)]">
-                          {device.currentPropertyLabel ?? "none"} -&gt; {device.nextPropertyLabel}
+                          {device.currentPropertyLabel ?? "none"} -&gt;{" "}
+                          {device.nextPropertyLabel}
                         </div>
                       </div>
                       {device.flagChanges.length > 0 ? (
@@ -828,11 +910,18 @@ export function SettingsPage() {
         {settings.data.tagConfig.length === 0 ? (
           <Card className="border-dashed px-5 py-8 text-center text-[12.5px] text-[var(--pc-text-muted)]">
             <Tag className="mx-auto mb-2 h-5 w-5 text-[var(--pc-accent)]" />
-            <div className="font-semibold text-[var(--pc-text-secondary)]">No mappings yet</div>
+            <div className="font-semibold text-[var(--pc-text-secondary)]">
+              No mappings yet
+            </div>
             <div className="mx-auto mt-1 max-w-xl leading-5">
               Without mappings, Runway cannot detect{" "}
-              <span className="text-[var(--pc-text-secondary)]">tag mismatch</span> or{" "}
-              <span className="text-[var(--pc-text-secondary)]">not in target group</span>{" "}
+              <span className="text-[var(--pc-text-secondary)]">
+                tag mismatch
+              </span>{" "}
+              or{" "}
+              <span className="text-[var(--pc-text-secondary)]">
+                not in target group
+              </span>{" "}
               conditions.
             </div>
           </Card>
@@ -865,7 +954,11 @@ export function SettingsPage() {
                     variant="destructive"
                     className="h-8 px-2.5"
                     disabled={!isAuthed}
-                    title={!isAuthed ? "Sign in as an admin to delete mappings" : undefined}
+                    title={
+                      !isAuthed
+                        ? "Sign in as an admin to delete mappings"
+                        : undefined
+                    }
                     onClick={() => setDeleteTarget(row.groupTag)}
                     aria-label={`Delete ${row.groupTag}`}
                   >
@@ -874,7 +967,9 @@ export function SettingsPage() {
                 </div>
                 <div className="mt-3 space-y-1.5 text-[11.5px]">
                   <div className="flex items-start gap-1.5">
-                    <span className="text-[var(--pc-text-muted)]">Profiles:</span>
+                    <span className="text-[var(--pc-text-muted)]">
+                      Profiles:
+                    </span>
                     <span className="text-[var(--pc-text-secondary)]">
                       {row.expectedProfileNames.join(", ") || "—"}
                     </span>
@@ -939,7 +1034,7 @@ function SettingsSectionHeader({
   index,
   title,
   detail,
-  actions
+  actions,
 }: {
   index: string;
   title: string;
@@ -957,7 +1052,7 @@ function SettingsSectionHeader({
             {title}
           </h2>
         </div>
-        <p className="mt-0.5 text-[11px] text-[var(--pc-text-muted)]">{detail}</p>
+        <p className="mt-0.5 pc-helper-text">{detail}</p>
       </div>
       {actions ? <div className="shrink-0">{actions}</div> : null}
     </div>
@@ -967,7 +1062,7 @@ function SettingsSectionHeader({
 function PreviewMetric({
   label,
   value,
-  tone = "neutral"
+  tone = "neutral",
 }: {
   label: string;
   value: number;
@@ -985,7 +1080,11 @@ function PreviewMetric({
       <div className="text-[10.5px] font-semibold uppercase tracking-wide text-[var(--pc-text-muted)]">
         {label}
       </div>
-      <div className={`mt-1 text-[20px] font-semibold tabular-nums ${toneClass}`}>{value}</div>
+      <div
+        className={`mt-1 text-[20px] font-semibold tabular-nums ${toneClass}`}
+      >
+        {value}
+      </div>
     </div>
   );
 }
@@ -995,7 +1094,7 @@ function SettingsReadinessBanner({
   appAccessRequired,
   adminSignedIn,
   sccmDetectionEnabled,
-  hasTagMappings
+  hasTagMappings,
 }: {
   graphConfigured: boolean;
   appAccessRequired: boolean;
@@ -1006,7 +1105,7 @@ function SettingsReadinessBanner({
   const blockers = [
     !graphConfigured ? "Graph credentials missing" : null,
     !hasTagMappings ? "No tag mappings" : null,
-    !adminSignedIn ? "Admin sign-in needed for changes/actions" : null
+    !adminSignedIn ? "Admin sign-in needed for changes/actions" : null,
   ].filter(Boolean);
   const ready = graphConfigured && hasTagMappings;
 
@@ -1015,32 +1114,42 @@ function SettingsReadinessBanner({
       label: "Live data",
       value: graphConfigured ? "Ready" : "Mock mode",
       good: graphConfigured,
-      detail: graphConfigured ? "Graph credentials detected" : "Add Graph credentials before tenant testing"
+      detail: graphConfigured
+        ? "Graph credentials detected"
+        : "Add Graph credentials before tenant testing",
     },
     {
       label: "Technician access",
       value: appAccessRequired ? "Entra gate on" : "Gate off",
       good: appAccessRequired,
-      detail: appAccessRequired ? "Users sign in before fleet data loads" : "Enable after setup if techs will use it"
+      detail: appAccessRequired
+        ? "Users sign in before fleet data loads"
+        : "Enable after setup if techs will use it",
     },
     {
       label: "Admin session",
       value: adminSignedIn ? "Signed in" : "Not signed in",
       good: adminSignedIn,
-      detail: adminSignedIn ? "Privileged settings/actions available" : "Required for mappings, feature flags, and actions"
+      detail: adminSignedIn
+        ? "Privileged settings/actions available"
+        : "Required for mappings, feature flags, and actions",
     },
     {
       label: "SCCM signal",
       value: sccmDetectionEnabled ? "On" : "Off",
       good: sccmDetectionEnabled,
-      detail: sccmDetectionEnabled ? "Device pages show ConfigMgr signal" : "Optional visibility check is disabled"
+      detail: sccmDetectionEnabled
+        ? "Device pages show ConfigMgr signal"
+        : "Optional visibility check is disabled",
     },
     {
       label: "Tag mappings",
       value: hasTagMappings ? "Configured" : "Missing",
       good: hasTagMappings,
-      detail: hasTagMappings ? "Runway can detect tag/profile drift" : "Needed for target-group and tag mismatch flags"
-    }
+      detail: hasTagMappings
+        ? "Runway can detect tag/profile drift"
+        : "Needed for target-group and tag mismatch flags",
+    },
   ];
 
   return (
@@ -1062,7 +1171,9 @@ function SettingsReadinessBanner({
           </div>
           <div>
             <div className="text-[13px] font-semibold text-[var(--pc-text)]">
-              {ready ? "Live testing readiness looks good" : "Setup still has readiness gaps"}
+              {ready
+                ? "Live testing readiness looks good"
+                : "Setup still has readiness gaps"}
             </div>
             <div className="mt-0.5 text-[12px] leading-5 text-[var(--pc-text-muted)]">
               {ready
@@ -1088,7 +1199,9 @@ function SettingsReadinessBanner({
                 <AlertTriangle className="h-3.5 w-3.5 text-[var(--pc-warning)]" />
               )}
             </div>
-            <div className="mt-1 text-[13px] font-semibold text-[var(--pc-text)]">{item.value}</div>
+            <div className="mt-1 text-[13px] font-semibold text-[var(--pc-text)]">
+              {item.value}
+            </div>
             <div className="mt-0.5 text-[11px] leading-4 text-[var(--pc-text-muted)]">
               {item.detail}
             </div>
@@ -1101,7 +1214,7 @@ function SettingsReadinessBanner({
 
 function SourceCard({
   source,
-  items
+  items,
 }: {
   source: "autopilot" | "intune" | "entra" | "sccm";
   items: string[];

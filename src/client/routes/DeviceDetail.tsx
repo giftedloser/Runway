@@ -1,4 +1,9 @@
-import { Link, useNavigate, useParams, useSearch } from "@tanstack/react-router";
+import {
+  Link,
+  useNavigate,
+  useParams,
+  useSearch,
+} from "@tanstack/react-router";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -8,7 +13,7 @@ import {
   GitBranch,
   Radio,
   Target,
-  Wrench
+  Wrench,
 } from "lucide-react";
 
 import { ActionHistory } from "../components/devices/ActionHistory.js";
@@ -17,7 +22,10 @@ import { AppStatusPanel } from "../components/devices/AppStatusPanel.js";
 import { AssignmentPanel } from "../components/devices/AssignmentPanel.js";
 import { BitLockerWidget } from "../components/devices/BitLockerWidget.js";
 import { AssignmentPathPanel } from "../components/devices/AssignmentPathPanel.js";
-import { buildSummaryText, CopySummaryButton } from "../components/devices/CopySummaryButton.js";
+import {
+  buildSummaryText,
+  CopySummaryButton,
+} from "../components/devices/CopySummaryButton.js";
 import { CompliancePoliciesPanel } from "../components/devices/CompliancePoliciesPanel.js";
 import { ConditionalAccessPanel } from "../components/devices/ConditionalAccessPanel.js";
 import { ConfigMgrConnectionPanel } from "../components/devices/ConfigMgrConnectionPanel.js";
@@ -51,16 +59,17 @@ const TAB_ORDER: TabKey[] = [
   "enrollment",
   "drift",
   "operate",
-  "history"
+  "history",
 ];
-const TAB_LABELS: Record<TabKey, { label: string; icon: typeof Fingerprint }> = {
-  identity: { label: "Identity", icon: Fingerprint },
-  targeting: { label: "Targeting", icon: Target },
-  enrollment: { label: "Enrollment", icon: Radio },
-  drift: { label: "Compliance & Drift", icon: GitBranch },
-  operate: { label: "Actions", icon: Wrench },
-  history: { label: "History & Raw Data", icon: Clock }
-};
+const TAB_LABELS: Record<TabKey, { label: string; icon: typeof Fingerprint }> =
+  {
+    identity: { label: "Identity", icon: Fingerprint },
+    targeting: { label: "Targeting", icon: Target },
+    enrollment: { label: "Enrollment", icon: Radio },
+    drift: { label: "Compliance & Drift", icon: GitBranch },
+    operate: { label: "Actions", icon: Wrench },
+    history: { label: "History & Raw Data", icon: Clock },
+  };
 
 const BREAKPOINT_BUCKETS: Record<BreakpointKey, FlagCode[]> = {
   identity: ["identity_conflict", "missing_ztdid"],
@@ -68,59 +77,71 @@ const BREAKPOINT_BUCKETS: Record<BreakpointKey, FlagCode[]> = {
     "not_in_target_group",
     "tag_mismatch",
     "no_profile_assigned",
-    "deployment_mode_mismatch"
+    "deployment_mode_mismatch",
   ],
   enrollment: [
     "no_autopilot_record",
     "profile_assignment_failed",
     "profile_assigned_not_enrolled",
     "orphaned_autopilot",
-    "provisioning_stalled"
+    "provisioning_stalled",
   ],
-  drift: ["hybrid_join_risk", "user_mismatch", "compliance_drift"]
+  drift: ["hybrid_join_risk", "user_mismatch", "compliance_drift"],
 };
 
 const BREAKPOINT_META: Record<
   BreakpointKey,
-  { label: string; description: string; icon: typeof Fingerprint; scrollTo: string }
+  {
+    label: string;
+    description: string;
+    icon: typeof Fingerprint;
+    scrollTo: string;
+  }
 > = {
   identity: {
     label: "Identity",
     description: "Who is this device across systems",
     icon: Fingerprint,
-    scrollTo: "section-identity"
+    scrollTo: "section-identity",
   },
   targeting: {
     label: "Targeting",
     description: "Group membership & profile assignment",
     icon: Target,
-    scrollTo: "section-targeting"
+    scrollTo: "section-targeting",
   },
   enrollment: {
     label: "Enrollment",
     description: "Autopilot record & Intune check-in",
     icon: Radio,
-    scrollTo: "section-diagnostics"
+    scrollTo: "section-diagnostics",
   },
   drift: {
     label: "Drift",
     description: "Compliance, hybrid join, primary user",
     icon: GitBranch,
-    scrollTo: "section-diagnostics"
-  }
+    scrollTo: "section-diagnostics",
+  },
 };
 
 function bucketDiagnostics(diagnostics: FlagExplanation[]) {
   const buckets: Record<
     BreakpointKey,
-    { issues: FlagExplanation[]; severity: Exclude<HealthLevel, "healthy" | "unknown"> | null }
+    {
+      issues: FlagExplanation[];
+      severity: Exclude<HealthLevel, "healthy" | "unknown"> | null;
+    }
   > = {
     identity: { issues: [], severity: null },
     targeting: { issues: [], severity: null },
     enrollment: { issues: [], severity: null },
-    drift: { issues: [], severity: null }
+    drift: { issues: [], severity: null },
   };
-  const severityRank: Record<string, number> = { info: 1, warning: 2, critical: 3 };
+  const severityRank: Record<string, number> = {
+    info: 1,
+    warning: 2,
+    critical: 3,
+  };
   for (const diag of diagnostics) {
     for (const key of Object.keys(BREAKPOINT_BUCKETS) as BreakpointKey[]) {
       if (BREAKPOINT_BUCKETS[key].includes(diag.code)) {
@@ -141,7 +162,7 @@ function BreakpointChip({
   count,
   severity,
   issues,
-  onSelect
+  onSelect,
 }: {
   bucketKey: BreakpointKey;
   count: number;
@@ -170,7 +191,7 @@ function BreakpointChip({
       onClick={() => onSelect(bucketKey)}
       className={cn(
         "flex min-w-0 items-center gap-2 rounded-lg border px-2.5 py-1.5 text-left text-[11.5px] transition-opacity hover:opacity-80",
-        tone
+        tone,
       )}
     >
       <Icon className="h-3.5 w-3.5 shrink-0" />
@@ -179,7 +200,9 @@ function BreakpointChip({
           {meta.label}
         </div>
         <div className="text-[12px] font-semibold tabular-nums leading-tight">
-          {count === 0 ? "Clear" : `${count} ${count === 1 ? "issue" : "issues"}`}
+          {count === 0
+            ? "Clear"
+            : `${count} ${count === 1 ? "issue" : "issues"}`}
         </div>
       </div>
     </button>
@@ -190,7 +213,7 @@ function TabButton({
   tab,
   active,
   count,
-  onSelect
+  onSelect,
 }: {
   tab: TabKey;
   active: boolean;
@@ -207,7 +230,7 @@ function TabButton({
         "flex shrink-0 items-center gap-1.5 border-b-2 px-3 py-2 text-[12.5px] font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]",
         active
           ? "border-[var(--pc-accent)] text-[var(--pc-text)]"
-          : "border-transparent text-[var(--pc-text-muted)] hover:text-[var(--pc-text-secondary)]"
+          : "border-transparent text-[var(--pc-text-muted)] hover:text-[var(--pc-text-secondary)]",
       )}
     >
       <Icon className="h-3.5 w-3.5" />
@@ -228,16 +251,24 @@ const DEVICES_DEFAULT_SEARCH = {
   property: undefined,
   profile: undefined,
   page: 1,
-  pageSize: 25
+  pageSize: 25,
 } as const;
 
-function TabHeading({ title, description }: { title: string; description: string }) {
+function TabHeading({
+  title,
+  description,
+}: {
+  title: string;
+  description: string;
+}) {
   return (
     <div>
       <div className="text-[12.5px] font-semibold uppercase tracking-wide text-[var(--pc-text-secondary)]">
         {title}
       </div>
-      <div className="text-[11.5px] text-[var(--pc-text-muted)]">{description}</div>
+      <div className="text-[11.5px] text-[var(--pc-text-muted)]">
+        {description}
+      </div>
     </div>
   );
 }
@@ -262,26 +293,36 @@ export function DeviceDetailPage() {
   }
 
   const data = device.data;
-  const showConfigMgrConnection = settings.data?.featureFlags.sccm_detection === true;
-  const displayName = data.summary.deviceName ?? data.summary.serialNumber ?? deviceKey;
+  const showConfigMgrConnection =
+    settings.data?.featureFlags.sccm_detection === true;
+  const displayName =
+    data.summary.deviceName ?? data.summary.serialNumber ?? deviceKey;
   const breakpoints = bucketDiagnostics(data.diagnostics);
 
   // Default tab: the highest-severity breakpoint bucket, or "identity" if clear.
   const defaultTab: TabKey =
-    (["critical", "warning", "info"] as const).reduce<TabKey | null>((found, level) => {
-      if (found) return found;
-      for (const key of ["identity", "targeting", "enrollment", "drift"] as BreakpointKey[]) {
-        const bucket = breakpoints[key];
-        if (bucket.issues.length > 0 && bucket.severity === level) return key;
-      }
-      return null;
-    }, null) ?? "identity";
+    (["critical", "warning", "info"] as const).reduce<TabKey | null>(
+      (found, level) => {
+        if (found) return found;
+        for (const key of [
+          "identity",
+          "targeting",
+          "enrollment",
+          "drift",
+        ] as BreakpointKey[]) {
+          const bucket = breakpoints[key];
+          if (bucket.issues.length > 0 && bucket.severity === level) return key;
+        }
+        return null;
+      },
+      null,
+    ) ?? "identity";
   const activeTab: TabKey = search.tab ?? defaultTab;
   const selectTab = (tab: TabKey) => {
     void navigate({
       to: "/devices/$deviceKey",
       params: { deviceKey },
-      search: { tab }
+      search: { tab },
     });
   };
 
@@ -292,13 +333,13 @@ export function DeviceDetailPage() {
         variant: "success",
         title: "Summary copied",
         description: "Device summary copied to clipboard.",
-        durationMs: 2000
+        durationMs: 2000,
       });
     } catch {
       toast.push({
         variant: "error",
         title: "Could not copy",
-        description: "Clipboard access denied."
+        description: "Clipboard access denied.",
       });
     }
   };
@@ -323,7 +364,10 @@ export function DeviceDetailPage() {
             Devices
           </Link>
           <ChevronRight className="h-3 w-3" />
-          <span className="truncate text-[var(--pc-text-secondary)]" title={displayName}>
+          <span
+            className="truncate text-[var(--pc-text-secondary)]"
+            title={displayName}
+          >
             {displayName}
           </span>
         </nav>
@@ -363,6 +407,11 @@ export function DeviceDetailPage() {
             >
               {displayName}
             </h1>
+            <p className="mt-1 pc-helper-text max-w-3xl">
+              Start with the breakpoint chips to see which system is failing,
+              then use the tabs for source records, assignments, actions, and
+              raw Graph evidence.
+            </p>
             <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-[var(--pc-text-muted)]">
               <span>
                 Serial{" "}
@@ -373,7 +422,9 @@ export function DeviceDetailPage() {
               {data.summary.propertyLabel ? (
                 <span>
                   Property{" "}
-                  <span className="text-[var(--pc-text-secondary)]">{data.summary.propertyLabel}</span>
+                  <span className="text-[var(--pc-text-secondary)]">
+                    {data.summary.propertyLabel}
+                  </span>
                 </span>
               ) : null}
               <span>
@@ -390,7 +441,7 @@ export function DeviceDetailPage() {
                       ? "bg-[var(--pc-healthy-muted)] text-[var(--pc-healthy)]"
                       : data.identity.matchConfidence === "medium"
                         ? "bg-[var(--pc-warning-muted)] text-[var(--pc-warning)]"
-                        : "bg-[var(--pc-critical-muted)] text-[var(--pc-critical)]"
+                        : "bg-[var(--pc-critical-muted)] text-[var(--pc-critical)]",
                   )}
                 >
                   {data.identity.matchConfidence}
@@ -414,9 +465,10 @@ export function DeviceDetailPage() {
           <div className="mt-4 flex items-start gap-2.5 rounded-lg border border-[var(--pc-warning)]/30 bg-[var(--pc-warning-muted)] px-3.5 py-2.5">
             <Fingerprint className="mt-0.5 h-4 w-4 shrink-0 text-[var(--pc-warning)]" />
             <div className="text-[12px] leading-relaxed text-[var(--pc-warning)]">
-              <span className="font-semibold">Name-only correlation.</span>{" "}
-              This device's source records were linked by display name only — the weakest join signal.
-              Verify identity before trusting cross-system diagnostics.
+              <span className="font-semibold">Name-only correlation.</span> This
+              device's source records were linked by display name only — the
+              weakest join signal. Verify identity before trusting cross-system
+              diagnostics.
             </div>
           </div>
         )}
@@ -437,13 +489,19 @@ export function DeviceDetailPage() {
       </header>
 
       <NextBestActionPanel device={data} />
-      <JoinPicturePanel device={data} showConfigMgrSignal={showConfigMgrConnection} />
+      <JoinPicturePanel
+        device={data}
+        showConfigMgrSignal={showConfigMgrConnection}
+      />
 
       {/* Tab navigation */}
       <div className="sticky top-0 z-20 -mx-4 flex items-center gap-1 overflow-x-auto border-b border-[var(--pc-border)] bg-[var(--pc-bg)]/95 px-4 pt-1 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 xl:-mx-10 xl:px-10">
         {TAB_ORDER.map((tab) => {
           const count =
-            tab === "identity" || tab === "targeting" || tab === "enrollment" || tab === "drift"
+            tab === "identity" ||
+            tab === "targeting" ||
+            tab === "enrollment" ||
+            tab === "drift"
               ? breakpoints[tab].issues.length
               : undefined;
           return (
@@ -464,7 +522,10 @@ export function DeviceDetailPage() {
             title="Identity"
             description="Which source records belong to this physical device, and whether the join is trustworthy"
           />
-          <IdentityPanel device={data} showConfigMgrSignal={showConfigMgrConnection} />
+          <IdentityPanel
+            device={data}
+            showConfigMgrSignal={showConfigMgrConnection}
+          />
           <HardwarePanel device={data} />
         </section>
       ) : null}
@@ -489,7 +550,10 @@ export function DeviceDetailPage() {
             description="Whether the intended device actually made it through OOBE and into Intune"
           />
           <ProvisioningTimeline device={data} />
-          <ConfigMgrConnectionPanel device={data} enabled={showConfigMgrConnection} />
+          <ConfigMgrConnectionPanel
+            device={data}
+            enabled={showConfigMgrConnection}
+          />
           <DiagnosticPanel device={data} />
           <AppStatusPanel device={data} />
         </section>

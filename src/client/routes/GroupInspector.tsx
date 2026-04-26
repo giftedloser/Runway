@@ -7,7 +7,7 @@ import {
   ShieldCheck,
   UserCheck,
   Users,
-  UsersRound
+  UsersRound,
 } from "lucide-react";
 
 import { PageHeader } from "../components/layout/PageHeader.js";
@@ -25,12 +25,14 @@ export function GroupInspectorPage() {
   const groups = useGroups();
   const routeSearch = useSearch({ from: "/groups" });
   const [search, setSearch] = useState("");
-  const [selectedId, setSelectedId] = useState<string | undefined>(routeSearch.groupId);
+  const [selectedId, setSelectedId] = useState<string | undefined>(
+    routeSearch.groupId,
+  );
   const [memberFilter, setMemberFilter] = useState<MemberHealthFilter>("all");
   const [memberSearch, setMemberSearch] = useState("");
 
   const filteredGroups = (groups.data ?? []).filter((g) =>
-    search ? g.groupName.toLowerCase().includes(search.toLowerCase()) : true
+    search ? g.groupName.toLowerCase().includes(search.toLowerCase()) : true,
   );
 
   const effectiveSelectedId =
@@ -66,6 +68,15 @@ export function GroupInspectorPage() {
         <div className="grid gap-5 xl:grid-cols-[360px_minmax(0,1fr)]">
           {/* Left: group list */}
           <div className="space-y-3">
+            <div>
+              <div className="text-[11px] font-semibold uppercase tracking-wide text-[var(--pc-text-secondary)]">
+                Group picker
+              </div>
+              <div className="pc-helper-text">
+                Select the Entra group that should receive devices for a tag or
+                profile. Dynamic groups show their rule when Graph provides it.
+              </div>
+            </div>
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--pc-text-muted)]" />
               <Input
@@ -109,7 +120,9 @@ export function GroupInspectorPage() {
                       <div className="min-w-0 flex-1">
                         <div
                           className={`truncate text-[12.5px] font-medium ${
-                            active ? "text-[var(--pc-text)]" : "text-[var(--pc-text)]"
+                            active
+                              ? "text-[var(--pc-text)]"
+                              : "text-[var(--pc-text)]"
                           }`}
                         >
                           {group.groupName}
@@ -119,12 +132,16 @@ export function GroupInspectorPage() {
                           <span>·</span>
                           <span>{group.assignedProfiles.length} profiles</span>
                           <span>·</span>
-                          <span className="capitalize">{group.membershipType}</span>
+                          <span className="capitalize">
+                            {group.membershipType}
+                          </span>
                         </div>
                       </div>
                       <ChevronRight
                         className={`h-3.5 w-3.5 shrink-0 ${
-                          active ? "text-[var(--pc-accent-hover)]" : "text-[var(--pc-text-muted)]"
+                          active
+                            ? "text-[var(--pc-accent-hover)]"
+                            : "text-[var(--pc-text-muted)]"
                         }`}
                       />
                     </button>
@@ -162,7 +179,9 @@ export function GroupInspectorPage() {
                             {groupDetail.data.groupId.slice(0, 8)}
                           </span>
                           <span>·</span>
-                          <span className="capitalize">{groupDetail.data.membershipType}</span>
+                          <span className="capitalize">
+                            {groupDetail.data.membershipType}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -186,16 +205,27 @@ export function GroupInspectorPage() {
                       </pre>
                     </div>
                   ) : null}
+                  <div className="mt-3 pc-helper-text">
+                    Use this summary to confirm the group type and member count
+                    before checking assigned profiles or member health.
+                  </div>
                 </Card>
 
                 {/* Assigned profiles */}
                 <Card className="p-5">
                   <div className="mb-3 flex items-center gap-2">
                     <ShieldCheck className="h-4 w-4 text-[var(--pc-accent)]" />
-                    <span className="text-[13px] font-semibold text-[var(--pc-text)]">Assigned Profiles</span>
+                    <span className="text-[13px] font-semibold text-[var(--pc-text)]">
+                      Assigned Profiles
+                    </span>
                     <span className="text-[11px] text-[var(--pc-text-muted)]">
                       ({groupDetail.data.assignedProfiles.length})
                     </span>
+                  </div>
+                  <div className="mb-3 pc-helper-text">
+                    Profiles listed here target this group directly or through
+                    assignment data. Empty results usually mean the group is not
+                    part of the provisioning path.
                   </div>
                   {groupDetail.data.assignedProfiles.length === 0 ? (
                     <div className="text-[12px] text-[var(--pc-text-muted)]">
@@ -228,12 +258,20 @@ export function GroupInspectorPage() {
                 {/* Members */}
                 <Card className="overflow-hidden">
                   <div className="flex flex-col gap-3 border-b border-[var(--pc-border)] px-5 py-4 sm:flex-row sm:items-center">
-                    <div className="flex items-center gap-2">
-                      <Users className="h-4 w-4 text-[var(--pc-accent)]" />
-                      <span className="text-[13px] font-semibold text-[var(--pc-text)]">Members</span>
-                      <span className="text-[11px] text-[var(--pc-text-muted)]">
-                        ({groupDetail.data.members.length})
-                      </span>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Users className="h-4 w-4 text-[var(--pc-accent)]" />
+                        <span className="text-[13px] font-semibold text-[var(--pc-text)]">
+                          Members
+                        </span>
+                        <span className="text-[11px] text-[var(--pc-text-muted)]">
+                          ({groupDetail.data.members.length})
+                        </span>
+                      </div>
+                      <div className="pc-helper-text">
+                        Filter to unhealthy or critical members when you need
+                        the devices most likely blocked by this targeting group.
+                      </div>
                     </div>
                     <div className="flex flex-wrap items-center gap-1.5 sm:ml-auto">
                       <MemberFilterChip
@@ -260,7 +298,9 @@ export function GroupInspectorPage() {
                         <Search className="pointer-events-none absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-[var(--pc-text-muted)]" />
                         <Input
                           value={memberSearch}
-                          onChange={(event) => setMemberSearch(event.target.value)}
+                          onChange={(event) =>
+                            setMemberSearch(event.target.value)
+                          }
                           placeholder="Filter…"
                           name="group-member-search"
                           autoComplete="off"
@@ -272,23 +312,29 @@ export function GroupInspectorPage() {
                   </div>
                   {(() => {
                     const lowerSearch = memberSearch.toLowerCase();
-                    const visible = groupDetail.data.members.filter((member) => {
-                      if (
-                        memberFilter === "unhealthy" &&
-                        member.health !== "warning" &&
-                        member.health !== "critical"
-                      ) {
-                        return false;
-                      }
-                      if (memberFilter === "critical" && member.health !== "critical") {
-                        return false;
-                      }
-                      if (lowerSearch) {
-                        const haystack = `${member.deviceName ?? ""} ${member.serialNumber ?? ""} ${member.groupTag ?? ""}`.toLowerCase();
-                        if (!haystack.includes(lowerSearch)) return false;
-                      }
-                      return true;
-                    });
+                    const visible = groupDetail.data.members.filter(
+                      (member) => {
+                        if (
+                          memberFilter === "unhealthy" &&
+                          member.health !== "warning" &&
+                          member.health !== "critical"
+                        ) {
+                          return false;
+                        }
+                        if (
+                          memberFilter === "critical" &&
+                          member.health !== "critical"
+                        ) {
+                          return false;
+                        }
+                        if (lowerSearch) {
+                          const haystack =
+                            `${member.deviceName ?? ""} ${member.serialNumber ?? ""} ${member.groupTag ?? ""}`.toLowerCase();
+                          if (!haystack.includes(lowerSearch)) return false;
+                        }
+                        return true;
+                      },
+                    );
                     if (visible.length === 0) {
                       return (
                         <div className="px-5 py-6 text-center text-[12px] text-[var(--pc-text-muted)]">
@@ -303,12 +349,24 @@ export function GroupInspectorPage() {
                         <table className="w-full min-w-[780px]">
                           <thead className="sticky top-0 bg-[var(--pc-surface)]">
                             <tr className="text-[10px] uppercase tracking-wide text-[var(--pc-text-muted)]">
-                              <th className="px-5 py-2 text-left font-medium">Device</th>
-                              <th className="px-3 py-2 text-left font-medium">Serial</th>
-                              <th className="px-3 py-2 text-left font-medium">Group Tag</th>
-                              <th className="px-3 py-2 text-left font-medium">Profile</th>
-                              <th className="px-3 py-2 text-left font-medium">Health</th>
-                              <th className="px-3 py-2 text-right font-medium">Flags</th>
+                              <th className="px-5 py-2 text-left font-medium">
+                                Device
+                              </th>
+                              <th className="px-3 py-2 text-left font-medium">
+                                Serial
+                              </th>
+                              <th className="px-3 py-2 text-left font-medium">
+                                Group Tag
+                              </th>
+                              <th className="px-3 py-2 text-left font-medium">
+                                Profile
+                              </th>
+                              <th className="px-3 py-2 text-left font-medium">
+                                Health
+                              </th>
+                              <th className="px-3 py-2 text-right font-medium">
+                                Flags
+                              </th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-[var(--pc-border)]">
@@ -336,7 +394,9 @@ export function GroupInspectorPage() {
                                   {member.assignedProfileName ?? "—"}
                                 </td>
                                 <td className="px-3 py-2.5">
-                                  <StatusBadge health={member.health as HealthLevel} />
+                                  <StatusBadge
+                                    health={member.health as HealthLevel}
+                                  />
                                 </td>
                                 <td className="px-3 py-2.5 text-right text-[11.5px] font-mono text-[var(--pc-text-secondary)]">
                                   {member.flagCount}
@@ -362,7 +422,7 @@ function MemberFilterChip({
   active,
   onClick,
   tone,
-  children
+  children,
 }: {
   active: boolean;
   onClick: () => void;

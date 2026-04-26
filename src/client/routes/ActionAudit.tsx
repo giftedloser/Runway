@@ -16,7 +16,7 @@ import {
   Trash2,
   Type,
   Upload,
-  XCircle
+  XCircle,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 
@@ -38,7 +38,7 @@ const ACTION_ICONS: Record<string, typeof RefreshCw> = {
   wipe: Eraser,
   "delete-intune": Trash2,
   "delete-autopilot": Trash2,
-  "autopilot-import": Upload
+  "autopilot-import": Upload,
 };
 
 const ACTION_LABELS: Record<string, string> = {
@@ -51,7 +51,7 @@ const ACTION_LABELS: Record<string, string> = {
   wipe: "Factory Wipe",
   "delete-intune": "Delete from Intune",
   "delete-autopilot": "Delete from Autopilot",
-  "autopilot-import": "Autopilot Import"
+  "autopilot-import": "Autopilot Import",
 };
 
 type StatusFilter = "all" | "success" | "failed";
@@ -74,7 +74,8 @@ export function ActionAuditPage() {
   const filtered = useMemo(() => {
     const items = logs.data ?? [];
     return items.filter((entry) => {
-      if (actionFilter !== "all" && entry.actionType !== actionFilter) return false;
+      if (actionFilter !== "all" && entry.actionType !== actionFilter)
+        return false;
       const ok = isSuccess(entry);
       if (statusFilter === "success" && !ok) return false;
       if (statusFilter === "failed" && ok) return false;
@@ -88,7 +89,7 @@ export function ActionAuditPage() {
     return {
       total: items.length,
       success,
-      failed: items.length - success
+      failed: items.length - success,
     };
   }, [logs.data]);
 
@@ -104,10 +105,12 @@ export function ActionAuditPage() {
           <div className="flex items-start gap-3">
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-[var(--pc-warning)]" />
             <div>
-              <div className="text-[13px] font-medium text-[var(--pc-text)]">Admin sign-in required</div>
+              <div className="text-[13px] font-medium text-[var(--pc-text)]">
+                Admin sign-in required
+              </div>
               <div className="mt-0.5 text-[11.5px] text-[var(--pc-text-muted)]">
-                The audit log includes triggered-by identity, so an authenticated admin
-                session is required to view it.
+                The audit log includes triggered-by identity, so an
+                authenticated admin session is required to view it.
               </div>
             </div>
           </div>
@@ -118,7 +121,11 @@ export function ActionAuditPage() {
             title={login.blockedReason ?? undefined}
             className="rounded-md border border-[var(--pc-border)] bg-[var(--pc-accent)] px-3 py-1.5 text-[12px] font-medium text-[var(--pc-text)] transition-colors hover:bg-[var(--pc-accent-hover)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)] disabled:opacity-60"
           >
-            {!login.canStart ? "Unavailable" : login.isPending ? "Opening…" : "Sign in"}
+            {!login.canStart
+              ? "Unavailable"
+              : login.isPending
+                ? "Opening…"
+                : "Sign in"}
           </button>
         </Card>
       </div>
@@ -163,7 +170,9 @@ export function ActionAuditPage() {
           </div>
         </Card>
         <Card className="px-4 py-3.5">
-          <div className="text-[11px] font-medium text-[var(--pc-text-muted)]">Success</div>
+          <div className="text-[11px] font-medium text-[var(--pc-text-muted)]">
+            Success
+          </div>
           <div className="mt-1 flex items-baseline gap-1.5">
             <span className="text-[24px] font-semibold tabular-nums text-[var(--pc-healthy)]">
               {stats.success}
@@ -176,11 +185,19 @@ export function ActionAuditPage() {
           </div>
         </Card>
         <Card className="px-4 py-3.5">
-          <div className="text-[11px] font-medium text-[var(--pc-text-muted)]">Failed</div>
+          <div className="text-[11px] font-medium text-[var(--pc-text-muted)]">
+            Failed
+          </div>
           <div className="mt-1 text-[24px] font-semibold tabular-nums text-[var(--pc-critical)]">
             {stats.failed}
           </div>
         </Card>
+      </div>
+
+      <div className="pc-section-note">
+        Filter by result or action type when reviewing whether an operator
+        command was accepted by Graph. Bulk IDs group actions submitted
+        together.
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -226,9 +243,14 @@ export function ActionAuditPage() {
       <Card className="overflow-hidden">
         <div className="flex items-center gap-2 border-b border-[var(--pc-border)] px-5 py-4">
           <History className="h-3.5 w-3.5 text-[var(--pc-accent)]" />
-          <div className="text-[13px] font-semibold text-[var(--pc-text)]">Timeline</div>
-          <div className="text-[11px] text-[var(--pc-text-muted)]">
-            Showing {filtered.length} of {stats.total}
+          <div>
+            <div className="text-[13px] font-semibold text-[var(--pc-text)]">
+              Timeline
+            </div>
+            <div className="text-[11px] text-[var(--pc-text-muted)]">
+              Showing {filtered.length} of {stats.total}. Use entries to confirm
+              who triggered an action, when it ran, and the Graph response.
+            </div>
           </div>
         </div>
         {filtered.length === 0 ? (
@@ -251,7 +273,7 @@ export function ActionAuditPage() {
                       "mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md",
                       ok
                         ? "bg-[var(--pc-healthy-muted)] text-[var(--pc-healthy)]"
-                        : "bg-[var(--pc-critical-muted)] text-[var(--pc-critical)]"
+                        : "bg-[var(--pc-critical-muted)] text-[var(--pc-critical)]",
                     )}
                   >
                     <Icon className="h-3.5 w-3.5" />
@@ -298,7 +320,9 @@ export function ActionAuditPage() {
                       {entry.graphResponseStatus !== null && (
                         <>
                           <span>·</span>
-                          <span className="font-mono">HTTP {entry.graphResponseStatus}</span>
+                          <span className="font-mono">
+                            HTTP {entry.graphResponseStatus}
+                          </span>
                         </>
                       )}
                     </div>
@@ -306,7 +330,9 @@ export function ActionAuditPage() {
                       <div
                         className={cn(
                           "mt-1.5 line-clamp-2 text-[11.5px]",
-                          ok ? "text-[var(--pc-text-secondary)]" : "text-rose-300/90"
+                          ok
+                            ? "text-[var(--pc-text-secondary)]"
+                            : "text-rose-300/90",
                         )}
                       >
                         {entry.notes}
@@ -359,7 +385,7 @@ function FilterChip({
   active,
   onClick,
   count,
-  tone
+  tone,
 }: {
   label: string;
   active: boolean;
@@ -379,7 +405,7 @@ function FilterChip({
             : tone === "critical"
               ? "border-[var(--pc-critical)]/50 bg-[var(--pc-critical-muted)] text-rose-100"
               : "border-[var(--pc-accent)]/60 bg-[var(--pc-accent-muted)] text-[var(--pc-text)]"
-          : "border-[var(--pc-border)] bg-[var(--pc-surface-raised)] text-[var(--pc-text-secondary)] hover:border-[var(--pc-accent)]/40 hover:text-[var(--pc-text)]"
+          : "border-[var(--pc-border)] bg-[var(--pc-surface-raised)] text-[var(--pc-text-secondary)] hover:border-[var(--pc-accent)]/40 hover:text-[var(--pc-text)]",
       )}
     >
       {label}
