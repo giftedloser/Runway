@@ -129,23 +129,19 @@ export function TriageCommandCenter({ dashboard }: { dashboard: DashboardRespons
   ];
 
   return (
-    <section className="rounded-[22px] border border-[var(--pc-border)] bg-[radial-gradient(circle_at_top_left,var(--pc-accent-muted),transparent_34%),var(--pc-surface)] p-4 shadow-[0_22px_70px_rgba(0,0,0,0.12)] sm:p-5">
+    <section className="rounded-[var(--pc-radius)] border border-[var(--pc-border)] bg-[var(--pc-surface)] p-4">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--pc-accent)]">
-            Triage Command Center
+          <div className="text-[13px] font-semibold text-[var(--pc-text)]">
+            Next Queues
           </div>
-          <h2 className="mt-1 text-[18px] font-semibold tracking-tight text-[var(--pc-text)]">
-            Turn join noise into the next queue to work
-          </h2>
         </div>
-        <p className="max-w-xl text-[12.5px] leading-5 text-[var(--pc-text-muted)]">
-          These queues are built from the same engine flags shown on device pages, so the dashboard
-          stays actionable instead of becoming another wall of charts.
+        <p className="max-w-xl overflow-hidden text-ellipsis whitespace-nowrap text-[12px] text-[var(--pc-text-muted)]">
+          Start with the highest-risk device queue.
         </p>
       </div>
 
-      <div className="mt-4 grid gap-3 md:grid-cols-2 2xl:grid-cols-4">
+      <div className="mt-3 grid gap-3 md:grid-cols-2 2xl:grid-cols-4">
         {queues.map((queue) => {
           const tone = toneClasses(queue.tone);
           const Icon = queue.icon;
@@ -155,25 +151,25 @@ export function TriageCommandCenter({ dashboard }: { dashboard: DashboardRespons
               to="/devices"
               search={queue.search}
               className={cn(
-                "group flex min-h-[178px] cursor-pointer flex-col rounded-2xl border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] p-4 transition-[border-color,background-color,transform] hover:-translate-y-0.5 hover:bg-[var(--pc-tint-subtle)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]",
+                "group flex min-h-[142px] cursor-pointer flex-col rounded-[var(--pc-radius)] border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] p-3.5 transition-[border-color,background-color] hover:bg-[var(--pc-tint-subtle)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]",
                 tone.ring
               )}
             >
               <div className="flex items-start justify-between gap-3">
-                <div className={cn("flex h-10 w-10 items-center justify-center rounded-xl", tone.icon)}>
+                <div className={cn("flex h-9 w-9 items-center justify-center rounded-[var(--pc-radius-sm)]", tone.icon)}>
                   <Icon className="h-4.5 w-4.5" />
                 </div>
-                <div className={cn("text-3xl font-semibold tabular-nums leading-none", tone.count)}>
+                <div className={cn("text-[1.7rem] font-semibold tabular-nums leading-none", tone.count)}>
                   {queue.count}
                 </div>
               </div>
-              <div className="mt-4 text-[14px] font-semibold text-[var(--pc-text)]">
+              <div className="mt-3 text-[13px] font-semibold text-[var(--pc-text)]">
                 {queue.title}
               </div>
-              <p className="mt-1 text-[12px] leading-5 text-[var(--pc-text-secondary)]">
+              <p className="mt-1 line-clamp-1 text-[12px] text-[var(--pc-text-secondary)]">
                 {queue.description}
               </p>
-              <div className="mt-auto flex items-center gap-2 pt-4 text-[11.5px] font-medium text-[var(--pc-text-muted)]">
+              <div className="mt-auto flex items-center gap-2 pt-3 text-[11.5px] font-medium text-[var(--pc-text-muted)]">
                 <span className="line-clamp-1">{queue.operatorHint}</span>
                 <ArrowRight className="ml-auto h-3.5 w-3.5 shrink-0 transition-transform group-hover:translate-x-0.5" />
               </div>

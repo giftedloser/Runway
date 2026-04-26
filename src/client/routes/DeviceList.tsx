@@ -173,7 +173,7 @@ export function DeviceListPage() {
       <PageHeader
         eyebrow="Triage"
         title="Device Queue"
-        description="Investigate join, enrollment, and assignment problems across your Windows fleet. Filter by health, flag, or property to narrow your triage list."
+        description="Filter devices by health, flag, property, or profile."
       />
       <SavedViews />
       <DeviceFilters />
@@ -199,28 +199,6 @@ export function DeviceListPage() {
                 search.property ||
                 search.profile,
               ) && <span className="text-[var(--pc-accent)]">filtered</span>}
-          </span>
-          <span className="text-[var(--pc-text-muted)]/60">·</span>
-          <span className="hidden sm:inline">
-            <kbd className="rounded border border-[var(--pc-border)] px-1 py-px font-mono text-[10px]">
-              j
-            </kbd>{" "}
-            <kbd className="rounded border border-[var(--pc-border)] px-1 py-px font-mono text-[10px]">
-              k
-            </kbd>{" "}
-            move,{" "}
-            <kbd className="rounded border border-[var(--pc-border)] px-1 py-px font-mono text-[10px]">
-              Enter
-            </kbd>{" "}
-            open,{" "}
-            <kbd className="rounded border border-[var(--pc-border)] px-1 py-px font-mono text-[10px]">
-              Space
-            </kbd>{" "}
-            select
-          </span>
-          <span className="pc-helper-text hidden xl:inline">
-            Open a row for source-level diagnostics, or select rows to run
-            guarded remote actions.
           </span>
         </div>
         <div className="flex w-full items-center gap-2 overflow-x-auto sm:w-auto sm:justify-end">

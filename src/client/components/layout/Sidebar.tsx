@@ -107,7 +107,7 @@ export function Sidebar() {
   return (
     <aside className="flex h-auto w-full shrink-0 flex-col border-b border-[var(--pc-border)] bg-[var(--pc-surface)] lg:sticky lg:top-0 lg:h-[calc(100vh-var(--pc-titlebar-height,0px))] lg:w-[218px] lg:self-start lg:border-b-0 lg:border-r">
       {/* Logo */}
-      <div className="flex items-center gap-2.5 px-3 py-3 lg:px-4 lg:py-4">
+      <div className="flex items-center gap-2.5 px-3 py-2.5 lg:px-4 lg:py-3">
         <img
           src="/runway.png"
           alt=""
@@ -116,11 +116,8 @@ export function Sidebar() {
           className="h-8 w-8 shrink-0 object-contain"
         />
         <div className="min-w-0">
-          <div className="font-brand text-[21px] uppercase leading-none tracking-[0.16em] text-[var(--pc-text)]">
+          <div className="font-brand text-[20px] uppercase leading-none tracking-[0.14em] text-[var(--pc-text)]">
             Runway
-          </div>
-          <div className="truncate pl-[0.08em] text-[10.5px] uppercase tracking-[0.18em] text-[var(--pc-text-muted)]">
-            Autopilot · Intune · Entra
           </div>
         </div>
         {(() => {
@@ -199,7 +196,7 @@ export function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="hidden space-y-2.5 border-t border-[var(--pc-border)] px-3 py-3 lg:block">
+      <div className="hidden space-y-2 border-t border-[var(--pc-border)] px-3 py-3 lg:block">
         <AuthIndicator />
         <div className="flex items-center justify-between px-2 text-[10.5px]">
           <span className="text-[var(--pc-text-muted)]">Engine</span>
@@ -224,18 +221,6 @@ export function Sidebar() {
               </button>
             );
           })()}
-        </div>
-        <div className="flex items-center justify-between gap-2 px-2 text-[10.5px] text-[var(--pc-text-muted)]">
-          <span>Shortcuts</span>
-          <span className="flex items-center gap-1">
-            <kbd className="rounded border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-1.5 py-0.5 font-mono text-[10px] text-[var(--pc-text-secondary)]">
-              ?
-            </kbd>
-            <span className="text-[var(--pc-text-muted)]">·</span>
-            <kbd className="rounded border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-1.5 py-0.5 font-mono text-[10px] text-[var(--pc-text-secondary)]">
-              ⌘K
-            </kbd>
-          </span>
         </div>
       </div>
     </aside>

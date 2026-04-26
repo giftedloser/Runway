@@ -405,6 +405,10 @@ select:disabled {
   color: var(--pc-text-muted);
   font-size: 0.8rem;
   line-height: 1.45;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
 }
 
 .pc-section-note {
@@ -413,8 +417,11 @@ select:disabled {
   background: var(--pc-surface);
   color: var(--pc-text-body);
   font-size: 0.8rem;
-  line-height: 1.45;
-  padding: 0.6rem 0.75rem;
+  line-height: 1.35;
+  padding: 0.5rem 0.65rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .pc-select {

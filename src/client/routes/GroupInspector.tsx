@@ -56,7 +56,7 @@ export function GroupInspectorPage() {
       <PageHeader
         eyebrow="Inspect"
         title="Targeting Groups"
-        description="Entra ID groups that drive Autopilot and Intune assignment. Inspect membership, dynamic rules, and which profiles each group resolves to."
+        description="Inspect group membership, rules, and profile targeting."
         actions={<SourceBadge source="entra" />}
       />
 
@@ -71,10 +71,6 @@ export function GroupInspectorPage() {
             <div>
               <div className="text-[11px] font-semibold uppercase tracking-wide text-[var(--pc-text-secondary)]">
                 Group picker
-              </div>
-              <div className="pc-helper-text">
-                Select the Entra group that should receive devices for a tag or
-                profile. Dynamic groups show their rule when Graph provides it.
               </div>
             </div>
             <div className="relative">
@@ -205,10 +201,6 @@ export function GroupInspectorPage() {
                       </pre>
                     </div>
                   ) : null}
-                  <div className="mt-3 pc-helper-text">
-                    Use this summary to confirm the group type and member count
-                    before checking assigned profiles or member health.
-                  </div>
                 </Card>
 
                 {/* Assigned profiles */}
@@ -221,11 +213,6 @@ export function GroupInspectorPage() {
                     <span className="text-[11px] text-[var(--pc-text-muted)]">
                       ({groupDetail.data.assignedProfiles.length})
                     </span>
-                  </div>
-                  <div className="mb-3 pc-helper-text">
-                    Profiles listed here target this group directly or through
-                    assignment data. Empty results usually mean the group is not
-                    part of the provisioning path.
                   </div>
                   {groupDetail.data.assignedProfiles.length === 0 ? (
                     <div className="text-[12px] text-[var(--pc-text-muted)]">
@@ -267,10 +254,6 @@ export function GroupInspectorPage() {
                         <span className="text-[11px] text-[var(--pc-text-muted)]">
                           ({groupDetail.data.members.length})
                         </span>
-                      </div>
-                      <div className="pc-helper-text">
-                        Filter to unhealthy or critical members when you need
-                        the devices most likely blocked by this targeting group.
                       </div>
                     </div>
                     <div className="flex flex-wrap items-center gap-1.5 sm:ml-auto">

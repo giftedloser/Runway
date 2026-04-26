@@ -215,28 +215,28 @@ export function NextBestActionPanel({ device }: { device: DeviceDetailResponse }
   };
 
   return (
-    <Card className={cn("border p-5", toneClass(recommendation.tone))}>
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+    <Card className={cn("border p-4", toneClass(recommendation.tone))}>
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div className="flex min-w-0 gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--pc-surface)]/60">
-            <Icon className={cn("h-5 w-5", iconClass(recommendation.tone))} />
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--pc-radius-sm)] bg-[var(--pc-surface)]/60">
+            <Icon className={cn("h-4 w-4", iconClass(recommendation.tone))} />
           </div>
           <div className="min-w-0">
             <div className="text-[11px] font-semibold uppercase tracking-wide text-[var(--pc-text-muted)]">
               Next Best Action
             </div>
-            <h2 className="mt-1 text-[17px] font-semibold text-[var(--pc-text)]">
+            <h2 className="mt-0.5 text-[15px] font-semibold text-[var(--pc-text)]">
               {recommendation.title}
             </h2>
-            <p className="mt-2 max-w-3xl text-[13px] leading-relaxed text-[var(--pc-text-secondary)]">
+            <p className="mt-1 max-w-3xl text-[12.5px] leading-snug text-[var(--pc-text-secondary)]">
               {recommendation.action}
             </p>
-            <div className="mt-3 grid gap-2 md:grid-cols-2">
+            <div className="mt-2 grid gap-2 md:grid-cols-2">
               <div className="rounded-md border border-[var(--pc-border)] bg-[var(--pc-surface)]/45 px-3 py-2">
                 <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--pc-text-muted)]">
                   Verify
                 </div>
-                <div className="mt-1 text-[12px] leading-5 text-[var(--pc-text-secondary)]">
+                <div className="mt-1 line-clamp-1 text-[12px] text-[var(--pc-text-secondary)]">
                   {recommendation.verify}
                 </div>
               </div>
@@ -244,7 +244,7 @@ export function NextBestActionPanel({ device }: { device: DeviceDetailResponse }
                 <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--pc-text-muted)]">
                   Expected wait
                 </div>
-                <div className="mt-1 text-[12px] leading-5 text-[var(--pc-text-secondary)]">
+                <div className="mt-1 line-clamp-1 text-[12px] text-[var(--pc-text-secondary)]">
                   {recommendation.wait}
                 </div>
               </div>

@@ -60,12 +60,6 @@ interface ValidateResult {
   warnings: string[];
 }
 
-const operatorChecklist = [
-  "Search the exact Autopilot group tag in use on the device record.",
-  "Confirm the targeting group references the same operational tag.",
-  "Validate that the assigned deployment profile matches the intended lane.",
-];
-
 export function ProvisioningBuilderPage() {
   const toast = useToast();
   const [groupTag, setGroupTag] = useState("");
@@ -206,7 +200,7 @@ export function ProvisioningBuilderPage() {
       <PageHeader
         eyebrow="Inspect"
         title="Provisioning Builder"
-        description="Trace an Autopilot provisioning path from group tag through Entra targeting and profile assignment. Use this to verify whether a new tag chain looks operationally sound before you rely on it in production."
+        description="Trace a group tag through targeting and profile assignment."
         actions={
           <>
             <SourceBadge source="autopilot" />
@@ -247,35 +241,19 @@ export function ProvisioningBuilderPage() {
       <div className="grid gap-5 2xl:grid-cols-[minmax(0,1.65fr)_360px]">
         <div className="space-y-5">
           <Card className="overflow-hidden border-[var(--pc-border-hover)]">
-            <div className="border-b border-[var(--pc-border)] bg-[linear-gradient(135deg,rgba(99,102,241,0.18),rgba(19,22,30,0.88)_55%)] px-5 py-5">
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div className="border-b border-[var(--pc-border)] bg-[var(--pc-surface)] px-5 py-4">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                 <div className="max-w-2xl">
-                  <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--pc-accent-hover)]">
+                  <div className="mb-1.5 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--pc-text-muted)]">
                     <ShieldCheck className="h-3.5 w-3.5" />
                     Workflow
                   </div>
-                  <div className="text-xl font-semibold tracking-tight text-[var(--pc-text)]">
-                    Validate a tag-to-profile provisioning path
+                  <div className="text-[15px] font-semibold tracking-tight text-[var(--pc-text)]">
+                    Discover tag path
                   </div>
-                  <div className="mt-1 text-[13px] leading-relaxed text-[var(--pc-text-secondary)]">
-                    Search by operational tag, inspect discovered targets, then
-                    validate the selected chain. This view is tuned for fast
-                    admin review, not authoring.
+                  <div className="mt-1 text-[12px] text-[var(--pc-text-muted)]">
+                    Search, select targets, then validate the chain.
                   </div>
-                </div>
-
-                <div className="grid gap-2 text-[11.5px] text-[var(--pc-text-secondary)] sm:grid-cols-3">
-                  {operatorChecklist.map((item, index) => (
-                    <div
-                      key={item}
-                      className="rounded-lg border border-white/8 bg-black/15 px-3 py-2"
-                    >
-                      <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--pc-accent-hover)]">
-                        Step {index + 1}
-                      </div>
-                      <div className="mt-1 leading-snug">{item}</div>
-                    </div>
-                  ))}
                 </div>
               </div>
             </div>
@@ -288,8 +266,6 @@ export function ProvisioningBuilderPage() {
                 </div>
                 <div className="mb-2 pc-helper-text">
                   Enter the exact Autopilot group tag from the device record.
-                  Discovery shows matching groups, assigned profiles, and any
-                  existing tag configuration.
                 </div>
                 <div className="flex flex-col gap-3 sm:flex-row">
                   <div className="relative flex-1">
@@ -317,19 +293,15 @@ export function ProvisioningBuilderPage() {
                     Discover
                   </Button>
                 </div>
-                <div className="mt-2 text-[11.5px] text-[var(--pc-text-muted)]">
-                  Searches current synced Autopilot, Entra group, and profile
-                  assignment data.
-                </div>
               </div>
 
-              <div className="rounded-xl border border-[var(--pc-border)] bg-[var(--pc-surface-raised)]/65 p-4">
+              <div className="rounded-[var(--pc-radius)] border border-[var(--pc-border)] bg-[var(--pc-surface-raised)]/65 p-3">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <div className="text-[11px] font-semibold uppercase tracking-wide text-[var(--pc-text-muted)]">
                       Search Context
                     </div>
-                    <div className="mt-2 text-[20px] font-semibold text-[var(--pc-text)]">
+                    <div className="mt-1 text-[16px] font-semibold text-[var(--pc-text)]">
                       {searchTag || "No tag loaded"}
                     </div>
                   </div>
@@ -342,10 +314,10 @@ export function ProvisioningBuilderPage() {
                     </IconButton>
                   ) : null}
                 </div>
-                <div className="mt-1 text-[12px] text-[var(--pc-text-secondary)]">
+                <div className="mt-1 text-[12px] text-[var(--pc-text-muted)]">
                   {searchTag
-                    ? "Current working tag used for discovery and validation."
-                    : "Load a tag to populate targeting candidates and current chain details."}
+                    ? "Active discovery context."
+                    : "Load a tag to populate candidates."}
                 </div>
               </div>
             </div>

@@ -145,8 +145,8 @@ export function DashboardPage() {
 
       <PageHeader
         eyebrow="Overview"
-        title="Runway Fleet Health"
-        description="Find Windows devices whose Autopilot, Entra, Intune, or ConfigMgr state no longer matches the intended provisioning path."
+        title="Fleet Health"
+        description="Find devices outside the expected provisioning path."
         actions={
           <>
             <SyncIndicator
@@ -166,49 +166,43 @@ export function DashboardPage() {
 
       <TriageCommandCenter dashboard={dashboard.data} />
 
-      {/* Top KPI row */}
-      <div className="pc-section-note">
-        Use these fleet counters to size today&apos;s queue. Click deeper
-        sections below when you need the affected devices, not just the count.
-      </div>
-
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
         <Card className="min-h-[112px] px-3 py-3 sm:px-4">
           <div className="text-[12px] font-medium text-[var(--pc-text-muted)]">
-            Total Devices
+            Devices
           </div>
           <div className="mt-1 text-3xl font-semibold tabular-nums text-[var(--pc-text)]">
             {totalDevices}
           </div>
           <div className="mt-1 text-[11px] text-[var(--pc-text-muted)]">
-            In current cache
+            Current cache
           </div>
         </Card>
         <Card className="min-h-[112px] px-3 py-3 sm:px-4">
           <div className="text-[12px] font-medium text-[var(--pc-text-muted)]">
-            Newly Unhealthy
+            New failures
           </div>
           <div className="mt-1 text-3xl font-semibold tabular-nums text-[var(--pc-text)]">
             {dashboard.data.newlyUnhealthy24h}
           </div>
           <div className="mt-1 text-[11px] text-[var(--pc-text-muted)]">
-            Devices that became unhealthy in 24h
+            Last 24h
           </div>
         </Card>
         <Card className="min-h-[112px] px-3 py-3 sm:px-4">
           <div className="text-[12px] font-medium text-[var(--pc-text-muted)]">
-            Needs Attention
+            Attention
           </div>
           <div className="mt-1 text-3xl font-semibold tabular-nums text-[var(--pc-text)]">
             {impactedDevices}
           </div>
           <div className="mt-1 text-[11px] text-[var(--pc-text-muted)]">
-            Outside expected state
+            Outside target
           </div>
         </Card>
         <Card className="min-h-[112px] px-3 py-3 sm:px-4">
           <div className="text-[12px] font-medium text-[var(--pc-text-muted)]">
-            Healthy Rate
+            Healthy
           </div>
           <div className="mt-1 flex items-end gap-1.5">
             <span className="text-3xl font-semibold tabular-nums text-[var(--pc-text)]">
@@ -227,7 +221,7 @@ export function DashboardPage() {
         </Card>
         <Card className="min-h-[112px] px-3 py-3 sm:px-4">
           <div className="text-[12px] font-medium text-[var(--pc-text-muted)]">
-            Most Common Failure
+            Top failure
           </div>
           <div className="mt-1 truncate text-[15px] font-semibold text-[var(--pc-text)]">
             {topPattern ? humanizeFlag(topPattern.flag) : "No Issues"}
@@ -241,7 +235,7 @@ export function DashboardPage() {
         <Card className="min-h-[112px] px-3 py-3 sm:px-4">
           <div className="flex items-center gap-1.5 text-[12px] font-medium text-[var(--pc-text-muted)]">
             <Fingerprint className="h-3 w-3" />
-            Correlation
+            Identity joins
           </div>
           {(() => {
             const cq = dashboard.data.correlationQuality;
@@ -292,10 +286,10 @@ export function DashboardPage() {
           <Card className="overflow-hidden">
             <div className="border-b border-[var(--pc-border)] px-5 py-4">
               <div className="text-[13px] font-semibold text-[var(--pc-text)]">
-                Where Devices Are Breaking
+                Breakpoints
               </div>
               <div className="mt-0.5 text-[12px] text-[var(--pc-text-muted)]">
-                Click an area to open the matching device queue.
+                Open the matching device queue.
               </div>
             </div>
             <div className="divide-y divide-[var(--pc-border)]">
@@ -341,10 +335,10 @@ export function DashboardPage() {
           <Card className="overflow-hidden">
             <div className="border-b border-[var(--pc-border)] px-5 py-4">
               <div className="text-[13px] font-semibold text-[var(--pc-text)]">
-                Quick Actions
+                Queues
               </div>
               <div className="mt-0.5 text-[12px] text-[var(--pc-text-muted)]">
-                Jump to the queues operators usually need during morning triage.
+                Common triage entry points.
               </div>
             </div>
             <div className="divide-y divide-[var(--pc-border)]">

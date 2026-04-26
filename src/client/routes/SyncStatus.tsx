@@ -35,7 +35,7 @@ export function SyncStatusPage() {
       <PageHeader
         eyebrow="System"
         title="Data Ingestion"
-        description="Pulls Autopilot, Intune, Entra ID, and ConfigMgr management-agent signals from Microsoft Graph into the local state engine. Run a full sync after configuration changes."
+        description="Run and inspect Microsoft Graph sync jobs."
         actions={
           <>
             <SourceBadge source="graph" />
@@ -49,13 +49,6 @@ export function SyncStatusPage() {
           </>
         }
       />
-
-      {/* Status cards */}
-      <div className="pc-section-note">
-        Check this page after changing Graph credentials, tag mappings, or
-        feature flags. Failed runs keep the previous cached state so operators
-        are not left with partial data.
-      </div>
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Card className="px-4 py-3.5">
@@ -148,8 +141,7 @@ export function SyncStatusPage() {
               Sync History
             </div>
             <div className="mt-0.5 text-[11px] text-[var(--pc-text-muted)]">
-              Most recent {status.data.logs.length} runs. Expand error rows to
-              see the source failure captured during ingestion.
+              Most recent {status.data.logs.length} runs.
             </div>
           </div>
           {status.data.logs.length > 0 && (

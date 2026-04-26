@@ -28,13 +28,9 @@ export function ProfileAuditPage() {
       <PageHeader
         eyebrow="Inspect"
         title="Deployment Profiles"
-        description="Audit Intune deployment profiles as shared failure domains. Identify targeting gaps, missing assignments, hybrid-join risk, and tag mismatches across the Windows fleet."
+        description="Find profile-level assignment and targeting failures."
         actions={<SourceBadge source="intune" />}
       />
-      <div className="pc-section-note">
-        Treat profiles as shared failure domains. Open a profile when several
-        devices show the same assignment or deployment-mode problem.
-      </div>
       {profiles.data.length === 0 ? (
         <div className="text-[13px] text-[var(--pc-text-muted)]">
           No profiles found. Run a sync to pull profile data from Graph.

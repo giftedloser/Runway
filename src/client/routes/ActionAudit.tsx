@@ -148,7 +148,7 @@ export function ActionAuditPage() {
       <PageHeader
         eyebrow="System"
         title="Action Audit"
-        description="Cross-device timeline of every remote action dispatched from Runway. Use this when an operator needs to confirm a fix landed, or when investigating a fleet-wide incident."
+        description="Review remote action results and operator identity."
         actions={
           <a
             href="/api/actions/logs/export?format=csv"
@@ -192,12 +192,6 @@ export function ActionAuditPage() {
             {stats.failed}
           </div>
         </Card>
-      </div>
-
-      <div className="pc-section-note">
-        Filter by result or action type when reviewing whether an operator
-        command was accepted by Graph. Bulk IDs group actions submitted
-        together.
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -248,8 +242,7 @@ export function ActionAuditPage() {
               Timeline
             </div>
             <div className="text-[11px] text-[var(--pc-text-muted)]">
-              Showing {filtered.length} of {stats.total}. Use entries to confirm
-              who triggered an action, when it ran, and the Graph response.
+              Showing {filtered.length} of {stats.total}.
             </div>
           </div>
         </div>

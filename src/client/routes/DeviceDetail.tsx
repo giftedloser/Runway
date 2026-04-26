@@ -263,10 +263,10 @@ function TabHeading({
 }) {
   return (
     <div>
-      <div className="text-[12.5px] font-semibold uppercase tracking-wide text-[var(--pc-text-secondary)]">
+      <div className="text-[12.5px] font-semibold text-[var(--pc-text-secondary)]">
         {title}
       </div>
-      <div className="text-[11.5px] text-[var(--pc-text-muted)]">
+      <div className="overflow-hidden text-ellipsis whitespace-nowrap text-[11.5px] text-[var(--pc-text-muted)]">
         {description}
       </div>
     </div>
@@ -345,7 +345,7 @@ export function DeviceDetailPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <DeviceShortcuts
         deviceKey={deviceKey}
         deviceLabel={displayName}
@@ -373,44 +373,24 @@ export function DeviceDetailPage() {
         </nav>
         <div className="hidden items-center gap-3 sm:flex">
           <CopySummaryButton device={data} />
-          <div className="flex items-center gap-2 text-[10.5px] text-[var(--pc-text-muted)]">
-            <kbd className="rounded border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-1 py-px font-mono text-[10px]">
-              r
-            </kbd>
-            refresh
-            <kbd className="rounded border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-1 py-px font-mono text-[10px]">
-              s
-            </kbd>
-            sync
-            <kbd className="rounded border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-1 py-px font-mono text-[10px]">
-              c
-            </kbd>
-            copy
-            <kbd className="rounded border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-1 py-px font-mono text-[10px]">
-              b
-            </kbd>
-            back
-          </div>
         </div>
       </div>
 
       {/* Hero header */}
-      <header className="rounded-xl border border-[var(--pc-border)] bg-[var(--pc-surface)] p-4 shadow-[0_18px_60px_rgba(0,0,0,0.14)] sm:p-5">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+      <header className="rounded-[var(--pc-radius)] border border-[var(--pc-border)] bg-[var(--pc-surface)] p-4">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-[var(--pc-accent)]">
+            <div className="text-[10.5px] font-medium uppercase tracking-wide text-[var(--pc-text-muted)]">
               Device Diagnostics
             </div>
             <h1
-              className="mt-1 truncate text-2xl font-semibold tracking-tight text-[var(--pc-text)]"
+              className="mt-0.5 truncate text-[1.7rem] font-semibold tracking-tight text-[var(--pc-text)]"
               title={displayName}
             >
               {displayName}
             </h1>
             <p className="mt-1 pc-helper-text max-w-3xl">
-              Start with the breakpoint chips to see which system is failing,
-              then use the tabs for source records, assignments, actions, and
-              raw Graph evidence.
+              Use breakpoint chips first, then inspect the active subsystem.
             </p>
             <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-[var(--pc-text-muted)]">
               <span>
@@ -452,7 +432,7 @@ export function DeviceDetailPage() {
           <div className="flex flex-col items-start gap-2 lg:items-end">
             <StatusBadge health={data.summary.health} />
             <p
-              className="max-w-md text-[12.5px] leading-relaxed text-[var(--pc-text-secondary)] lg:text-right"
+              className="max-w-md text-[12px] leading-snug text-[var(--pc-text-secondary)] lg:text-right"
               title={data.summary.diagnosis}
             >
               {data.summary.diagnosis}
@@ -462,7 +442,7 @@ export function DeviceDetailPage() {
 
         {/* Name-joined correlation warning */}
         {data.identity.nameJoined && (
-          <div className="mt-4 flex items-start gap-2.5 rounded-lg border border-[var(--pc-warning)]/30 bg-[var(--pc-warning-muted)] px-3.5 py-2.5">
+          <div className="mt-3 flex items-start gap-2.5 rounded-[var(--pc-radius)] border border-[var(--pc-warning)]/30 bg-[var(--pc-warning-muted)] px-3.5 py-2.5">
             <Fingerprint className="mt-0.5 h-4 w-4 shrink-0 text-[var(--pc-warning)]" />
             <div className="text-[12px] leading-relaxed text-[var(--pc-warning)]">
               <span className="font-semibold">Name-only correlation.</span> This
@@ -474,7 +454,7 @@ export function DeviceDetailPage() {
         )}
 
         {/* Breakpoint chips — click to jump to the failing subsystem tab */}
-        <div className="mt-5 grid grid-cols-2 gap-2 md:grid-cols-4">
+        <div className="mt-4 grid grid-cols-2 gap-2 md:grid-cols-4">
           {(Object.keys(BREAKPOINT_BUCKETS) as BreakpointKey[]).map((key) => (
             <BreakpointChip
               key={key}
@@ -520,7 +500,7 @@ export function DeviceDetailPage() {
         <section className="space-y-3">
           <TabHeading
             title="Identity"
-            description="Which source records belong to this physical device, and whether the join is trustworthy"
+            description="Source record matching and join confidence."
           />
           <IdentityPanel
             device={data}
@@ -534,7 +514,7 @@ export function DeviceDetailPage() {
         <section className="space-y-3">
           <TabHeading
             title="Targeting"
-            description="The group membership and deployment profile that should drive Autopilot intent"
+            description="Group membership and deployment profile intent."
           />
           <AssignmentPathPanel path={data.assignmentPath} />
           <AssignmentPanel device={data} />
@@ -547,7 +527,7 @@ export function DeviceDetailPage() {
         <section className="space-y-3">
           <TabHeading
             title="Enrollment"
-            description="Whether the intended device actually made it through OOBE and into Intune"
+            description="OOBE, Autopilot, and Intune enrollment state."
           />
           <ProvisioningTimeline device={data} />
           <ConfigMgrConnectionPanel
@@ -563,7 +543,7 @@ export function DeviceDetailPage() {
         <section className="space-y-3">
           <TabHeading
             title="Compliance & Drift"
-            description="Policy drift, hybrid-join risk, user ownership mismatch, and custom rule violations"
+            description="Policy drift, hybrid join, ownership, and rules."
           />
           <CompliancePoliciesPanel device={data} />
           <ConditionalAccessPanel device={data} />
@@ -575,7 +555,7 @@ export function DeviceDetailPage() {
         <section className="space-y-3">
           <TabHeading
             title="Actions"
-            description="Remote actions, secrets, and related devices (delegated sign-in required)"
+            description="Remote actions, secrets, and related devices."
           />
           <ActionsToolbar device={data} />
           <LapsWidget device={data} />
@@ -589,7 +569,7 @@ export function DeviceDetailPage() {
         <section className="space-y-3">
           <TabHeading
             title="History & Raw Data"
-            description="State transitions over time, plus raw Graph source data for deeper validation"
+            description="State transitions and raw Graph evidence."
           />
           <HistoryPanel device={data} />
           <SourceJsonPanel device={data} />

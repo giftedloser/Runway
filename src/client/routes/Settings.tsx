@@ -197,7 +197,7 @@ export function SettingsPage() {
       <PageHeader
         eyebrow="System"
         title="Settings"
-        description="Confirm live-data readiness, operator access, SCCM visibility, and the tag mappings Runway uses to explain join problems."
+        description="Configure ingestion, access, signals, tags, and rules."
       />
 
       <SettingsReadinessBanner
@@ -214,8 +214,8 @@ export function SettingsPage() {
       <section id="graph" className="scroll-mt-6 space-y-3">
         <SettingsSectionHeader
           index="1"
-          title="Microsoft Graph Integration"
-          detail="Read-only ingestion - powers dashboards and device joins"
+          title="Graph Integration"
+          detail="Read-only ingestion for dashboards and joins"
         />
 
         <Card className="p-5">
@@ -239,8 +239,8 @@ export function SettingsPage() {
                 </div>
                 <div className="mt-0.5 text-[12px] text-[var(--pc-text-muted)]">
                   {graphConfigured
-                    ? "Server-side credentials detected. Runway can read Autopilot, Intune, Entra, and ConfigMgr management-agent signals."
-                    : "Missing credentials. Runway cannot ingest live data — running in mock mode."}
+                    ? "Credentials detected. Live Graph ingestion is available."
+                    : "Missing credentials. Live data ingestion is unavailable."}
                 </div>
               </div>
             </div>
@@ -295,7 +295,7 @@ export function SettingsPage() {
         <SettingsSectionHeader
           index="2"
           title="App Access"
-          detail="Optional Entra login before the workspace opens"
+          detail="Optional Entra login before workspace access"
         />
         <Card className="p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -373,7 +373,7 @@ export function SettingsPage() {
         <SettingsSectionHeader
           index="3"
           title="Admin Sign-In"
-          detail="Required for remote actions, LAPS, BitLocker, and settings changes"
+          detail="Required for actions, secrets, and settings changes"
         />
         <Card className="p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -457,7 +457,7 @@ export function SettingsPage() {
         <SettingsSectionHeader
           index="4"
           title="SCCM / ConfigMgr Signal"
-          detail="Optional join-picture check on device pages"
+          detail="Optional ConfigMgr visibility on device pages"
         />
         <Card className="p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -492,13 +492,9 @@ export function SettingsPage() {
                     {sccmDetectionEnabled ? "Enabled" : "Disabled"}
                   </span>
                 </div>
-                <p className="mt-1 max-w-2xl text-[12px] leading-relaxed text-[var(--pc-text-muted)]">
-                  Reads Intune's{" "}
-                  <span className="font-mono">managementAgent</span> value and
-                  shows whether a device is reporting a Configuration Manager
-                  client. This does not run SCCM actions or change devices; it
-                  only adds visibility to the device-detail enrollment tab and
-                  custom rule fields.
+                <p className="mt-1 max-w-2xl text-[12px] text-[var(--pc-text-muted)]">
+                  Reads Intune <span className="font-mono">managementAgent</span>{" "}
+                  for device-detail and rule visibility only.
                 </p>
                 {!isAuthed ? (
                   <p className="mt-2 text-[11px] text-[var(--pc-warning)]">
@@ -561,7 +557,7 @@ export function SettingsPage() {
         <SettingsSectionHeader
           index="5"
           title="Data Sources"
-          detail="What Runway reads from each Microsoft service"
+          detail="Synced Microsoft service data"
         />
         <Card className="p-5">
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -603,8 +599,8 @@ export function SettingsPage() {
       <section id="tags" className="scroll-mt-6 space-y-3">
         <SettingsSectionHeader
           index="6"
-          title="Group Tag -> Profile Mapping"
-          detail="Tells the engine what each Autopilot group tag should resolve to"
+          title="Tag Mapping"
+          detail="Expected property, group, and profile per group tag"
           actions={
             <div className="flex flex-wrap items-center gap-2">
               <input
@@ -1116,45 +1112,45 @@ function SettingsReadinessBanner({
       good: graphConfigured,
       detail: graphConfigured
         ? "Graph credentials detected"
-        : "Add Graph credentials before tenant testing",
+        : "Add Graph credentials",
     },
     {
       label: "Technician access",
       value: appAccessRequired ? "Entra gate on" : "Gate off",
       good: appAccessRequired,
       detail: appAccessRequired
-        ? "Users sign in before fleet data loads"
-        : "Enable after setup if techs will use it",
+        ? "Sign-in required"
+        : "Enable after setup",
     },
     {
       label: "Admin session",
       value: adminSignedIn ? "Signed in" : "Not signed in",
       good: adminSignedIn,
       detail: adminSignedIn
-        ? "Privileged settings/actions available"
-        : "Required for mappings, feature flags, and actions",
+        ? "Privileged controls available"
+        : "Required for changes",
     },
     {
       label: "SCCM signal",
       value: sccmDetectionEnabled ? "On" : "Off",
       good: sccmDetectionEnabled,
       detail: sccmDetectionEnabled
-        ? "Device pages show ConfigMgr signal"
-        : "Optional visibility check is disabled",
+        ? "ConfigMgr signal visible"
+        : "Optional signal disabled",
     },
     {
       label: "Tag mappings",
       value: hasTagMappings ? "Configured" : "Missing",
       good: hasTagMappings,
       detail: hasTagMappings
-        ? "Runway can detect tag/profile drift"
-        : "Needed for target-group and tag mismatch flags",
+        ? "Drift detection enabled"
+        : "Needed for tag flags",
     },
   ];
 
   return (
     <Card className="overflow-hidden p-0">
-      <div className="flex flex-col gap-3 border-b border-[var(--pc-border)] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 border-b border-[var(--pc-border)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-3">
           <div
             className={
@@ -1175,9 +1171,9 @@ function SettingsReadinessBanner({
                 ? "Live testing readiness looks good"
                 : "Setup still has readiness gaps"}
             </div>
-            <div className="mt-0.5 text-[12px] leading-5 text-[var(--pc-text-muted)]">
+            <div className="mt-0.5 overflow-hidden text-ellipsis whitespace-nowrap text-[12px] text-[var(--pc-text-muted)]">
               {ready
-                ? "Graph ingestion and tag interpretation are configured. Review access and optional signals before pilot use."
+                ? "Graph ingestion and tag interpretation are configured."
                 : blockers.join(", ")}
             </div>
           </div>
@@ -1187,7 +1183,7 @@ function SettingsReadinessBanner({
         {items.map((item) => (
           <div
             key={item.label}
-            className="bg-[var(--pc-surface)] px-4 py-3 transition-colors duration-150 hover:bg-[var(--pc-surface-raised)]"
+            className="bg-[var(--pc-surface)] px-3 py-2.5 transition-colors duration-150 hover:bg-[var(--pc-surface-raised)]"
           >
             <div className="flex items-center justify-between gap-2">
               <div className="text-[10.5px] font-semibold uppercase tracking-wide text-[var(--pc-text-muted)]">
@@ -1202,7 +1198,7 @@ function SettingsReadinessBanner({
             <div className="mt-1 text-[13px] font-semibold text-[var(--pc-text)]">
               {item.value}
             </div>
-            <div className="mt-0.5 text-[11px] leading-4 text-[var(--pc-text-muted)]">
+            <div className="mt-0.5 overflow-hidden text-ellipsis whitespace-nowrap text-[11px] text-[var(--pc-text-muted)]">
               {item.detail}
             </div>
           </div>

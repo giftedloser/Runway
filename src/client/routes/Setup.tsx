@@ -31,7 +31,7 @@ interface StepShellProps {
 function StepShell({ number, title, description, done, active, children }: StepShellProps) {
   return (
     <Card
-      className={`p-5 transition-opacity ${done && !active ? "opacity-70" : ""}`}
+      className={`p-4 transition-opacity ${done && !active ? "opacity-70" : ""}`}
     >
       <div className="flex items-start gap-3">
         <div
@@ -46,9 +46,9 @@ function StepShell({ number, title, description, done, active, children }: StepS
           {done ? <CheckCircle2 className="h-4 w-4" /> : number}
         </div>
         <div className="min-w-0 flex-1">
-          <div className="text-[14px] font-semibold text-[var(--pc-text)]">{title}</div>
-          <div className="mt-0.5 text-[12px] text-[var(--pc-text-muted)]">{description}</div>
-          <div className="mt-4">{children}</div>
+          <div className="text-[13px] font-semibold text-[var(--pc-text)]">{title}</div>
+          <div className="mt-0.5 overflow-hidden text-ellipsis whitespace-nowrap text-[12px] text-[var(--pc-text-muted)]">{description}</div>
+          <div className="mt-3">{children}</div>
         </div>
       </div>
     </Card>
@@ -91,7 +91,7 @@ export function SetupPage() {
       <PageHeader
         eyebrow="Welcome"
         title="First-run Setup"
-        description="Walk through these steps to take Runway from a fresh install to a working ingestion of your Windows Autopilot, Intune, Entra ID, and ConfigMgr signals. You can skip ahead at any time and revisit Settings later."
+        description="Configure Graph, sync data, and add the first tag mapping."
       />
 
       {/* Progress stepper */}
@@ -100,7 +100,7 @@ export function SetupPage() {
       <StepShell
         number={1}
         title="Graph credentials"
-        description="Runway reads from Microsoft Graph using a read-only app registration. Paste your tenant ID, app (client) ID, and client secret value below — we'll write them to the server's .env so the next start picks them up."
+        description="Add tenant ID, client ID, and client secret."
         done={graphConfigured}
         active={activeStep === 1}
       >
@@ -112,7 +112,7 @@ export function SetupPage() {
       <StepShell
         number={2}
         title="Run your first sync"
-        description="Pull Autopilot, Intune, Entra ID, and ConfigMgr management-agent signals into the local cache."
+        description="Pull Microsoft Graph signals into the local cache."
         done={hasSync}
         active={activeStep === 2}
       >
@@ -136,7 +136,7 @@ export function SetupPage() {
       <StepShell
         number={3}
         title="Map a group tag"
-        description="Tell the engine what each Autopilot group tag should resolve to. Without this, tag-mismatch detection cannot run."
+        description="Set expected property, groups, and profiles for a tag."
         done={hasMappings}
         active={activeStep === 3}
       >
