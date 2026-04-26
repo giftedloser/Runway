@@ -192,23 +192,25 @@ export function ProvisioningBuilderPage() {
             <SourceBadge source="autopilot" />
             <SourceBadge source="entra" />
             <SourceBadge source="derived" />
-            <button
-              type="button"
-              onClick={() => setCompact((p) => !p)}
-              className="inline-flex items-center gap-1.5 rounded-md border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-2.5 py-1.5 text-[11px] font-medium text-[var(--pc-text-secondary)] transition-colors hover:border-[var(--pc-border-hover)] hover:text-[var(--pc-text)]"
-              title={
-                compact
-                  ? "Switch to comfortable view"
-                  : "Switch to compact view"
-              }
-            >
-              {compact ? (
-                <StretchHorizontal className="h-3 w-3" />
-              ) : (
-                <Rows3 className="h-3 w-3" />
-              )}
-              {compact ? "Comfortable" : "Compact"}
-            </button>
+            {data ? (
+              <button
+                type="button"
+                onClick={() => setCompact((p) => !p)}
+                className="inline-flex items-center gap-1.5 rounded-md border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-2.5 py-1.5 text-[11px] font-medium text-[var(--pc-text-secondary)] transition-colors hover:border-[var(--pc-border-hover)] hover:text-[var(--pc-text)]"
+                title={
+                  compact
+                    ? "Switch to comfortable view"
+                    : "Switch to compact view"
+                }
+              >
+                {compact ? (
+                  <StretchHorizontal className="h-3 w-3" />
+                ) : (
+                  <Rows3 className="h-3 w-3" />
+                )}
+                {compact ? "Comfortable" : "Compact"}
+              </button>
+            ) : null}
             {data ? (
               <button
                 type="button"
