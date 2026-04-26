@@ -6,7 +6,6 @@ import {
   GitBranch,
   History,
   LayoutDashboard,
-  Monitor,
   Moon,
   Palette,
   Search,
@@ -35,18 +34,16 @@ const appVersion =
     : ((globalThis as { __APP_VERSION__?: string }).__APP_VERSION__ ?? "dev");
 
 const themeIcons: Record<Theme, typeof Sun> = {
-  light: Sun,
-  dark: Moon,
-  ocean: Palette,
-  copper: Flame,
-  system: Monitor,
+  bone: Sun,
+  void: Moon,
+  foundry: Flame,
+  oxidized: Palette,
 };
 const themeLabels: Record<Theme, string> = {
-  light: "Light",
-  dark: "Dark",
-  ocean: "Ocean",
-  copper: "Copper",
-  system: "System",
+  bone: "Bone",
+  void: "Void",
+  foundry: "Foundry",
+  oxidized: "Oxidized",
 };
 
 interface NavItem {
@@ -116,7 +113,7 @@ export function Sidebar() {
           alt=""
           width={32}
           height={32}
-          className="h-8 w-8 shrink-0 object-contain drop-shadow-[0_5px_14px_rgba(0,0,0,0.18)]"
+          className="h-8 w-8 shrink-0 object-contain"
         />
         <div className="min-w-0">
           <div className="font-brand text-[21px] uppercase leading-none tracking-[0.16em] text-[var(--pc-text)]">
@@ -132,7 +129,7 @@ export function Sidebar() {
             <button
               type="button"
               onClick={cycleTheme}
-              className="ml-auto inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] text-[var(--pc-text-secondary)] transition-[border-color,color,background-color,transform] hover:-translate-y-0.5 hover:border-[var(--pc-border-hover)] hover:text-[var(--pc-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)] lg:hidden"
+              className="ml-auto inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--pc-border)] bg-[var(--pc-surface)] text-[var(--pc-icon-primary)] transition-[border-color,color,background-color,transform] hover:-translate-y-0.5 hover:border-[var(--pc-border-hover)] hover:bg-[var(--pc-surface-raised)] hover:text-[var(--pc-text-heading)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)] lg:hidden"
               title={`Current: ${themeLabels[theme]}. Click to cycle.`}
               aria-label={`Current theme: ${themeLabels[theme]}. Click to cycle theme.`}
             >
@@ -179,10 +176,10 @@ export function Sidebar() {
                   key={item.to}
                   to={item.to}
                   className={cn(
-                    "group flex shrink-0 items-center gap-2 whitespace-nowrap rounded-[var(--pc-radius-sm)] px-2.5 py-1.5 text-[12px] font-medium transition-[background-color,color,transform] duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)] lg:gap-2.5 lg:whitespace-normal",
+                    "group flex shrink-0 items-center gap-2 whitespace-nowrap rounded-[var(--pc-radius-sm)] border-l-2 px-2.5 py-1.5 text-[12px] font-medium transition-[background-color,border-color,color,transform] duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)] lg:gap-2.5 lg:whitespace-normal",
                     active
-                      ? "bg-[var(--pc-accent-muted)] text-[var(--pc-accent-hover)]"
-                      : "text-[var(--pc-text-secondary)] hover:bg-[var(--pc-tint-hover)] hover:text-[var(--pc-text)] hover:translate-x-0.5",
+                      ? "border-[var(--pc-accent)] bg-[var(--pc-surface-raised)] text-[var(--pc-text-heading)]"
+                      : "border-transparent text-[var(--pc-text-body)] hover:bg-[var(--pc-surface-raised)] hover:text-[var(--pc-text-heading)] hover:translate-x-0.5",
                   )}
                 >
                   <Icon
@@ -218,7 +215,7 @@ export function Sidebar() {
               <button
                 type="button"
                 onClick={cycleTheme}
-                className="flex items-center gap-1.5 rounded-md border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-2 py-1 text-[10.5px] text-[var(--pc-text-secondary)] transition-[border-color,color,background-color] hover:border-[var(--pc-border-hover)] hover:text-[var(--pc-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]"
+                className="flex items-center gap-1.5 rounded-md border border-[var(--pc-border)] bg-[var(--pc-surface)] px-2 py-1 text-[10.5px] text-[var(--pc-text-body)] transition-[border-color,color,background-color] hover:border-[var(--pc-border-hover)] hover:bg-[var(--pc-surface-raised)] hover:text-[var(--pc-text-heading)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]"
                 title={`Current: ${themeLabels[theme]}. Click to cycle.`}
                 aria-label={`Current theme: ${themeLabels[theme]}. Click to cycle theme.`}
               >
@@ -286,10 +283,10 @@ function PropertiesGroup({
               pageSize: 25,
             }}
             className={cn(
-              "flex items-center gap-3 rounded-lg px-3 py-1.5 text-[12px] font-medium transition-[background-color,color,transform] duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]",
+              "flex items-center gap-3 rounded-lg border-l-2 px-3 py-1.5 text-[12px] font-medium transition-[background-color,border-color,color,transform] duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]",
               active
-                ? "bg-[var(--pc-accent-muted)] text-[var(--pc-accent-hover)]"
-                : "text-[var(--pc-text-secondary)] hover:bg-[var(--pc-tint-hover)] hover:text-[var(--pc-text)] hover:translate-x-0.5",
+                ? "border-[var(--pc-accent)] bg-[var(--pc-surface-raised)] text-[var(--pc-text-heading)]"
+                : "border-transparent text-[var(--pc-text-body)] hover:bg-[var(--pc-surface-raised)] hover:text-[var(--pc-text-heading)] hover:translate-x-0.5",
             )}
             title={`Filter device queue to ${property}`}
           >

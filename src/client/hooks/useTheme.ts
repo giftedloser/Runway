@@ -2,20 +2,14 @@ import { useCallback, useEffect } from "react";
 
 import { usePreference } from "./usePreference.js";
 
-export type Theme = "dark" | "light" | "ocean" | "copper" | "system";
-export type AppliedTheme = Exclude<Theme, "system">;
+export type Theme = "void" | "foundry" | "bone" | "oxidized";
+export type AppliedTheme = Theme;
 
-const THEMES: Theme[] = ["dark", "light", "ocean", "copper", "system"];
-const DARK_SCHEME_THEMES = new Set<AppliedTheme>(["dark", "ocean", "copper"]);
+const THEMES: Theme[] = ["bone", "void", "foundry", "oxidized"];
+const DARK_SCHEME_THEMES = new Set<AppliedTheme>(["void", "foundry", "oxidized"]);
 
 function isTheme(value: unknown): value is Theme {
   return typeof value === "string" && THEMES.includes(value as Theme);
-}
-
-function resolveTheme(theme: Theme): AppliedTheme {
-  if (theme !== "system") return theme;
-  if (typeof window === "undefined") return "dark";
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
 function applyTheme(resolved: AppliedTheme) {
@@ -25,24 +19,15 @@ function applyTheme(resolved: AppliedTheme) {
 }
 
 export function useTheme(): [Theme, () => void, AppliedTheme] {
-  const [storedTheme, setTheme] = usePreference<Theme>("theme", "dark");
-  const theme = isTheme(storedTheme) ? storedTheme : "dark";
+  const [storedTheme, setTheme] = usePreference<Theme>("theme", "bone");
+  const theme = isTheme(storedTheme) ? storedTheme : "bone";
 
-  const resolved = resolveTheme(theme);
+  const resolved = theme;
 
   // Apply on mount and whenever theme changes
   useEffect(() => {
     applyTheme(resolved);
   }, [resolved]);
-
-  // Listen for system preference changes when in "system" mode
-  useEffect(() => {
-    if (theme !== "system") return;
-    const mql = window.matchMedia("(prefers-color-scheme: dark)");
-    const handler = () => applyTheme(resolveTheme("system"));
-    mql.addEventListener("change", handler);
-    return () => mql.removeEventListener("change", handler);
-  }, [theme]);
 
   const cycle = useCallback(() => {
     const idx = THEMES.indexOf(theme);
