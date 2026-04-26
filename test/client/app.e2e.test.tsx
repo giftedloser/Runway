@@ -186,7 +186,7 @@ describe("client drilldown", () => {
   }
 
   function findDashboardTitle() {
-    return screen.findByText("Runway Fleet Health", {}, { timeout: 5000 });
+    return screen.findByText("Fleet Health", {}, { timeout: 5000 });
   }
 
   it("navigates from dashboard to devices to a device detail", async () => {
