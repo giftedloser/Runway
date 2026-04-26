@@ -9,27 +9,29 @@
     -apple-system,
     sans-serif;
 
-  /* Bone is the default theme. */
-  --pc-bg: #fdfcfa;
-  --pc-surface: #edeae4;
+  /* Canopy Light is the default theme. */
+  --pc-sidebar-bg: #1c2333;
+  --pc-sidebar-text: #8a95b0;
+  --pc-sidebar-text-active: #ffffff;
+  --pc-sidebar-border: #252d40;
+  --pc-bg: #f4f2ee;
+  --pc-surface: #ffffff;
   --pc-surface-raised: #ffffff;
   --pc-surface-overlay: var(--pc-surface-raised);
   --pc-surface-glass: var(--pc-surface-raised);
-  --pc-border: #d4d0c8;
-  --pc-border-hover: #b8b4ac;
-  --pc-text-muted: #a8a49c;
-  --pc-text-secondary: #3a3a3a;
-  --pc-text: #1a1a1a;
-  --pc-text-body: #3a3a3a;
-  --pc-text-heading: #1a1a1a;
-  --pc-accent: #2a2a2a;
-  --pc-accent-hover: #000000;
-  --pc-accent-contrast: #fdfcfa;
-  --pc-icon-primary: #3a3a3a;
-  --pc-icon-muted: #a8a49c;
+  --pc-border: #e4e0d8;
+  --pc-border-hover: #c8c4bc;
+  --pc-text-muted: #9a9590;
+  --pc-text-secondary: #3a3830;
+  --pc-text: #0f0e0c;
+  --pc-text-body: #3a3830;
+  --pc-text-heading: #0f0e0c;
+  --pc-accent: #e8820c;
+  --pc-accent-hover: #d07208;
+  --pc-accent-contrast: #ffffff;
   --pc-input-bg: #ffffff;
-  --pc-input-border: #d4d0c8;
-  --pc-input-text: #1a1a1a;
+  --pc-input-border: #e4e0d8;
+  --pc-input-text: #0f0e0c;
   --pc-placeholder: #c0bdb6;
 
   /* Radius */
@@ -39,18 +41,18 @@
 
   /* Existing semantic aliases mapped back into the strict theme palette. */
   --pc-accent-muted: var(--pc-surface-raised);
-  --pc-accent-2: var(--pc-accent);
-  --pc-accent-2-muted: var(--pc-surface-raised);
-  --pc-critical: var(--pc-accent);
-  --pc-critical-muted: var(--pc-surface-raised);
-  --pc-danger: var(--pc-accent);
-  --pc-warning: var(--pc-accent);
-  --pc-warning-muted: var(--pc-surface-raised);
-  --pc-info: var(--pc-text-body);
-  --pc-info-muted: var(--pc-surface-raised);
-  --pc-healthy: var(--pc-accent);
-  --pc-healthy-muted: var(--pc-surface-raised);
-  --pc-success: var(--pc-accent);
+  --pc-accent-2: #2dd4bf;
+  --pc-accent-2-muted: #2dd4bf1c;
+  --pc-critical: #f43f5e;
+  --pc-critical-muted: #f43f5e1f;
+  --pc-danger: #f43f5e;
+  --pc-warning: #f59e0b;
+  --pc-warning-muted: #f59e0b1f;
+  --pc-info: #38bdf8;
+  --pc-info-muted: #38bdf81f;
+  --pc-healthy: #34d399;
+  --pc-healthy-muted: #34d3991f;
+  --pc-success: #34d399;
   --pc-tint-subtle: var(--pc-surface);
   --pc-tint-hover: var(--pc-surface-raised);
   --pc-shadow-soft: 0 0 0 1px var(--pc-border);
@@ -61,77 +63,83 @@
   --pc-gradient-panel: var(--pc-surface);
 }
 
-:root[data-theme="void"] {
-  color-scheme: dark;
-  --pc-bg: #000000;
-  --pc-surface: #0d0d0d;
-  --pc-surface-raised: #141414;
-  --pc-border: #1a1a1a;
-  --pc-border-hover: #2a2a2a;
-  --pc-text-muted: #4a4a4a;
-  --pc-text-secondary: #c0c8d8;
-  --pc-text: #ffffff;
-  --pc-text-body: #c0c8d8;
-  --pc-text-heading: #ffffff;
-  --pc-accent: #c0c8d8;
-  --pc-accent-hover: #d8e0ec;
-  --pc-accent-contrast: #000000;
-  --pc-icon-primary: #c0c8d8;
-  --pc-icon-muted: #4a4a4a;
-  --pc-input-bg: #0d0d0d;
-  --pc-input-border: #1a1a1a;
-  --pc-input-text: #c0c8d8;
-  --pc-placeholder: #4a4a4a;
-}
-
-:root[data-theme="foundry"] {
-  color-scheme: dark;
-  --pc-bg: #1c1c1c;
-  --pc-surface: #2e2e2e;
-  --pc-surface-raised: #383838;
-  --pc-border: #3a3a3a;
-  --pc-border-hover: #505050;
-  --pc-text-muted: #666666;
-  --pc-text-secondary: #e8e8e8;
-  --pc-text: #ffffff;
-  --pc-text-body: #e8e8e8;
-  --pc-text-heading: #ffffff;
-  --pc-accent: #cc0000;
-  --pc-accent-hover: #e60000;
-  --pc-accent-contrast: #1c1c1c;
-  --pc-icon-primary: #e8e8e8;
-  --pc-icon-muted: #666666;
-  --pc-input-bg: #242424;
-  --pc-input-border: #3a3a3a;
-  --pc-input-text: #e8e8e8;
-  --pc-placeholder: #555555;
-}
-
-:root[data-theme="bone"] {
+:root[data-theme="canopy-light"] {
   color-scheme: light;
 }
 
-:root[data-theme="oxidized"] {
+:root[data-theme="canopy-dark"] {
   color-scheme: dark;
-  --pc-bg: #0f1410;
-  --pc-surface: #161e17;
-  --pc-surface-raised: #1e2a1f;
-  --pc-border: #243026;
-  --pc-border-hover: #344836;
-  --pc-text-muted: #4a6050;
-  --pc-text-secondary: #8aaa90;
-  --pc-text: #d4e8d8;
-  --pc-text-body: #8aaa90;
-  --pc-text-heading: #d4e8d8;
-  --pc-accent: #7dae6a;
-  --pc-accent-hover: #8fc47a;
-  --pc-accent-contrast: #0f1410;
-  --pc-icon-primary: #8aaa90;
-  --pc-icon-muted: #4a6050;
-  --pc-input-bg: #161e17;
-  --pc-input-border: #243026;
-  --pc-input-text: #8aaa90;
-  --pc-placeholder: #4a6050;
+  --pc-sidebar-bg: #0f1117;
+  --pc-sidebar-text: #5a6478;
+  --pc-sidebar-text-active: #e8ecf4;
+  --pc-sidebar-border: #1e2230;
+  --pc-bg: #0f1117;
+  --pc-surface: #181c24;
+  --pc-surface-raised: #1e2230;
+  --pc-border: #242830;
+  --pc-border-hover: #303848;
+  --pc-text-muted: #5a6478;
+  --pc-text-secondary: #a8b4c8;
+  --pc-text: #e8ecf4;
+  --pc-text-body: #a8b4c8;
+  --pc-text-heading: #e8ecf4;
+  --pc-accent: #e8820c;
+  --pc-accent-hover: #f09030;
+  --pc-accent-contrast: #ffffff;
+  --pc-input-bg: #181c24;
+  --pc-input-border: #242830;
+  --pc-input-text: #e8ecf4;
+  --pc-placeholder: #3a4050;
+}
+
+:root[data-theme="carbon"] {
+  color-scheme: dark;
+  --pc-sidebar-bg: #111210;
+  --pc-sidebar-text: #606858;
+  --pc-sidebar-text-active: #eaf0e4;
+  --pc-sidebar-border: #1e2018;
+  --pc-bg: #111210;
+  --pc-surface: #1a1c18;
+  --pc-surface-raised: #222420;
+  --pc-border: #272a24;
+  --pc-border-hover: #343830;
+  --pc-text-muted: #606858;
+  --pc-text-secondary: #a8b0a0;
+  --pc-text: #eaf0e4;
+  --pc-text-body: #a8b0a0;
+  --pc-text-heading: #eaf0e4;
+  --pc-accent: #6dbf6d;
+  --pc-accent-hover: #80d080;
+  --pc-accent-contrast: #ffffff;
+  --pc-input-bg: #1a1c18;
+  --pc-input-border: #272a24;
+  --pc-input-text: #eaf0e4;
+  --pc-placeholder: #404840;
+}
+
+:root[data-theme="studio"] {
+  color-scheme: light;
+  --pc-sidebar-bg: #1e1e1e;
+  --pc-sidebar-text: #888888;
+  --pc-sidebar-text-active: #ffffff;
+  --pc-sidebar-border: #2a2a2a;
+  --pc-bg: #f0ede8;
+  --pc-surface: #ffffff;
+  --pc-surface-raised: #ffffff;
+  --pc-border: #ddd8d0;
+  --pc-border-hover: #c4beb6;
+  --pc-text-muted: #999490;
+  --pc-text-secondary: #2e2c28;
+  --pc-text: #0c0b08;
+  --pc-text-body: #2e2c28;
+  --pc-text-heading: #0c0b08;
+  --pc-accent: #d4500a;
+  --pc-accent-hover: #c04800;
+  --pc-accent-contrast: #ffffff;
+  --pc-input-bg: #ffffff;
+  --pc-input-border: #ddd8d0;
+  --pc-input-text: #0c0b08;
+  --pc-placeholder: #c0bcb4;
 }
 
 html {

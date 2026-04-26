@@ -34,16 +34,16 @@ const appVersion =
     : ((globalThis as { __APP_VERSION__?: string }).__APP_VERSION__ ?? "dev");
 
 const themeIcons: Record<Theme, typeof Sun> = {
-  bone: Sun,
-  void: Moon,
-  foundry: Flame,
-  oxidized: Palette,
+  "canopy-light": Sun,
+  "canopy-dark": Moon,
+  carbon: Flame,
+  studio: Palette,
 };
 const themeLabels: Record<Theme, string> = {
-  bone: "Bone",
-  void: "Void",
-  foundry: "Foundry",
-  oxidized: "Oxidized",
+  "canopy-light": "Canopy Light",
+  "canopy-dark": "Canopy Dark",
+  carbon: "Carbon",
+  studio: "Studio",
 };
 
 interface NavItem {
@@ -105,7 +105,7 @@ export function Sidebar() {
   })();
 
   return (
-    <aside className="flex h-auto w-full shrink-0 flex-col border-b border-[var(--pc-border)] bg-[var(--pc-surface)] lg:sticky lg:top-0 lg:h-[calc(100vh-var(--pc-titlebar-height,0px))] lg:w-[218px] lg:self-start lg:border-b-0 lg:border-r">
+    <aside className="flex h-auto w-full shrink-0 flex-col border-b border-[var(--pc-sidebar-border)] bg-[var(--pc-sidebar-bg)] text-[var(--pc-sidebar-text)] lg:sticky lg:top-0 lg:h-[calc(100vh-var(--pc-titlebar-height,0px))] lg:w-[218px] lg:self-start lg:border-b-0 lg:border-r">
       {/* Logo */}
       <div className="flex items-center gap-2.5 px-3 py-2.5 lg:px-4 lg:py-3">
         <img
@@ -116,7 +116,7 @@ export function Sidebar() {
           className="h-8 w-8 shrink-0 object-contain"
         />
         <div className="min-w-0">
-          <div className="font-brand text-[20px] uppercase leading-none tracking-[0.14em] text-[var(--pc-text)]">
+          <div className="font-brand text-[20px] uppercase leading-none tracking-[0.14em] text-[var(--pc-sidebar-text-active)]">
             Runway
           </div>
         </div>
@@ -126,7 +126,7 @@ export function Sidebar() {
             <button
               type="button"
               onClick={cycleTheme}
-              className="ml-auto inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--pc-border)] bg-[var(--pc-surface)] text-[var(--pc-icon-primary)] transition-[border-color,color,background-color,transform] hover:-translate-y-0.5 hover:border-[var(--pc-border-hover)] hover:bg-[var(--pc-surface-raised)] hover:text-[var(--pc-text-heading)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)] lg:hidden"
+              className="ml-auto inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--pc-sidebar-border)] bg-[var(--pc-sidebar-bg)] text-[var(--pc-sidebar-text)] transition-[border-color,color,background-color,transform] hover:-translate-y-0.5 hover:border-[var(--pc-border-hover)] hover:bg-[var(--pc-sidebar-border)] hover:text-[var(--pc-sidebar-text-active)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)] lg:hidden"
               title={`Current: ${themeLabels[theme]}. Click to cycle.`}
               aria-label={`Current theme: ${themeLabels[theme]}. Click to cycle theme.`}
             >
@@ -140,14 +140,14 @@ export function Sidebar() {
         <button
           type="button"
           onClick={requestCommandPaletteOpen}
-          className="flex w-full items-center justify-between rounded-[var(--pc-radius)] border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-2.5 py-2 text-left transition-[border-color,background-color,color] hover:border-[var(--pc-border-hover)] hover:bg-[var(--pc-surface-overlay)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]"
+          className="flex w-full items-center justify-between rounded-[var(--pc-radius)] border border-[var(--pc-sidebar-border)] bg-[var(--pc-sidebar-bg)] px-2.5 py-2 text-left transition-[border-color,background-color,color] hover:border-[var(--pc-border-hover)] hover:bg-[var(--pc-sidebar-border)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]"
           aria-label="Open command search"
         >
-          <span className="flex items-center gap-2 text-[12px] text-[var(--pc-text-secondary)]">
+          <span className="flex items-center gap-2 text-[12px] text-[var(--pc-sidebar-text)]">
             <Search className="h-3.5 w-3.5" />
             Search devices
           </span>
-          <span className="flex items-center gap-1 text-[10px] text-[var(--pc-text-muted)]">
+          <span className="flex items-center gap-1 text-[10px] text-[var(--pc-sidebar-text)]">
             <Command className="h-3 w-3" />K
           </span>
         </button>
@@ -160,7 +160,7 @@ export function Sidebar() {
             key={group.label}
             className="contents lg:flex lg:shrink-0 lg:flex-col lg:gap-0.5"
           >
-            <div className="mb-1 hidden px-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--pc-text-muted)] lg:block">
+            <div className="mb-1 hidden px-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--pc-sidebar-text)] lg:block">
               {group.label}
             </div>
             {group.items.map((item) => {
@@ -175,8 +175,8 @@ export function Sidebar() {
                   className={cn(
                     "group flex shrink-0 items-center gap-2 whitespace-nowrap rounded-[var(--pc-radius-sm)] border-l-2 px-2.5 py-1.5 text-[12px] font-medium transition-[background-color,border-color,color,transform] duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)] lg:gap-2.5 lg:whitespace-normal",
                     active
-                      ? "border-[var(--pc-accent)] bg-[var(--pc-surface-raised)] text-[var(--pc-text-heading)]"
-                      : "border-transparent text-[var(--pc-text-body)] hover:bg-[var(--pc-surface-raised)] hover:text-[var(--pc-text-heading)] hover:translate-x-0.5",
+                      ? "border-[var(--pc-accent)] bg-[var(--pc-sidebar-border)] text-[var(--pc-sidebar-text-active)]"
+                      : "border-transparent text-[var(--pc-sidebar-text)] hover:bg-[var(--pc-sidebar-border)] hover:text-[var(--pc-sidebar-text-active)] hover:translate-x-0.5",
                   )}
                 >
                   <Icon
@@ -196,15 +196,15 @@ export function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="hidden space-y-2 border-t border-[var(--pc-border)] px-3 py-3 lg:block">
+      <div className="hidden space-y-2 border-t border-[var(--pc-sidebar-border)] px-3 py-3 lg:block">
         <AuthIndicator />
         <div className="flex items-center justify-between px-2 text-[10.5px]">
-          <span className="text-[var(--pc-text-muted)]">Engine</span>
-          <span className="font-mono text-[var(--pc-text-secondary)]">
+          <span className="text-[var(--pc-sidebar-text)]">Engine</span>
+          <span className="font-mono text-[var(--pc-sidebar-text)]">
             v{appVersion}
           </span>
         </div>
-        <div className="flex items-center justify-between gap-2 px-2 text-[10.5px] text-[var(--pc-text-muted)]">
+        <div className="flex items-center justify-between gap-2 px-2 text-[10.5px] text-[var(--pc-sidebar-text)]">
           <span>Theme</span>
           {(() => {
             const ThemeIcon = themeIcons[theme];
@@ -212,7 +212,7 @@ export function Sidebar() {
               <button
                 type="button"
                 onClick={cycleTheme}
-                className="flex items-center gap-1.5 rounded-md border border-[var(--pc-border)] bg-[var(--pc-surface)] px-2 py-1 text-[10.5px] text-[var(--pc-text-body)] transition-[border-color,color,background-color] hover:border-[var(--pc-border-hover)] hover:bg-[var(--pc-surface-raised)] hover:text-[var(--pc-text-heading)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]"
+                className="flex items-center gap-1.5 rounded-md border border-[var(--pc-sidebar-border)] bg-[var(--pc-sidebar-bg)] px-2 py-1 text-[10.5px] text-[var(--pc-sidebar-text)] transition-[border-color,color,background-color] hover:border-[var(--pc-border-hover)] hover:bg-[var(--pc-sidebar-border)] hover:text-[var(--pc-sidebar-text-active)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]"
                 title={`Current: ${themeLabels[theme]}. Click to cycle.`}
                 aria-label={`Current theme: ${themeLabels[theme]}. Click to cycle theme.`}
               >
@@ -249,7 +249,7 @@ function PropertiesGroup({
 
   return (
     <div className="hidden flex-col gap-0.5 lg:flex">
-      <div className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--pc-text-muted)]">
+      <div className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--pc-sidebar-text)]">
         Properties
       </div>
       {properties.map((property) => {
@@ -270,8 +270,8 @@ function PropertiesGroup({
             className={cn(
               "flex items-center gap-3 rounded-lg border-l-2 px-3 py-1.5 text-[12px] font-medium transition-[background-color,border-color,color,transform] duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]",
               active
-                ? "border-[var(--pc-accent)] bg-[var(--pc-surface-raised)] text-[var(--pc-text-heading)]"
-                : "border-transparent text-[var(--pc-text-body)] hover:bg-[var(--pc-surface-raised)] hover:text-[var(--pc-text-heading)] hover:translate-x-0.5",
+                ? "border-[var(--pc-accent)] bg-[var(--pc-sidebar-border)] text-[var(--pc-sidebar-text-active)]"
+                : "border-transparent text-[var(--pc-sidebar-text)] hover:bg-[var(--pc-sidebar-border)] hover:text-[var(--pc-sidebar-text-active)] hover:translate-x-0.5",
             )}
             title={`Filter device queue to ${property}`}
           >
