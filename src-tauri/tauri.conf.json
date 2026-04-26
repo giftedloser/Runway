@@ -31,6 +31,7 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "createUpdaterArtifacts": true,
     "resources": {
       "../.tauri-runtime/runtime/": "runtime/"
     },
@@ -40,6 +41,17 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "windows": {
+      "signCommand": null
+    }
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://github.com/giftedloser/PilotCheck/releases/latest/download/latest.json"
+      ],
+      "pubkey": "REPLACE_WITH_OUTPUT_OF_TAURI_SIGNER_GENERATE"
+    }
   }
 }

@@ -110,6 +110,8 @@ pub fn run() {
     .manage(DesktopApiToken(create_desktop_api_token()))
     .invoke_handler(tauri::generate_handler![get_desktop_api_token])
     .setup(|app| {
+      app.handle().plugin(tauri_plugin_updater::Builder::new().build())?;
+
       if cfg!(debug_assertions) {
         app.handle().plugin(
           tauri_plugin_log::Builder::default()

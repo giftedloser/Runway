@@ -15,7 +15,15 @@ import { apiRequest } from "../../lib/api.js";
 import type { DeviceListItem } from "../../lib/types.js";
 import { cn } from "../../lib/utils.js";
 
-const DEVICE_QUEUE_SEARCH = {
+const DEVICE_QUEUE_SEARCH: {
+  search: string | undefined;
+  health: string | undefined;
+  flag: string | undefined;
+  property: string | undefined;
+  profile: string | undefined;
+  page: number;
+  pageSize: number;
+} = {
   search: undefined,
   health: undefined,
   flag: undefined,
@@ -23,7 +31,7 @@ const DEVICE_QUEUE_SEARCH = {
   profile: undefined,
   page: 1,
   pageSize: 25
-} as const;
+};
 
 function useDebounced<T>(value: T, delayMs: number) {
   const [debounced, setDebounced] = useState(value);
@@ -254,9 +262,7 @@ function QuickLink({
   detail
 }: {
   to: "/devices";
-  search: typeof DEVICE_QUEUE_SEARCH & {
-    health?: "critical" | "warning";
-  };
+  search: typeof DEVICE_QUEUE_SEARCH;
   title: string;
   detail: string;
 }) {

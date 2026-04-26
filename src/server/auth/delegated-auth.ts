@@ -1,8 +1,27 @@
 import { randomBytes } from "node:crypto";
+import fs from "node:fs";
 
 import { ConfidentialClientApplication, type AuthorizationUrlRequest } from "@azure/msal-node";
 
 import { config } from "../config.js";
+
+function buildMsalAuth(clientId: string, authority: string) {
+  if (config.graphAuthMode === "certificate") {
+    return {
+      clientId,
+      authority,
+      clientCertificate: {
+        thumbprint: config.AZURE_CLIENT_CERT_THUMBPRINT!,
+        privateKey: fs.readFileSync(config.AZURE_CLIENT_CERT_PATH!, "utf8")
+      }
+    };
+  }
+  return {
+    clientId,
+    authority,
+    clientSecret: config.AZURE_CLIENT_SECRET ?? ""
+  };
+}
 
 export const DELEGATED_SCOPES = [
   "User.Read",
@@ -24,11 +43,10 @@ function getMsal(): ConfidentialClientApplication {
     throw new Error("Graph credentials are not configured.");
   }
   msalInstance = new ConfidentialClientApplication({
-    auth: {
-      clientId: config.AZURE_CLIENT_ID!,
-      clientSecret: config.AZURE_CLIENT_SECRET!,
-      authority: `https://login.microsoftonline.com/${config.AZURE_TENANT_ID}`
-    }
+    auth: buildMsalAuth(
+      config.AZURE_CLIENT_ID!,
+      `https://login.microsoftonline.com/${config.AZURE_TENANT_ID}`
+    )
   });
   return msalInstance;
 }

@@ -10,6 +10,13 @@ const envSchema = z.object({
   AZURE_TENANT_ID: z.string().optional(),
   AZURE_CLIENT_ID: z.string().optional(),
   AZURE_CLIENT_SECRET: z.string().optional(),
+  // Optional certificate auth alternative to AZURE_CLIENT_SECRET.
+  // AZURE_CLIENT_CERT_PATH points at a PEM file containing the private
+  // key (and optionally the cert); AZURE_CLIENT_CERT_THUMBPRINT is the
+  // SHA-1 thumbprint of the cert as registered on the Entra app.
+  // When both secret and cert are configured, the cert wins.
+  AZURE_CLIENT_CERT_PATH: z.string().optional(),
+  AZURE_CLIENT_CERT_THUMBPRINT: z.string().optional(),
   AZURE_REDIRECT_URI: z.string().default("http://localhost:3001/api/auth/callback"),
   HOST: z.string().default("127.0.0.1"),
   SESSION_SECRET: z.string().default(DEFAULT_SESSION_SECRET),
@@ -53,22 +60,23 @@ if (!isDevOrTest && parsed.SESSION_SECRET === DEFAULT_SESSION_SECRET) {
   );
 }
 
+const hasCert =
+  Boolean(parsed.AZURE_CLIENT_CERT_PATH) && Boolean(parsed.AZURE_CLIENT_CERT_THUMBPRINT);
+const hasSecret = Boolean(parsed.AZURE_CLIENT_SECRET);
+const hasCredentials = hasCert || hasSecret;
+const isGraphConfigured =
+  Boolean(parsed.AZURE_TENANT_ID) && Boolean(parsed.AZURE_CLIENT_ID) && hasCredentials;
+
 export const config = {
   ...parsed,
-  isGraphConfigured:
-    Boolean(parsed.AZURE_TENANT_ID) &&
-    Boolean(parsed.AZURE_CLIENT_ID) &&
-    Boolean(parsed.AZURE_CLIENT_SECRET),
-  isAppAccessRequired:
-    parsed.APP_ACCESS_MODE === "entra" &&
-    Boolean(parsed.AZURE_TENANT_ID) &&
-    Boolean(parsed.AZURE_CLIENT_ID) &&
-    Boolean(parsed.AZURE_CLIENT_SECRET),
+  isGraphConfigured,
+  graphAuthMode: hasCert ? ("certificate" as const) : hasSecret ? ("secret" as const) : ("none" as const),
+  isAppAccessRequired: isGraphConfigured && parsed.APP_ACCESS_MODE === "entra",
   appAccessAllowedUsers,
   isDevOrTest,
   graphMissing: [
     !parsed.AZURE_TENANT_ID ? "AZURE_TENANT_ID" : null,
     !parsed.AZURE_CLIENT_ID ? "AZURE_CLIENT_ID" : null,
-    !parsed.AZURE_CLIENT_SECRET ? "AZURE_CLIENT_SECRET" : null
+    !hasCredentials ? "AZURE_CLIENT_SECRET (or AZURE_CLIENT_CERT_PATH + AZURE_CLIENT_CERT_THUMBPRINT)" : null
   ].filter(Boolean) as string[]
 };

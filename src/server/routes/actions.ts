@@ -15,9 +15,18 @@ import {
   deleteIntuneDevice,
   deleteAutopilotDevice
 } from "../actions/remote-actions.js";
-import { listActionLogs, listDeviceActionLogs, logAction } from "../db/queries/actions.js";
+import {
+  findActionByIdempotencyKey,
+  listActionLogs,
+  listDeviceActionLogs,
+  logAction
+} from "../db/queries/actions.js";
 import { getDeviceIdentity } from "../db/queries/devices.js";
 import { actionRateLimit } from "../auth/rate-limit.js";
+
+// UUID v4 / v7 / nil — accept anything that looks like a UUID. Header
+// is optional; missing means the caller opted out of idempotency.
+const IDEMPOTENCY_KEY_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const VALID_ACTIONS: ReadonlySet<RemoteActionType> = new Set([
   "sync",
@@ -191,6 +200,39 @@ export function actionsRouter(db: Database.Database) {
       return;
     }
 
+    // Idempotency replay: if the client sent an Idempotency-Key we've
+    // seen in the last 24h *for this same action*, return the cached
+    // result instead of re-dispatching to Graph. Defends against double-
+    // click / network-retry duplicates of destructive actions.
+    const rawIdempotencyKey = request.get("idempotency-key");
+    const idempotencyKey =
+      rawIdempotencyKey && IDEMPOTENCY_KEY_RE.test(rawIdempotencyKey)
+        ? rawIdempotencyKey.toLowerCase()
+        : null;
+    if (rawIdempotencyKey && !idempotencyKey) {
+      response.status(400).json({ message: "Idempotency-Key must be a UUID." });
+      return;
+    }
+    if (idempotencyKey) {
+      const prior = findActionByIdempotencyKey(db, idempotencyKey);
+      if (prior) {
+        if (prior.actionType !== action) {
+          response.status(409).json({
+            message: `Idempotency-Key reuse with a different action (${prior.actionType}).`
+          });
+          return;
+        }
+        const cachedStatus = prior.graphResponseStatus ?? 500;
+        response.status(cachedStatus < 400 ? 200 : cachedStatus).json({
+          success: cachedStatus < 400,
+          status: cachedStatus,
+          message: prior.notes ?? "Replayed previous result.",
+          replayed: true
+        });
+        return;
+      }
+    }
+
     const device = getDeviceIdentity(db, deviceKey);
     if (!device) {
       response.status(404).json({ message: "Device not found." });
@@ -284,7 +326,8 @@ export function actionsRouter(db: Database.Database) {
       triggeredBy: user,
       triggeredAt: new Date().toISOString(),
       graphResponseStatus: result.status,
-      notes: result.message
+      notes: result.message,
+      idempotencyKey
     });
 
     const httpStatus = result.success ? 200 : result.status >= 400 ? result.status : 500;

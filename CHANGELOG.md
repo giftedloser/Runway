@@ -10,6 +10,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Tier 1 hardening (post-audit)
+
+- **Certificate-based Graph auth** as an alternative to client secret.
+  Set `AZURE_CLIENT_CERT_PATH` + `AZURE_CLIENT_CERT_THUMBPRINT` in `.env`
+  and Runway uses the cert; secret is only used as a fallback. Cert auth
+  removes the rotating string from disk and is preferred for production.
+- **Idempotency keys on destructive actions.** Single-device action POSTs
+  now accept an `Idempotency-Key` UUID header; the client generates one
+  per click. A duplicate within 24h replays the cached Graph result
+  instead of re-dispatching. Reuse with a different action returns 409.
+- **Graceful shutdown.** SIGTERM/SIGINT now closes the HTTP server,
+  waits up to 10s for any in-flight sync to drain, then closes the
+  SQLite handle cleanly before exit.
+- **Tauri updater plugin wired.** `tauri-plugin-updater` is registered
+  and the updater capability is enabled. Signing key generation and
+  release flow are documented in
+  [`docs/release-signing.md`](docs/release-signing.md). Signed updater
+  artifacts will publish to `latest.json` once the keypair is generated
+  and the public key is pasted into `tauri.conf.json`.
+- Authenticode signing slot in `tauri.conf.json` ready for a Windows
+  code-signing cert (`bundle.windows.signCommand`).
+
+### Fixed
+
+- Pre-existing TypeScript errors that blocked clean `tsc --noEmit`:
+  `Setup.tsx` casing in the router, and `as const`-typed dashboard
+  search defaults that rejected the typed `health` / `flag` literals.
+
 ### Security
 
 - **`/api/*` is now gated end-to-end.** New `requireLocalAccess`

@@ -11,7 +11,17 @@ import {
 import type { DashboardResponse, FlagCode, HealthLevel } from "../../lib/types.js";
 import { cn } from "../../lib/utils.js";
 
-const DEVICE_QUEUE_SEARCH = {
+type QueueSearch = {
+  search: string | undefined;
+  health: HealthLevel | undefined;
+  flag: FlagCode | undefined;
+  property: string | undefined;
+  profile: string | undefined;
+  page: number;
+  pageSize: number;
+};
+
+const DEVICE_QUEUE_SEARCH: QueueSearch = {
   search: undefined,
   health: undefined,
   flag: undefined,
@@ -19,11 +29,6 @@ const DEVICE_QUEUE_SEARCH = {
   profile: undefined,
   page: 1,
   pageSize: 25
-} as const;
-
-type QueueSearch = typeof DEVICE_QUEUE_SEARCH & {
-  health?: HealthLevel;
-  flag?: FlagCode;
 };
 
 type QueueCard = {

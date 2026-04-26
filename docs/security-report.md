@@ -85,7 +85,7 @@ Only grant delegated permissions if those flows are approved for the pilot.
 ## Known Risks And Mitigations
 
 - Local workstation compromise can expose `.env` and SQLite data. Mitigate with BitLocker, endpoint protection, least-privilege operator access, and secret rotation.
-- The current confidential-client delegated flow is acceptable for a controlled internal pilot but should migrate to a PKCE public-client model before broader distribution.
+- The current confidential-client delegated flow is acceptable for a controlled internal pilot but should migrate to a PKCE public-client model before broader distribution. Certificate-based confidential auth (`AZURE_CLIENT_CERT_PATH` + `AZURE_CLIENT_CERT_THUMBPRINT`) is supported and preferred over `AZURE_CLIENT_SECRET` because it removes the rotating string from disk.
 - `npm audit` reports a moderate transitive `uuid` advisory through `@azure/msal-node`; no upstream fix is currently available. Monitor and upgrade MSAL when patched.
 - Live Graph permissions are powerful. Start with read-only validation, then approve privileged delegated flows separately.
 - The SCCM signal proves only what Intune/Graph reports via `managementAgent`; it does not prove SCCM site assignment, policy retrieval, inventory freshness, or client health.

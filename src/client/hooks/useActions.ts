@@ -15,6 +15,10 @@ export function useRemoteAction() {
     mutationFn: ({ deviceKey, action, body }: ActionPayload) =>
       apiRequest<ActionResult>(`/api/actions/${deviceKey}/${action}`, {
         method: "POST",
+        // Stamp every dispatch with a unique key so a double-click or
+        // network retry replays the original Graph result instead of
+        // sending a second wipe / retire / etc.
+        headers: { "Idempotency-Key": crypto.randomUUID() },
         body: body ? JSON.stringify(body) : undefined
       }),
     onSuccess: (_result, variables) => {

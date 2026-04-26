@@ -14,11 +14,11 @@ export interface ActionLogEntry {
 
 export function logAction(
   db: Database.Database,
-  entry: Omit<ActionLogEntry, "id">
+  entry: Omit<ActionLogEntry, "id"> & { idempotencyKey?: string | null }
 ) {
   db.prepare(
-    `INSERT INTO action_log (device_serial, device_name, intune_id, action_type, triggered_by, triggered_at, graph_response_status, notes)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+    `INSERT INTO action_log (device_serial, device_name, intune_id, action_type, triggered_by, triggered_at, graph_response_status, notes, idempotency_key)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).run(
     entry.deviceSerial,
     entry.deviceName,
@@ -27,8 +27,40 @@ export function logAction(
     entry.triggeredBy,
     entry.triggeredAt,
     entry.graphResponseStatus,
-    entry.notes
+    entry.notes,
+    entry.idempotencyKey ?? null
   );
+}
+
+const IDEMPOTENCY_WINDOW_HOURS = 24;
+
+/**
+ * Look up a recent action_log row by idempotency key. Returns the
+ * cached Graph status + notes so a duplicate request can replay the
+ * original result instead of re-dispatching to Microsoft Graph.
+ */
+export function findActionByIdempotencyKey(
+  db: Database.Database,
+  key: string
+): { actionType: string; graphResponseStatus: number | null; notes: string | null; triggeredAt: string } | null {
+  const cutoff = new Date(Date.now() - IDEMPOTENCY_WINDOW_HOURS * 60 * 60 * 1000).toISOString();
+  const row = db
+    .prepare(
+      `SELECT action_type, graph_response_status, notes, triggered_at
+       FROM action_log
+       WHERE idempotency_key = ? AND triggered_at >= ?
+       ORDER BY id DESC LIMIT 1`
+    )
+    .get(key, cutoff) as
+    | { action_type: string; graph_response_status: number | null; notes: string | null; triggered_at: string }
+    | undefined;
+  if (!row) return null;
+  return {
+    actionType: row.action_type,
+    graphResponseStatus: row.graph_response_status,
+    notes: row.notes,
+    triggeredAt: row.triggered_at
+  };
 }
 
 export function listActionLogs(

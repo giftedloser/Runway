@@ -123,7 +123,7 @@ const settingsRoute = createRoute({
 const setupRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/setup",
-  component: lazyRouteComponent(() => import("./routes/Setup.js"), "SetupPage")
+  component: lazyRouteComponent(() => import("./routes/setup.js"), "SetupPage")
 });
 
 const provisioningRoute = createRoute({
