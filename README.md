@@ -1,5 +1,7 @@
 # Runway
 
+Runway is the user-facing app name for the PilotCheck project.
+
 ![CI](https://github.com/giftedloser/PilotCheck/actions/workflows/ci.yml/badge.svg)
 ![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Platform: Windows](https://img.shields.io/badge/platform-Windows-0078d4.svg)

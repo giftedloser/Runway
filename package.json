@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "license": "MIT",
-  "description": "Local-first Windows Autopilot, Intune, Entra, and SCCM readiness triage for Runway.",
+  "description": "Runway: local-first Windows Autopilot, Intune, Entra, and SCCM readiness triage.",
   "engines": {
     "node": ">=24.14 <25",
     "npm": ">=11"
