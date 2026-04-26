@@ -10,15 +10,19 @@ export interface ActionLogEntry {
   triggeredAt: string;
   graphResponseStatus: number | null;
   notes: string | null;
+  bulkRunId: string | null;
 }
 
 export function logAction(
   db: Database.Database,
-  entry: Omit<ActionLogEntry, "id"> & { idempotencyKey?: string | null }
+  entry: Omit<ActionLogEntry, "id" | "bulkRunId"> & {
+    idempotencyKey?: string | null;
+    bulkRunId?: string | null;
+  }
 ) {
   db.prepare(
-    `INSERT INTO action_log (device_serial, device_name, intune_id, action_type, triggered_by, triggered_at, graph_response_status, notes, idempotency_key)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    `INSERT INTO action_log (device_serial, device_name, intune_id, action_type, triggered_by, triggered_at, graph_response_status, notes, idempotency_key, bulk_run_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).run(
     entry.deviceSerial,
     entry.deviceName,
@@ -28,7 +32,8 @@ export function logAction(
     entry.triggeredAt,
     entry.graphResponseStatus,
     entry.notes,
-    entry.idempotencyKey ?? null
+    entry.idempotencyKey ?? null,
+    entry.bulkRunId ?? null
   );
 }
 
@@ -69,7 +74,7 @@ export function listActionLogs(
 ): ActionLogEntry[] {
   const rows = db
     .prepare(
-      `SELECT id, device_serial, device_name, intune_id, action_type, triggered_by, triggered_at, graph_response_status, notes
+      `SELECT id, device_serial, device_name, intune_id, action_type, triggered_by, triggered_at, graph_response_status, notes, bulk_run_id
        FROM action_log ORDER BY triggered_at DESC LIMIT ?`
     )
     .all(limit) as Array<{
@@ -82,6 +87,7 @@ export function listActionLogs(
     triggered_at: string;
     graph_response_status: number | null;
     notes: string | null;
+    bulk_run_id: string | null;
   }>;
 
   return rows.map((row) => ({
@@ -93,7 +99,8 @@ export function listActionLogs(
     triggeredBy: row.triggered_by,
     triggeredAt: row.triggered_at,
     graphResponseStatus: row.graph_response_status,
-    notes: row.notes
+    notes: row.notes,
+    bulkRunId: row.bulk_run_id
   }));
 }
 
@@ -104,7 +111,7 @@ export function listDeviceActionLogs(
 ): ActionLogEntry[] {
   const rows = db
     .prepare(
-      `SELECT id, device_serial, device_name, intune_id, action_type, triggered_by, triggered_at, graph_response_status, notes
+      `SELECT id, device_serial, device_name, intune_id, action_type, triggered_by, triggered_at, graph_response_status, notes, bulk_run_id
        FROM action_log WHERE device_serial = ? ORDER BY triggered_at DESC LIMIT ?`
     )
     .all(serial, limit) as Array<{
@@ -117,6 +124,7 @@ export function listDeviceActionLogs(
     triggered_at: string;
     graph_response_status: number | null;
     notes: string | null;
+    bulk_run_id: string | null;
   }>;
 
   return rows.map((row) => ({
@@ -128,6 +136,7 @@ export function listDeviceActionLogs(
     triggeredBy: row.triggered_by,
     triggeredAt: row.triggered_at,
     graphResponseStatus: row.graph_response_status,
-    notes: row.notes
+    notes: row.notes,
+    bulkRunId: row.bulk_run_id
   }));
 }

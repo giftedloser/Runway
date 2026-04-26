@@ -430,6 +430,7 @@ export interface ActionLogEntry {
   triggeredAt: string;
   graphResponseStatus: number | null;
   notes: string | null;
+  bulkRunId: string | null;
 }
 
 // --- LAPS ---

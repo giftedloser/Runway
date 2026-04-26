@@ -287,6 +287,14 @@ export function ActionAuditPage() {
                       </span>
                       <span>·</span>
                       <span>by {entry.triggeredBy}</span>
+                      {entry.bulkRunId && (
+                        <>
+                          <span>·</span>
+                          <span className="font-mono" title={entry.bulkRunId}>
+                            Bulk {entry.bulkRunId.slice(0, 8)}
+                          </span>
+                        </>
+                      )}
                       {entry.graphResponseStatus !== null && (
                         <>
                           <span>·</span>

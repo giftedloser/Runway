@@ -74,6 +74,14 @@ export function ActionHistory({ device }: { device: DeviceDetailResponse }) {
                   </div>
                   <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11.5px] text-[var(--pc-text-muted)]">
                     <span>by {entry.triggeredBy}</span>
+                    {entry.bulkRunId ? (
+                      <>
+                        <span aria-hidden="true">·</span>
+                        <span className="font-mono" title={entry.bulkRunId}>
+                          Bulk {entry.bulkRunId.slice(0, 8)}
+                        </span>
+                      </>
+                    ) : null}
                     {entry.graphResponseStatus !== null ? (
                       <>
                         <span aria-hidden="true">·</span>

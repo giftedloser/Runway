@@ -1,5 +1,6 @@
 import { Router } from "express";
 import type Database from "better-sqlite3";
+import { randomUUID } from "node:crypto";
 
 import type { RemoteActionType } from "../../shared/types.js";
 import { requireDelegatedAuth, getDelegatedToken, getDelegatedUser } from "../auth/auth-middleware.js";
@@ -96,6 +97,7 @@ export function actionsRouter(db: Database.Database) {
       "deviceName",
       "deviceSerial",
       "intuneId",
+      "bulkRunId",
       "triggeredBy",
       "graphResponseStatus",
       "notes"
@@ -164,6 +166,7 @@ export function actionsRouter(db: Database.Database) {
     const token = getDelegatedToken(request);
     const user = getDelegatedUser(request);
     const triggeredAt = new Date().toISOString();
+    const bulkRunId = randomUUID();
 
     const results: Array<{
       deviceKey: string;
@@ -217,7 +220,8 @@ export function actionsRouter(db: Database.Database) {
         triggeredBy: user,
         triggeredAt,
         graphResponseStatus: result.status,
-        notes: `[bulk] ${result.message}`
+        notes: `[bulk] ${result.message}`,
+        bulkRunId
       });
 
       results.push({ deviceKey, ...result });
@@ -229,6 +233,7 @@ export function actionsRouter(db: Database.Database) {
       total: results.length,
       successCount,
       failureCount: results.length - successCount,
+      bulkRunId,
       results
     });
   });
@@ -371,7 +376,8 @@ export function actionsRouter(db: Database.Database) {
       triggeredAt: new Date().toISOString(),
       graphResponseStatus: result.status,
       notes: result.message,
-      idempotencyKey
+      idempotencyKey,
+      bulkRunId: null
     });
 
     const httpStatus = result.success ? 200 : result.status >= 400 ? result.status : 500;

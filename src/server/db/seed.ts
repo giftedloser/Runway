@@ -553,10 +553,11 @@ function buildMockPayload(): SnapshotPayload {
 // ── Seed action log entries for the audit trail ──────────────────────
 function seedActionLog(db: Database.Database) {
   const insert = db.prepare(
-    `INSERT INTO action_log (device_serial, device_name, intune_id, action_type, triggered_by, triggered_at, graph_response_status, notes)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+    `INSERT INTO action_log (device_serial, device_name, intune_id, action_type, triggered_by, triggered_at, graph_response_status, notes, bulk_run_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
   );
 
+  const sampleBulkRunId = "00000000-0000-4000-8000-000000000001";
   const actions = [
     { serial: "CZC100001", name: "DESKTOP-LODGE-001", intuneId: "int-1", action: "sync", by: "mjarvis@bhwk.com", hoursAgo: 2, status: 204, notes: "Sync initiated successfully." },
     { serial: "CZC100001", name: "DESKTOP-LODGE-001", intuneId: "int-1", action: "sync", by: "mjarvis@bhwk.com", hoursAgo: 26, status: 204, notes: "Sync initiated successfully." },
@@ -572,8 +573,8 @@ function seedActionLog(db: Database.Database) {
     { serial: "CZC9100001", name: "DESKTOP-LODGE-037", intuneId: "int-37", action: "reboot", by: "mjarvis@bhwk.com", hoursAgo: 0.3, status: 504, notes: "Gateway timeout — device unreachable." },
     { serial: null, name: null, intuneId: null, action: "create_group", by: "mjarvis@bhwk.com", hoursAgo: 96, status: 201, notes: "VIP-Executive-Devices (Assigned) — Group created." },
     { serial: "CZC100001", name: "DESKTOP-LODGE-001", intuneId: "int-1", action: "add_to_group", by: "mjarvis@bhwk.com", hoursAgo: 95, status: 204, notes: "Group grp-vip-devices — Member added." },
-    { serial: "CZC100010", name: "DESKTOP-BHK-010", intuneId: "int-10", action: "sync", by: "lnguyen@bhwk.com", hoursAgo: 5, status: 204, notes: "[bulk] Sync initiated successfully." },
-    { serial: "CZC100011", name: "DESKTOP-BHK-011", intuneId: "int-11", action: "sync", by: "lnguyen@bhwk.com", hoursAgo: 5, status: 204, notes: "[bulk] Sync initiated successfully." }
+    { serial: "CZC100010", name: "DESKTOP-BHK-010", intuneId: "int-10", action: "sync", by: "lnguyen@bhwk.com", hoursAgo: 5, status: 204, notes: "[bulk] Sync initiated successfully.", bulkRunId: sampleBulkRunId },
+    { serial: "CZC100011", name: "DESKTOP-BHK-011", intuneId: "int-11", action: "sync", by: "lnguyen@bhwk.com", hoursAgo: 5, status: 204, notes: "[bulk] Sync initiated successfully.", bulkRunId: sampleBulkRunId }
   ];
 
   const txn = db.transaction(() => {
@@ -586,7 +587,8 @@ function seedActionLog(db: Database.Database) {
         a.by,
         isoOffset(a.hoursAgo),
         a.status,
-        a.notes
+        a.notes,
+        "bulkRunId" in a ? a.bulkRunId : null
       );
     }
   });

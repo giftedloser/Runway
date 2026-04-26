@@ -161,6 +161,30 @@ describe("POST /api/actions/bulk — guardrails", () => {
     expect(remoteActionMocks.syncDevice).toHaveBeenCalledTimes(1);
     expect(remoteActionMocks.syncDevice).toHaveBeenCalledWith("fake-token", "intune-known");
   });
+
+  it("stamps one bulk_run_id across all logged rows in a bulk request", async () => {
+    const app = createApp(db);
+    seedDevice(db, { deviceKey: "dev-a", intuneId: "intune-a", serial: "BULK001" });
+    seedDevice(db, { deviceKey: "dev-b", intuneId: "intune-b", serial: "BULK002" });
+
+    const response = await request(app)
+      .post("/api/actions/bulk")
+      .send({ action: "sync", deviceKeys: ["dev-a", "dev-b"] });
+
+    expect(response.status).toBe(200);
+    expect(response.body.bulkRunId).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    );
+
+    const rows = db
+      .prepare("SELECT bulk_run_id FROM action_log ORDER BY id ASC")
+      .all() as Array<{ bulk_run_id: string | null }>;
+    expect(rows).toHaveLength(2);
+    expect(rows.map((row) => row.bulk_run_id)).toEqual([
+      response.body.bulkRunId,
+      response.body.bulkRunId
+    ]);
+  });
 });
 
 describe("POST /api/actions/:deviceKey/:action — guardrails", () => {
@@ -271,11 +295,11 @@ describe("POST /api/actions/:deviceKey/:action — guardrails", () => {
     await request(app).post("/api/actions/dev-audit/reboot").send({});
 
     const rows = db
-      .prepare("SELECT action_type, triggered_by FROM action_log ORDER BY id ASC")
-      .all() as Array<{ action_type: string; triggered_by: string }>;
+      .prepare("SELECT action_type, triggered_by, bulk_run_id FROM action_log ORDER BY id ASC")
+      .all() as Array<{ action_type: string; triggered_by: string; bulk_run_id: string | null }>;
     expect(rows).toEqual([
-      { action_type: "sync", triggered_by: "tester@example.com" },
-      { action_type: "reboot", triggered_by: "tester@example.com" }
+      { action_type: "sync", triggered_by: "tester@example.com", bulk_run_id: null },
+      { action_type: "reboot", triggered_by: "tester@example.com", bulk_run_id: null }
     ]);
   });
 });
