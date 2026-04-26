@@ -94,7 +94,7 @@ export function SettingsPage() {
       .filter(Boolean),
   });
 
-  if (settings.isLoading) return <LoadingState label="Loading settingsâ€¦" />;
+  if (settings.isLoading) return <LoadingState label="Loading settings…" />;
   if (settings.isError || !settings.data) {
     return (
       <ErrorState
@@ -274,7 +274,7 @@ export function SettingsPage() {
                   : "Configure credentials"}
               </div>
               <span className="text-[11px] text-[var(--pc-text-muted)]">
-                Writes to the server's .env â€” restart required
+                Writes to the server's .env — restart required
               </span>
             </div>
             <GraphCredentialsWizard
@@ -437,7 +437,7 @@ export function SettingsPage() {
                   {!login.canStart
                     ? "Unavailable"
                     : login.isPending
-                      ? "Openingâ€¦"
+                      ? "Opening…"
                       : "Sign in"}
                 </Button>
               )}
@@ -537,7 +537,7 @@ export function SettingsPage() {
                 <ToggleLeft className="h-3.5 w-3.5" />
               )}
               {featureFlagMutation.isPending
-                ? "Savingâ€¦"
+                ? "Saving…"
                 : sccmDetectionEnabled
                   ? "Disable"
                   : "Enable"}
@@ -749,7 +749,7 @@ export function SettingsPage() {
                 onClick={() => preview.mutate(buildFormRecord())}
               >
                 <Search className="h-3.5 w-3.5" />
-                {preview.isPending ? "Previewingâ€¦" : "Preview impact"}
+                {preview.isPending ? "Previewing…" : "Preview impact"}
               </Button>
               <Button
                 disabled={
@@ -777,7 +777,7 @@ export function SettingsPage() {
                 }
               >
                 <Plus className="h-3.5 w-3.5" />
-                {mutations.create.isPending ? "Savingâ€¦" : "Save mapping"}
+                {mutations.create.isPending ? "Saving…" : "Save mapping"}
               </Button>
             </div>
           </div>
@@ -961,13 +961,13 @@ export function SettingsPage() {
                       Profiles:
                     </span>
                     <span className="text-[var(--pc-text-secondary)]">
-                      {row.expectedProfileNames.join(", ") || "â€”"}
+                      {row.expectedProfileNames.join(", ") || "—"}
                     </span>
                   </div>
                   <div className="flex items-start gap-1.5">
                     <span className="text-[var(--pc-text-muted)]">Groups:</span>
                     <span className="text-[var(--pc-text-secondary)]">
-                      {row.expectedGroupNames.join(", ") || "â€”"}
+                      {row.expectedGroupNames.join(", ") || "—"}
                     </span>
                   </div>
                 </div>

@@ -3,7 +3,6 @@ import { ChevronRight, Maximize2, Monitor } from "lucide-react";
 
 import type { ProfileAuditSummary } from "../../lib/types.js";
 import { SourceBadge } from "../shared/SourceBadge.js";
-import { Card } from "../ui/card.js";
 
 function filterForProfile(profileName: string) {
   return {
@@ -25,7 +24,7 @@ export function ProfileCard({
   onInspect?: () => void;
 }) {
   return (
-    <Card className="p-5">
+    <div>
       <div className="flex items-start justify-between gap-3">
         <button
           type="button"
@@ -77,7 +76,7 @@ export function ProfileCard({
         </div>
       </div>
 
-      <div className="mt-4 grid gap-2 sm:grid-cols-3">
+      <div className="mt-3 grid gap-2 sm:grid-cols-3">
         <Link
           to="/devices"
           search={filterForProfile(profile.profileName)}
@@ -111,6 +110,6 @@ export function ProfileCard({
           </div>
         </Link>
       </div>
-    </Card>
+    </div>
   );
 }

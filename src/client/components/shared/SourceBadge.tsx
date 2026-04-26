@@ -25,8 +25,8 @@ const SOURCE_META: Record<
     label: "Intune",
     full: "Microsoft Intune (managed device record)",
     ring: "ring-violet-500/30",
-    bg: "bg-violet-500/10 text-violet-200",
-    dot: "bg-violet-400"
+    bg: "bg-violet-500/15 text-violet-500",
+    dot: "bg-violet-500"
   },
   entra: {
     label: "Entra ID",
@@ -39,8 +39,8 @@ const SOURCE_META: Record<
     label: "SCCM",
     full: "Configuration Manager client signal derived from Intune managementAgent",
     ring: "ring-orange-500/30",
-    bg: "bg-orange-500/10 text-orange-200",
-    dot: "bg-orange-400"
+    bg: "bg-orange-500/15 text-orange-600",
+    dot: "bg-orange-500"
   },
   graph: {
     label: "Graph",

@@ -141,19 +141,19 @@ export function ProvisioningBuilderPage() {
 
   const handleExportSummary = async () => {
     const lines = [
-      `Runway Provisioning Review â€” ${new Date().toLocaleString()}`,
+      `Runway Provisioning Review — ${new Date().toLocaleString()}`,
       `${"â”€".repeat(56)}`,
       `Group Tag:          ${data?.groupTag ?? "Not loaded"}`,
-      `Devices with tag:   ${data?.deviceCount ?? "â€”"}`,
+      `Devices with tag:   ${data?.deviceCount ?? "—"}`,
       ``,
       `Selected Group:     ${selectedGroup?.groupName ?? "None"}`,
-      `  Membership type:  ${selectedGroup ? formatMembershipType(selectedGroup.membershipType) : "â€”"}`,
-      `  Group ID:         ${selectedGroup?.groupId ?? "â€”"}`,
+      `  Membership type:  ${selectedGroup ? formatMembershipType(selectedGroup.membershipType) : "—"}`,
+      `  Group ID:         ${selectedGroup?.groupId ?? "—"}`,
       ``,
       `Selected Profile:   ${selectedProfile?.profileName ?? "None"}`,
-      `  Deployment mode:  ${selectedProfile ? formatDeploymentMode(selectedProfile.deploymentMode) : "â€”"}`,
-      `  Profile ID:       ${selectedProfile?.profileId ?? "â€”"}`,
-      `  Assigned via:     ${selectedProfileViaGroup?.groupName ?? selectedProfile?.viaGroupId ?? "â€”"}`,
+      `  Deployment mode:  ${selectedProfile ? formatDeploymentMode(selectedProfile.deploymentMode) : "—"}`,
+      `  Profile ID:       ${selectedProfile?.profileId ?? "—"}`,
+      `  Assigned via:     ${selectedProfileViaGroup?.groupName ?? selectedProfile?.viaGroupId ?? "—"}`,
       ``,
     ];
     if (validate.data) {
@@ -312,13 +312,13 @@ export function ProvisioningBuilderPage() {
           <div className="grid gap-4 md:grid-cols-3">
             <MetricCard
               label="Devices With Tag"
-              value={data ? String(data.deviceCount) : "â€”"}
+              value={data ? String(data.deviceCount) : "—"}
               tone="neutral"
               hint="Autopilot records carrying the searched tag."
             />
             <MetricCard
               label="Matching Groups"
-              value={data ? String(data.matchingGroups.length) : "â€”"}
+              value={data ? String(data.matchingGroups.length) : "—"}
               tone={
                 data && data.matchingGroups.length > 0 ? "healthy" : "warning"
               }
@@ -326,7 +326,7 @@ export function ProvisioningBuilderPage() {
             />
             <MetricCard
               label="Matching Profiles"
-              value={data ? String(data.matchingProfiles.length) : "â€”"}
+              value={data ? String(data.matchingProfiles.length) : "—"}
               tone={
                 data && data.matchingProfiles.length > 0 ? "healthy" : "warning"
               }
@@ -343,7 +343,7 @@ export function ProvisioningBuilderPage() {
               </div>
               <div className="mx-auto mt-2 max-w-md text-[12px] leading-relaxed text-[var(--pc-text-muted)]">
                 Check the tag spelling matches your Autopilot hardware order ID.
-                If the tag is new, devices may not have synced yet â€” run a sync
+                If the tag is new, devices may not have synced yet — run a sync
                 from the Sync page and try again.
               </div>
             </Card>
@@ -359,7 +359,7 @@ export function ProvisioningBuilderPage() {
 
           {discover.isFetching && !data ? (
             <Card className="p-5">
-              <LoadingState label="Discovering provisioning targetsâ€¦" />
+              <LoadingState label="Discovering provisioning targets…" />
             </Card>
           ) : null}
 
@@ -431,7 +431,7 @@ export function ProvisioningBuilderPage() {
                     <div className="max-h-[520px] space-y-2 overflow-auto px-3 py-3">
                       <div className="sticky top-0 z-10 -mx-3 -mt-3 mb-2 border-b border-[var(--pc-border)] bg-[var(--pc-surface)] px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-[var(--pc-text-muted)]">
                         {data.matchingGroups.length} group
-                        {data.matchingGroups.length !== 1 ? "s" : ""} â€” click to
+                        {data.matchingGroups.length !== 1 ? "s" : ""} — click to
                         select
                       </div>
                       {data.matchingGroups.map((group) => (
@@ -467,7 +467,7 @@ export function ProvisioningBuilderPage() {
                                 <span>
                                   {formatMembershipType(group.membershipType)}
                                 </span>
-                                <span>â€¢</span>
+                                <span>•</span>
                                 <span>
                                   {selectedGroupId === group.groupId
                                     ? "Selected"
@@ -475,7 +475,7 @@ export function ProvisioningBuilderPage() {
                                 </span>
                                 {expectedGroups.includes(group.groupName) ? (
                                   <>
-                                    <span>â€¢</span>
+                                    <span>•</span>
                                     <span className="text-[var(--pc-healthy)]">
                                       Expected
                                     </span>
@@ -532,14 +532,14 @@ export function ProvisioningBuilderPage() {
                       guidance={
                         data.matchingGroups.length > 0
                           ? "Groups were found, but none have an Autopilot deployment profile assigned. Assign a profile to one of the discovered groups in the Intune portal."
-                          : "Discover matching groups first â€” profiles are found through groupâ†’profile assignments."
+                          : "Discover matching groups first — profiles are found through group→profile assignments."
                       }
                     />
                   ) : (
                     <div className="max-h-[520px] space-y-2 overflow-auto px-3 py-3">
                       <div className="sticky top-0 z-10 -mx-3 -mt-3 mb-2 border-b border-[var(--pc-border)] bg-[var(--pc-surface)] px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-[var(--pc-text-muted)]">
                         {data.matchingProfiles.length} profile
-                        {data.matchingProfiles.length !== 1 ? "s" : ""} â€” click
+                        {data.matchingProfiles.length !== 1 ? "s" : ""} — click
                         to select
                       </div>
                       {data.matchingProfiles.map((profile) => {

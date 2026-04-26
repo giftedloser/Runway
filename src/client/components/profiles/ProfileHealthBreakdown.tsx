@@ -2,7 +2,6 @@ import { Link } from "@tanstack/react-router";
 import { ArrowUpRight } from "lucide-react";
 
 import type { HealthLevel, ProfileAuditSummary } from "../../lib/types.js";
-import { Card } from "../ui/card.js";
 
 const dotColors: Record<string, string> = {
   critical: "bg-[var(--pc-critical)]",
@@ -24,9 +23,9 @@ export function ProfileHealthBreakdown({ profile }: { profile: ProfileAuditSumma
   const entries = Object.entries(profile.counts) as [HealthLevel, number][];
 
   return (
-    <Card className="p-5">
-      <div className="mb-3 flex items-center justify-between">
-        <div className="text-[12px] font-medium text-[var(--pc-text-muted)]">
+    <div>
+      <div className="mb-2 flex items-center justify-between">
+        <div className="text-[11px] font-medium uppercase tracking-wide text-[var(--pc-text-muted)]">
           Health Breakdown
         </div>
         <Link
@@ -47,11 +46,11 @@ export function ProfileHealthBreakdown({ profile }: { profile: ProfileAuditSumma
           <ArrowUpRight className="h-3 w-3" />
         </Link>
       </div>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-5 gap-2">
         {entries.map(([key, value]) => {
           const tile = (
             <div
-              className={`rounded-lg bg-[var(--pc-tint-subtle)] px-3 py-2.5 transition-colors ${
+              className={`rounded-lg bg-[var(--pc-tint-subtle)] px-2.5 py-2 transition-colors ${
                 ROUTABLE[key] && value > 0
                   ? "cursor-pointer hover:bg-[var(--pc-tint-hover)]"
                   : ""
@@ -61,7 +60,7 @@ export function ProfileHealthBreakdown({ profile }: { profile: ProfileAuditSumma
                 <span className={`h-1.5 w-1.5 rounded-full ${dotColors[key] ?? "bg-[var(--pc-text-muted)]"}`} />
                 <span className="text-[11px] capitalize text-[var(--pc-text-muted)]">{key}</span>
               </div>
-              <div className="mt-1 text-[20px] font-semibold tabular-nums text-[var(--pc-text)]">{value}</div>
+              <div className="mt-0.5 text-[16px] font-semibold tabular-nums text-[var(--pc-text)]">{value}</div>
             </div>
           );
 
@@ -89,6 +88,6 @@ export function ProfileHealthBreakdown({ profile }: { profile: ProfileAuditSumma
           );
         })}
       </div>
-    </Card>
+    </div>
   );
 }

@@ -22,13 +22,13 @@ export function AuthIndicator() {
       return (
         <Link
           to="/settings"
-          className="flex w-full items-center justify-between rounded-lg border border-[var(--pc-warning)]/25 bg-[var(--pc-warning-muted)] px-2.5 py-2 text-[11.5px] font-medium text-[var(--pc-warning)] transition-colors hover:border-[var(--pc-warning)]/45 hover:text-[var(--pc-text)]"
+          className="flex w-full items-center justify-between gap-2 rounded-lg border border-[var(--pc-warning)]/25 bg-[var(--pc-warning-muted)] px-2.5 py-2 text-[11.5px] font-medium text-[var(--pc-warning)] transition-colors hover:border-[var(--pc-warning)]/45 hover:text-[var(--pc-text)]"
         >
-          <span className="flex items-center gap-2">
-            <LogIn className="h-3 w-3" />
-            Configure admin sign-in
+          <span className="flex min-w-0 flex-1 items-center gap-2">
+            <LogIn className="h-3 w-3 shrink-0" />
+            <span className="truncate">Configure sign-in</span>
           </span>
-          <span className="text-[10px] text-[var(--pc-text-muted)]">Settings</span>
+          <span className="shrink-0 text-[10px] text-[var(--pc-text-muted)]">Settings</span>
         </Link>
       );
     }
@@ -39,13 +39,13 @@ export function AuthIndicator() {
         onClick={() => login.mutate()}
         disabled={login.isPending}
         title={login.blockedReason ?? undefined}
-        className="flex w-full items-center justify-between rounded-lg border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-2.5 py-2 text-[11.5px] font-medium text-[var(--pc-text-secondary)] transition-colors hover:border-[var(--pc-accent)]/40 hover:text-[var(--pc-accent-hover)] disabled:opacity-50"
+        className="flex w-full items-center justify-between gap-2 rounded-lg border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-2.5 py-2 text-[11.5px] font-medium text-[var(--pc-text-secondary)] transition-colors hover:border-[var(--pc-accent)]/40 hover:text-[var(--pc-accent-hover)] disabled:opacity-50"
       >
-        <span className="flex items-center gap-2">
-          <LogIn className="h-3 w-3" />
-          Admin sign-in
+        <span className="flex min-w-0 flex-1 items-center gap-2">
+          <LogIn className="h-3 w-3 shrink-0" />
+          <span className="truncate">Admin sign-in</span>
         </span>
-        <span className="text-[10px] text-[var(--pc-text-muted)]">Entra</span>
+        <span className="shrink-0 text-[10px] text-[var(--pc-text-muted)]">Entra</span>
       </button>
     );
   }
