@@ -247,9 +247,26 @@ function PlaybookRow({ step }: { step: PlaybookStep }) {
   };
 
   const onOpen = async () => {
-    const opened = window.open(step.payload, "_blank", "noopener,noreferrer");
-    if (opened) {
-      opened.opener = null;
+    // window.open(..., "noopener,noreferrer") returns null per spec even on
+    // success, so we can't trust its return value. Use an anchor click,
+    // which keeps rel="noopener noreferrer" security and reliably tells us
+    // whether we dispatched the open.
+    let dispatched = false;
+    try {
+      const anchor = document.createElement("a");
+      anchor.href = step.payload;
+      anchor.target = "_blank";
+      anchor.rel = "noopener noreferrer";
+      anchor.style.display = "none";
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      dispatched = true;
+    } catch {
+      dispatched = false;
+    }
+
+    if (dispatched) {
       markAction("opened");
       toast.push({
         variant: "info",
@@ -259,6 +276,7 @@ function PlaybookRow({ step }: { step: PlaybookStep }) {
       });
       return;
     }
+
     await copyPayload("Link copied instead");
   };
 
