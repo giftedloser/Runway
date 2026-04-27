@@ -1,7 +1,4 @@
-<img width="125" height="125" alt="runway" src="https://github.com/user-attachments/assets/7101352c-d980-4ab3-8886-e8055d20ebcc" /># Runway
-
-<img width="125" height="125" alt="runway" src="https://github.com/user-attachments/assets/7101352c-d980-4ab3-8886-e8055d20ebcc" />
-
+# Runway
 
 Runway is the user-facing app name for the PilotCheck project.
 
