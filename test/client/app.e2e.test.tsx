@@ -232,6 +232,13 @@ describe("client drilldown", () => {
   });
 
   it("playbook link buttons copy the URL when external open is unavailable", async () => {
+    // The onOpen handler uses anchor.click() which silently succeeds in jsdom.
+    // Force it to throw so the clipboard fallback path is exercised.
+    const originalClick = HTMLAnchorElement.prototype.click;
+    HTMLAnchorElement.prototype.click = () => {
+      throw new Error("simulated: cannot open external link");
+    };
+
     await renderApp();
 
     fireEvent.click((await screen.findAllByText("Critical Devices"))[0]);
@@ -248,6 +255,8 @@ describe("client drilldown", () => {
         "https://intune.microsoft.com/#view/Microsoft_Intune_Enrollment/AutopilotProfilesBlade"
       );
     });
+
+    HTMLAnchorElement.prototype.click = originalClick;
   });
 
   it("opens the admin sign-in shell before navigating to Microsoft", async () => {
