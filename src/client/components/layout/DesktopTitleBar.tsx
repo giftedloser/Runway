@@ -71,7 +71,7 @@ export function DesktopTitleBar() {
   return (
     <header
       data-tauri-drag-region
-      className="fixed inset-x-0 top-0 z-[90] flex h-[38px] select-none items-center border-b border-[var(--pc-border)] bg-[color-mix(in_srgb,var(--pc-surface)_94%,transparent)] text-[var(--pc-text)] shadow-[0_1px_0_rgba(255,255,255,0.04),0_10px_32px_rgba(0,0,0,0.12)] backdrop-blur-xl"
+      className="fixed left-0 right-0 top-0 z-[90] flex h-[38px] w-full select-none items-center border-b border-[var(--pc-border)] bg-[var(--pc-surface)] text-[var(--pc-text)] backdrop-blur-xl"
       onDoubleClick={() => {
         void toggleMaximize();
       }}
