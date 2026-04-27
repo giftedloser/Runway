@@ -137,7 +137,7 @@ function ToastViewport({
   if (toasts.length === 0) return null;
   return (
     <div
-      className="pointer-events-none fixed right-4 top-4 z-[60] flex w-[min(360px,calc(100vw-2rem))] flex-col gap-2"
+      className="pointer-events-none fixed right-4 top-[calc(var(--pc-titlebar-height,0px)+1rem)] z-[60] flex w-[min(360px,calc(100vw-2rem))] flex-col gap-2"
       role="region"
       aria-label="Notifications"
       aria-live="polite"
