@@ -8,15 +8,15 @@ import { Sidebar } from "./Sidebar.js";
 import { UnauthenticatedListener } from "./UnauthenticatedListener.js";
 
 export function AppShell() {
-  // Note: the window is the scroll container (not an inner <main>) so that
-  // TanStack Router's built-in scroll restoration works on back/forward nav.
+  // In the desktop shell, scroll below the custom title bar so the root
+  // scrollbar never reserves a gutter beside the window controls.
   return (
     <ToastProvider>
       <UnauthenticatedListener />
       <a href="#main-content" className="pc-skip-link">
         Skip to Main Content
       </a>
-      <div className="flex min-h-[calc(100vh-var(--pc-titlebar-height,0px))] flex-col bg-[var(--pc-bg)] pt-[var(--pc-titlebar-height,0px)]">
+      <div className="mt-[var(--pc-titlebar-height,0px)] flex h-[calc(100vh-var(--pc-titlebar-height,0px))] flex-col overflow-y-auto bg-[var(--pc-bg)]">
         <MockModeBanner />
         <div className="flex flex-1 flex-col lg:flex-row lg:items-start lg:pl-[218px]">
           <Sidebar />

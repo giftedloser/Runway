@@ -24,12 +24,14 @@ export function DesktopTitleBar() {
   useEffect(() => {
     if (!isTauriRuntime()) {
       document.documentElement.style.setProperty("--pc-titlebar-height", "0px");
+      document.documentElement.removeAttribute("data-desktop-titlebar");
       return;
     }
 
     let cancelled = false;
     setIsDesktop(true);
     document.documentElement.style.setProperty("--pc-titlebar-height", `${TITLEBAR_HEIGHT_PX}px`);
+    document.documentElement.setAttribute("data-desktop-titlebar", "true");
 
     void getWindow()
       .then((appWindow) => appWindow.isMaximized())
@@ -43,6 +45,7 @@ export function DesktopTitleBar() {
     return () => {
       cancelled = true;
       document.documentElement.style.setProperty("--pc-titlebar-height", "0px");
+      document.documentElement.removeAttribute("data-desktop-titlebar");
     };
   }, []);
 

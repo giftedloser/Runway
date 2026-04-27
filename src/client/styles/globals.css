@@ -167,12 +167,7 @@
 }
 
 html {
-  background:
-    linear-gradient(
-      to bottom,
-      var(--pc-titlebar-bg) 0 var(--pc-titlebar-height, 0px),
-      var(--pc-bg) var(--pc-titlebar-height, 0px)
-    );
+  background: var(--pc-bg);
   font-size: 14px;
   overflow-x: hidden;
 }
@@ -189,17 +184,11 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-body::before {
-  content: "";
-  position: fixed;
-  top: 0;
-  right: 0;
-  z-index: 89;
-  width: 16px;
-  height: var(--pc-titlebar-height, 0px);
-  border-bottom: 1px solid var(--pc-titlebar-border);
-  background: var(--pc-titlebar-bg);
-  pointer-events: none;
+:root[data-desktop-titlebar="true"],
+:root[data-desktop-titlebar="true"] body,
+:root[data-desktop-titlebar="true"] #root {
+  height: 100vh;
+  overflow: hidden;
 }
 
 #root {
@@ -305,11 +294,6 @@ select:disabled {
 
 ::-webkit-scrollbar-track {
   background: transparent;
-}
-
-html::-webkit-scrollbar-track,
-body::-webkit-scrollbar-track {
-  margin-top: var(--pc-titlebar-height, 0px);
 }
 
 ::-webkit-scrollbar-thumb {

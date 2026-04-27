@@ -64,7 +64,7 @@ export function DesktopBootstrap({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-var(--pc-titlebar-height,0px))] items-center justify-center bg-[var(--pc-surface)] px-6">
+    <div className="mt-[var(--pc-titlebar-height,0px)] flex h-[calc(100vh-var(--pc-titlebar-height,0px))] items-center justify-center overflow-y-auto bg-[var(--pc-surface)] px-6">
       <div className="w-full max-w-md rounded-2xl border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] p-6 shadow-lg shadow-black/20">
         <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--pc-text-muted)]">
           Runway

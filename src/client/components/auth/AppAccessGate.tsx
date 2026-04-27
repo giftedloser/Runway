@@ -146,7 +146,7 @@ export function AppAccessGate({ children }: { children: ReactNode }) {
 
 function AccessShell({ children }: { children: ReactNode }) {
   return (
-    <main className="relative grid min-h-[calc(100vh-var(--pc-titlebar-height,0px))] overflow-hidden bg-[var(--pc-bg)] px-4 py-6 text-[var(--pc-text)] sm:px-8 lg:px-10">
+    <main className="relative mt-[var(--pc-titlebar-height,0px)] grid h-[calc(100vh-var(--pc-titlebar-height,0px))] overflow-y-auto overflow-x-hidden bg-[var(--pc-bg)] px-4 py-6 text-[var(--pc-text)] sm:px-8 lg:px-10">
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_16%_18%,var(--pc-accent-muted),transparent_30%),radial-gradient(circle_at_92%_4%,var(--pc-tint-hover),transparent_28%)]" />
         <div className="absolute inset-x-0 bottom-0 h-1/2 bg-[linear-gradient(to_top,var(--pc-surface),transparent)] opacity-35" />
