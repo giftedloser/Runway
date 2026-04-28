@@ -436,4 +436,32 @@ describe("POST /api/actions/:deviceKey/:action — guardrails", () => {
       { action_type: "reboot", triggered_by: "tester@example.com", bulk_run_id: null }
     ]);
   });
+
+  it("neutralizes spreadsheet formulas in action-log CSV exports", async () => {
+    const app = createApp(db);
+    db.prepare(
+      `INSERT INTO action_log (
+        device_serial, device_name, intune_id, action_type, triggered_by,
+        triggered_at, graph_response_status, notes
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+    ).run(
+      "=SERIAL",
+      "+DEVICE",
+      "-INTUNE",
+      "sync",
+      "@operator@example.com",
+      "2026-04-07T00:00:00.000Z",
+      204,
+      "=HYPERLINK(\"https://example.com\")"
+    );
+
+    const response = await request(app).get("/api/actions/logs/export?format=csv");
+
+    expect(response.status).toBe(200);
+    expect(response.text).toContain("'=SERIAL");
+    expect(response.text).toContain("'+DEVICE");
+    expect(response.text).toContain("'-INTUNE");
+    expect(response.text).toContain("'@operator@example.com");
+    expect(response.text).toContain("\"'=HYPERLINK(\"\"https://example.com\"\")\"");
+  });
 });

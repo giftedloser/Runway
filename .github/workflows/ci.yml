@@ -40,3 +40,6 @@ jobs:
 
       - name: Build client and server
         run: npm run build
+
+      - name: Tauri Rust checks
+        run: npm run check:tauri

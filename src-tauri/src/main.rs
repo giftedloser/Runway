@@ -2,5 +2,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-  pilotcheck_lib::run();
+    pilotcheck_lib::run();
 }

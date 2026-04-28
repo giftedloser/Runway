@@ -17,12 +17,13 @@ export function logAction(
   db: Database.Database,
   entry: Omit<ActionLogEntry, "id" | "bulkRunId"> & {
     idempotencyKey?: string | null;
+    idempotencyScope?: string | null;
     bulkRunId?: string | null;
   }
 ) {
   db.prepare(
-    `INSERT INTO action_log (device_serial, device_name, intune_id, action_type, triggered_by, triggered_at, graph_response_status, notes, idempotency_key, bulk_run_id)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    `INSERT INTO action_log (device_serial, device_name, intune_id, action_type, triggered_by, triggered_at, graph_response_status, notes, idempotency_key, idempotency_scope, bulk_run_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).run(
     entry.deviceSerial,
     entry.deviceName,
@@ -33,38 +34,50 @@ export function logAction(
     entry.graphResponseStatus,
     entry.notes,
     entry.idempotencyKey ?? null,
+    entry.idempotencyScope ?? null,
     entry.bulkRunId ?? null
   );
 }
 
-const IDEMPOTENCY_WINDOW_HOURS = 24;
-
 /**
- * Look up a recent action_log row by idempotency key. Returns the
+ * Look up an action_log row by idempotency key. Returns the
  * cached Graph status + notes so a duplicate request can replay the
- * original result instead of re-dispatching to Microsoft Graph.
+ * original result instead of re-dispatching to Microsoft Graph. This
+ * intentionally mirrors the permanent unique idempotency_key index.
  */
 export function findActionByIdempotencyKey(
   db: Database.Database,
   key: string
-): { actionType: string; graphResponseStatus: number | null; notes: string | null; triggeredAt: string } | null {
-  const cutoff = new Date(Date.now() - IDEMPOTENCY_WINDOW_HOURS * 60 * 60 * 1000).toISOString();
+): {
+  actionType: string;
+  graphResponseStatus: number | null;
+  notes: string | null;
+  triggeredAt: string;
+  idempotencyScope: string | null;
+} | null {
   const row = db
     .prepare(
-      `SELECT action_type, graph_response_status, notes, triggered_at
+      `SELECT action_type, graph_response_status, notes, triggered_at, idempotency_scope
        FROM action_log
-       WHERE idempotency_key = ? AND triggered_at >= ?
+       WHERE idempotency_key = ?
        ORDER BY id DESC LIMIT 1`
     )
-    .get(key, cutoff) as
-    | { action_type: string; graph_response_status: number | null; notes: string | null; triggered_at: string }
+    .get(key) as
+    | {
+        action_type: string;
+        graph_response_status: number | null;
+        notes: string | null;
+        triggered_at: string;
+        idempotency_scope: string | null;
+      }
     | undefined;
   if (!row) return null;
   return {
     actionType: row.action_type,
     graphResponseStatus: row.graph_response_status,
     notes: row.notes,
-    triggeredAt: row.triggered_at
+    triggeredAt: row.triggered_at,
+    idempotencyScope: row.idempotency_scope
   };
 }
 

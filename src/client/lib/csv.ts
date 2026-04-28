@@ -3,10 +3,11 @@ import type { DeviceListItem } from "./types.js";
 export function csvEscape(value: unknown): string {
   if (value === null || value === undefined) return "";
   const str = String(value);
-  if (/[",\n\r]/.test(str)) {
-    return `"${str.replace(/"/g, '""')}"`;
+  const safeStr = /^\s*[=+\-@]/.test(str) ? `'${str}` : str;
+  if (/[",\n\r]/.test(safeStr)) {
+    return `"${safeStr.replace(/"/g, '""')}"`;
   }
-  return str;
+  return safeStr;
 }
 
 export function devicesToCsv(items: DeviceListItem[]): string {

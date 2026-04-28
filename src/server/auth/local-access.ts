@@ -28,9 +28,15 @@ function isAllowedOrigin(origin: string | undefined): boolean {
   // mutating methods to defeat CSRF against the loopback API.
   if (!origin || origin === "null") return true;
   if (origin.startsWith("tauri://")) return true;
+  const allowedWebOrigins = new Set([
+    `http://localhost:${config.PORT}`,
+    `http://127.0.0.1:${config.PORT}`,
+    `http://localhost:${config.CLIENT_PORT}`,
+    `http://127.0.0.1:${config.CLIENT_PORT}`
+  ]);
   try {
     const url = new URL(origin);
-    if (url.hostname === "127.0.0.1" || url.hostname === "localhost") {
+    if (allowedWebOrigins.has(url.origin)) {
       return true;
     }
   } catch {

@@ -36,6 +36,7 @@ describe("Idempotency-Key replay", () => {
   let envBackup: NodeJS.ProcessEnv;
 
   beforeEach(async () => {
+    vi.clearAllMocks();
     envBackup = { ...process.env };
     process.env.NODE_ENV = "test";
     process.env.SESSION_SECRET = "test-session-secret";
@@ -98,6 +99,61 @@ describe("Idempotency-Key replay", () => {
       .set("Idempotency-Key", key)
       .send({});
     expect(conflict.status).toBe(409);
+  });
+
+  it("returns 409 when the same key is reused for another device", async () => {
+    const { createApp } = await import("../../src/server/app.js");
+    const remote = await import("../../src/server/actions/remote-actions.js");
+    db.prepare(
+      `INSERT INTO device_state
+        (device_key, serial_number, intune_id, device_name, active_flags,
+         flag_count, overall_health, diagnosis, match_confidence, matched_on,
+         identity_conflict, assignment_path, computed_at, has_autopilot_record,
+         has_intune_record, has_entra_record, has_profile_assigned,
+         is_in_correct_group, deployment_mode_mismatch, hybrid_join_configured,
+         hybrid_join_risk, user_assignment_match, provisioning_stalled,
+         tag_mismatch, assignment_chain_complete, assignment_break_point)
+       VALUES ('dev-2', 'SN2', 'intune-2', 'PC-2', '[]', 0, 'healthy', '',
+         'high', 'serial', 0, '{}', '2026-01-01T00:00:00Z', 1, 1, 1, 1, 1, 0,
+         1, 0, 1, 0, 0, 1, 'none')`
+    ).run();
+    const app = createApp(db);
+    const key = "33333333-3333-4333-8333-333333333333";
+
+    await request(app).post("/api/actions/dev-1/sync").set("Idempotency-Key", key).send({});
+    const conflict = await request(app)
+      .post("/api/actions/dev-2/sync")
+      .set("Idempotency-Key", key)
+      .send({});
+
+    expect(conflict.status).toBe(409);
+    expect(conflict.body.message).toMatch(/different device or request body/i);
+    expect(remote.syncDevice).toHaveBeenCalledTimes(1);
+  });
+
+  it("replays old matching keys instead of dispatching into a unique-index failure", async () => {
+    const { createApp } = await import("../../src/server/app.js");
+    const remote = await import("../../src/server/actions/remote-actions.js");
+    const app = createApp(db);
+    const key = "44444444-4444-4444-8444-444444444444";
+
+    const first = await request(app)
+      .post("/api/actions/dev-1/sync")
+      .set("Idempotency-Key", key)
+      .send({});
+    expect(first.status).toBe(200);
+
+    db.prepare(
+      "UPDATE action_log SET triggered_at = ? WHERE idempotency_key = ?"
+    ).run("2020-01-01T00:00:00.000Z", key);
+
+    const second = await request(app)
+      .post("/api/actions/dev-1/sync")
+      .set("Idempotency-Key", key)
+      .send({});
+    expect(second.status).toBe(200);
+    expect(second.body.replayed).toBe(true);
+    expect(remote.syncDevice).toHaveBeenCalledTimes(1);
   });
 
   it("rejects a malformed Idempotency-Key with 400", async () => {

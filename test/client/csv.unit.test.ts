@@ -28,6 +28,16 @@ describe("csvEscape", () => {
   it("converts numbers to string", () => {
     expect(csvEscape(42)).toBe("42");
   });
+
+  it("prefixes spreadsheet formulas", () => {
+    expect(csvEscape("=cmd|'/C calc'!A0")).toBe("'=cmd|'/C calc'!A0");
+    expect(csvEscape("+SUM(A1:A2)")).toBe("'+SUM(A1:A2)");
+    expect(csvEscape("-10+20")).toBe("'-10+20");
+    expect(csvEscape("@HYPERLINK(\"https://example.com\")")).toBe(
+      "\"'@HYPERLINK(\"\"https://example.com\"\")\""
+    );
+    expect(csvEscape("  =SUM(A1:A2)")).toBe("'  =SUM(A1:A2)");
+  });
 });
 
 describe("devicesToCsv", () => {

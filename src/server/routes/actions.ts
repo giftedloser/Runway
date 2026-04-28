@@ -1,6 +1,6 @@
 import { Router } from "express";
 import type Database from "better-sqlite3";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 
 import type { RemoteActionType } from "../../shared/types.js";
 import { requireDelegatedAuth, getDelegatedToken, getDelegatedUser } from "../auth/auth-middleware.js";
@@ -62,6 +62,43 @@ function isValidDeviceName(value: unknown): value is string {
   return typeof value === "string" && DEVICE_NAME_RE.test(value);
 }
 
+function stableStringify(value: unknown): string {
+  if (value === undefined) {
+    return "undefined";
+  }
+  if (value === null || typeof value !== "object") {
+    return JSON.stringify(value);
+  }
+  if (Array.isArray(value)) {
+    return `[${value.map((item) => stableStringify(item)).join(",")}]`;
+  }
+
+  const object = value as Record<string, unknown>;
+  return `{${Object.keys(object)
+    .sort()
+    .map((key) => `${JSON.stringify(key)}:${stableStringify(object[key])}`)
+    .join(",")}}`;
+}
+
+function makeIdempotencyScope(
+  deviceKey: string,
+  action: string,
+  body: unknown
+): string {
+  const normalizedBody = body && typeof body === "object" ? body : {};
+  return createHash("sha256")
+    .update(`${deviceKey}\n${action}\n${stableStringify(normalizedBody)}`)
+    .digest("hex");
+}
+
+function csvEscape(value: unknown) {
+  const text = value == null ? "" : String(value);
+  const safeText = /^\s*[=+\-@]/.test(text) ? `'${text}` : text;
+  return /[",\n\r]/.test(safeText)
+    ? `"${safeText.replace(/"/g, '""')}"`
+    : safeText;
+}
+
 export function actionsRouter(db: Database.Database) {
   const router = Router();
 
@@ -102,17 +139,13 @@ export function actionsRouter(db: Database.Database) {
       "graphResponseStatus",
       "notes"
     ] as const;
-    const escape = (value: unknown) => {
-      const text = value == null ? "" : String(value);
-      return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
-    };
     response
       .status(200)
       .set("Content-Type", "text/csv; charset=utf-8")
       .set("Content-Disposition", `attachment; filename="runway-action-log-${stamp}.csv"`);
     response.write(headers.join(",") + "\n");
     for (const row of rows) {
-      response.write(headers.map((h) => escape(row[h])).join(",") + "\n");
+      response.write(headers.map((h) => csvEscape(row[h])).join(",") + "\n");
     }
     response.end();
   });
@@ -258,6 +291,9 @@ export function actionsRouter(db: Database.Database) {
       rawIdempotencyKey && IDEMPOTENCY_KEY_RE.test(rawIdempotencyKey)
         ? rawIdempotencyKey.toLowerCase()
         : null;
+    const idempotencyScope = idempotencyKey
+      ? makeIdempotencyScope(deviceKey, action, request.body)
+      : null;
     if (rawIdempotencyKey && !idempotencyKey) {
       response.status(400).json({ message: "Idempotency-Key must be a UUID." });
       return;
@@ -268,6 +304,12 @@ export function actionsRouter(db: Database.Database) {
         if (prior.actionType !== action) {
           response.status(409).json({
             message: `Idempotency-Key reuse with a different action (${prior.actionType}).`
+          });
+          return;
+        }
+        if (prior.idempotencyScope !== idempotencyScope) {
+          response.status(409).json({
+            message: "Idempotency-Key reuse with a different device or request body."
           });
           return;
         }
@@ -377,6 +419,7 @@ export function actionsRouter(db: Database.Database) {
       graphResponseStatus: result.status,
       notes: result.message,
       idempotencyKey,
+      idempotencyScope,
       bulkRunId: null
     });
 

@@ -56,6 +56,26 @@ describe("requireLocalAccess gate", () => {
     expect(res.status).toBe(403);
   });
 
+  it("blocks mutating methods from unrelated localhost ports", async () => {
+    const { createApp } = await import("../../src/server/app.js");
+    const app = createApp(db);
+    const res = await request(app)
+      .post("/api/sync/full")
+      .set("X-Runway-Desktop-Token", process.env.RUNWAY_DESKTOP_TOKEN!)
+      .set("Origin", "http://localhost:9999");
+    expect(res.status).toBe(403);
+  });
+
+  it("admits mutating requests from the configured client origin", async () => {
+    const { createApp } = await import("../../src/server/app.js");
+    const app = createApp(db);
+    const res = await request(app)
+      .post("/api/sync/full")
+      .set("X-Runway-Desktop-Token", process.env.RUNWAY_DESKTOP_TOKEN!)
+      .set("Origin", "http://localhost:5173");
+    expect(res.status).not.toBe(403);
+  });
+
   it("admits mutating requests from a tauri:// origin", async () => {
     const { createApp } = await import("../../src/server/app.js");
     const app = createApp(db);

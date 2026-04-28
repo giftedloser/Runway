@@ -44,6 +44,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "check": "npm run lint && npm run typecheck && npm run test && npm run test:e2e",
+    "check:tauri": "cd src-tauri && cargo fmt --check && cargo clippy -- -D warnings && cargo test",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build"
   },
