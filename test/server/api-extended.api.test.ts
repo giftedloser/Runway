@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { createApp } from "../../src/server/app.js";
 import { runMigrations } from "../../src/server/db/migrate.js";
 import { seedMockData } from "../../src/server/db/seed.js";
+import type { FlagCode } from "../../src/shared/types.js";
 
 /**
  * Extended API integration tests that pin response shapes and filter
@@ -38,6 +39,53 @@ describe("API — dashboard", () => {
     const app = createApp(db);
     const res = await request(app).get("/api/dashboard").expect(200);
     expect(Array.isArray(res.body.recentTransitions)).toBe(true);
+  });
+
+  it("seeds a comprehensive showcase fleet with healthy devices and every core flag", async () => {
+    const app = createApp(db);
+    const res = await request(app).get("/api/dashboard").expect(200);
+
+    expect(res.body.counts.healthy).toBeGreaterThan(40);
+    expect(res.body.counts.critical).toBeGreaterThan(0);
+    expect(res.body.counts.warning).toBeGreaterThan(0);
+    expect(res.body.counts.info).toBeGreaterThan(0);
+
+    const flags = new Set(
+      (
+        db
+          .prepare("SELECT active_flags FROM device_state")
+          .all() as Array<{ active_flags: string }>
+      ).flatMap((row) => JSON.parse(row.active_flags) as FlagCode[])
+    );
+    const expectedFlags: FlagCode[] = [
+      "no_autopilot_record",
+      "no_profile_assigned",
+      "profile_assignment_failed",
+      "profile_assigned_not_enrolled",
+      "not_in_target_group",
+      "deployment_mode_mismatch",
+      "hybrid_join_risk",
+      "user_mismatch",
+      "provisioning_stalled",
+      "compliance_drift",
+      "orphaned_autopilot",
+      "missing_ztdid",
+      "identity_conflict",
+      "tag_mismatch"
+    ];
+
+    for (const flag of expectedFlags) {
+      expect(flags.has(flag)).toBe(true);
+    }
+
+    const conditionalAccessCount = db
+      .prepare("SELECT COUNT(*) AS count FROM conditional_access_policies")
+      .get() as { count: number };
+    const sccmFlag = db
+      .prepare("SELECT enabled FROM feature_flags WHERE key = 'sccm_detection'")
+      .get() as { enabled: number } | undefined;
+    expect(conditionalAccessCount.count).toBeGreaterThanOrEqual(4);
+    expect(sccmFlag?.enabled).toBe(1);
   });
 });
 

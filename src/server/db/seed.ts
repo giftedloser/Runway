@@ -56,6 +56,42 @@ const APPS = [
   { id: "app-onedrive", name: "OneDrive", type: "microsoftStoreForBusinessApp", publisher: "Microsoft" }
 ];
 
+// ── Conditional Access policies ─────────────────────────────────────
+const CONDITIONAL_ACCESS_POLICIES = [
+  {
+    id: "ca-require-compliant-windows",
+    name: "CA - Windows devices require compliance",
+    state: "enabled",
+    conditions: { platforms: { includePlatforms: ["windows"], excludePlatforms: [] } },
+    grantControls: { operator: "AND", builtInControls: ["compliantDevice", "mfa"] },
+    sessionControls: null
+  },
+  {
+    id: "ca-report-only-admins",
+    name: "CA - Admin portals require phishing-resistant MFA",
+    state: "enabledForReportingButNotEnforced",
+    conditions: { platforms: { includePlatforms: ["all"], excludePlatforms: [] } },
+    grantControls: { operator: "AND", builtInControls: ["mfa"] },
+    sessionControls: { signInFrequency: { value: 8, type: "hours", isEnabled: true } }
+  },
+  {
+    id: "ca-block-legacy-auth",
+    name: "CA - Block legacy authentication",
+    state: "enabled",
+    conditions: { platforms: { includePlatforms: ["all"], excludePlatforms: [] } },
+    grantControls: { operator: "OR", builtInControls: ["block"] },
+    sessionControls: null
+  },
+  {
+    id: "ca-kiosk-report-only",
+    name: "CA - Kiosk session controls pilot",
+    state: "disabled",
+    conditions: { platforms: { includePlatforms: ["windows"], excludePlatforms: [] } },
+    grantControls: { operator: "AND", builtInControls: ["compliantDevice"] },
+    sessionControls: { persistentBrowser: { mode: "never", isEnabled: true } }
+  }
+];
+
 function buildMockPayload(): SnapshotPayload {
   const now = new Date().toISOString();
   const payload: SnapshotPayload = {
@@ -210,6 +246,16 @@ function buildMockPayload(): SnapshotPayload {
       raw_json: JSON.stringify(p)
     })),
     deviceConfigStates: [],
+    conditionalAccessPolicies: CONDITIONAL_ACCESS_POLICIES.map((policy) => ({
+      id: policy.id,
+      display_name: policy.name,
+      state: policy.state,
+      conditions_json: JSON.stringify(policy.conditions),
+      grant_controls_json: JSON.stringify(policy.grantControls),
+      session_controls_json: policy.sessionControls ? JSON.stringify(policy.sessionControls) : null,
+      last_synced_at: now,
+      raw_json: JSON.stringify(policy)
+    })),
     mobileApps: APPS.map((a) => ({
       id: a.id,
       display_name: a.name,
@@ -224,10 +270,12 @@ function buildMockPayload(): SnapshotPayload {
 
   // ── Device scenarios ─────────────────────────────────────────────
   const scenarios = [
-    // 18 healthy devices spread across tags with hardware variety
-    ...Array.from({ length: 18 }, (_, index) => ({
+    // Healthy devices should be the dominant state in demo mode. Keep them
+    // spread across tags/hardware so fleet filters, profiles, groups, and
+    // device-detail panels all have plenty of clean examples.
+    ...Array.from({ length: 42 }, (_, index) => ({
       kind: "healthy",
-      tag: index < 8 ? "North" : index < 14 ? "South" : "Kiosk",
+      tag: index < 18 ? "North" : index < 33 ? "South" : "Kiosk",
       serial: `CZC10${(index + 1).toString().padStart(4, "0")}`,
       hwIndex: index
     })),
@@ -237,22 +285,30 @@ function buildMockPayload(): SnapshotPayload {
     { kind: "hybrid_risk", tag: "North", serial: "CZC2000003", hwIndex: 6 },
     { kind: "no_profile", tag: "North", serial: "CZC3000001", hwIndex: 2 },
     { kind: "no_profile", tag: "South", serial: "CZC3000002", hwIndex: 3 },
+    { kind: "assignment_failed", tag: "North", serial: "CZC3100001", hwIndex: 7 },
+    { kind: "assignment_failed", tag: "South", serial: "CZC3100002", hwIndex: 8 },
     { kind: "group_miss", tag: "North", serial: "CZC4000001", hwIndex: 4 },
     { kind: "group_miss", tag: "South", serial: "CZC4000002", hwIndex: 5 },
     { kind: "user_mismatch", tag: "North", serial: "CZC5000001", hwIndex: 8 },
     { kind: "user_mismatch", tag: "South", serial: "CZC5000002", hwIndex: 9 },
     { kind: "tag_mismatch", tag: "North", serial: "CZC6000001", hwIndex: 7 },
     { kind: "tag_mismatch", tag: "South", serial: "CZC6000002", hwIndex: 3 },
+    { kind: "mode_mismatch", tag: "Kiosk", serial: "CZC6100001", hwIndex: 5 },
+    { kind: "mode_conflict", tag: "North", serial: "CZC6100002", hwIndex: 6 },
     { kind: "orphaned", tag: "Kiosk", serial: "CZC7000001", hwIndex: 5 },
     { kind: "orphaned", tag: "North", serial: "CZC7000002", hwIndex: 2 },
     { kind: "no_autopilot", tag: "North", serial: "CZC8000001", hwIndex: 4 },
     { kind: "no_autopilot", tag: "South", serial: "CZC8000002", hwIndex: 6 },
     { kind: "identity_conflict", tag: "North", serial: "CZC9000001", hwIndex: 0 },
+    { kind: "missing_ztdid", tag: "South", serial: "CZC9000004", hwIndex: 4 },
+    { kind: "name_joined", tag: "North", serial: "CZC9000005", hwIndex: 2 },
     { kind: "not_enrolled", tag: "South", serial: "CZC9000002", hwIndex: 1 },
     { kind: "drift_seed", tag: "North", serial: "CZC9000003", hwIndex: 8 },
     // Additional realistic scenarios
     { kind: "stale_checkin", tag: "North", serial: "CZC9100001", hwIndex: 3 },
     { kind: "stale_checkin", tag: "South", serial: "CZC9100002", hwIndex: 7 },
+    { kind: "provisioning_stalled", tag: "North", serial: "CZC9100003", hwIndex: 6 },
+    { kind: "provisioning_stalled", tag: "South", serial: "CZC9100004", hwIndex: 1 },
     { kind: "healthy", tag: "North", serial: "CZC9200001", hwIndex: 9 },
     { kind: "healthy", tag: "South", serial: "CZC9200002", hwIndex: 8 },
     { kind: "healthy", tag: "Kiosk", serial: "CZC9200003", hwIndex: 5 }
@@ -297,17 +353,28 @@ function buildMockPayload(): SnapshotPayload {
           : "grp-kiosk-devices";
     const pool = userPool[scenario.tag as keyof typeof userPool] ?? userPool.North;
     const user = pool[index % pool.length] ?? `user${seq}@example.test`;
+    const isNameJoined = scenario.kind === "name_joined";
+    const assignedUser =
+      scenario.kind === "mode_mismatch"
+        ? "kiosk.owner@example.test"
+        : scenario.tag === "Kiosk"
+          ? null
+          : user;
+    const intuneDeviceId = isNameJoined ? null : deviceId;
+    const entraDeviceId = isNameJoined ? `${deviceId}-entra` : deviceId;
+    const intuneEntraId = isNameJoined ? null : entraId;
+    const intuneSerial = isNameJoined ? null : scenario.serial;
+    const entraSerial = isNameJoined ? null : scenario.serial;
 
     // ── Autopilot record ─────────────────────────────────────────
-    if (scenario.kind !== "no_autopilot") {
+    if (!["no_autopilot", "name_joined"].includes(scenario.kind)) {
       payload.autopilotRows.push({
         id: autopilotId,
         serial_number: scenario.serial,
         model: hw.model,
         manufacturer: hw.manufacturer,
         group_tag: scenario.tag,
-        assigned_user_upn:
-          scenario.tag === "Kiosk" ? null : user,
+        assigned_user_upn: assignedUser,
         deployment_profile_id:
           scenario.kind === "no_profile" ? null : scenario.kind === "tag_mismatch" && scenario.tag === "North" ? "prof-south-user" : scenario.kind === "hybrid_risk" ? "prof-north-hybrid" : baseProfile,
         deployment_profile_name:
@@ -319,7 +386,13 @@ function buildMockPayload(): SnapshotPayload {
                 ? "AP-North-Hybrid"
                 : profileName,
         profile_assignment_status:
-          scenario.kind === "group_miss" ? "pending" : scenario.kind === "no_profile" ? "notAssigned" : "assigned",
+          scenario.kind === "assignment_failed"
+            ? "assignmentFailed"
+            : scenario.kind === "group_miss"
+              ? "pending"
+              : scenario.kind === "no_profile"
+                ? "notAssigned"
+                : "assigned",
         deployment_mode:
           scenario.tag === "Kiosk" ? "selfDeploying" : "userDriven",
         entra_device_id:
@@ -335,8 +408,22 @@ function buildMockPayload(): SnapshotPayload {
           model: hw.model,
           manufacturer: hw.manufacturer,
           groupTag: scenario.tag,
-          deploymentProfileName: profileName,
-          profileAssignmentStatus: scenario.kind === "group_miss" ? "pending" : "assigned"
+          deploymentProfileName:
+            scenario.kind === "no_profile"
+              ? null
+              : scenario.kind === "tag_mismatch" && scenario.tag === "North"
+                ? "AP-South-UserDriven"
+                : scenario.kind === "hybrid_risk"
+                  ? "AP-North-Hybrid"
+                  : profileName,
+          profileAssignmentStatus:
+            scenario.kind === "assignment_failed"
+              ? "assignmentFailed"
+              : scenario.kind === "group_miss"
+                ? "pending"
+                : scenario.kind === "no_profile"
+                  ? "notAssigned"
+                  : "assigned"
         })
       });
     }
@@ -344,6 +431,8 @@ function buildMockPayload(): SnapshotPayload {
     // ── Intune record ────────────────────────────────────────────
     const lastSync = scenario.kind === "stale_checkin"
       ? isoOffset(336) // 14 days ago
+      : scenario.kind === "provisioning_stalled"
+        ? isoOffset(72)
       : scenario.kind === "group_miss"
         ? isoOffset(10)
         : isoOffset(1 + index * 0.3);
@@ -352,10 +441,15 @@ function buildMockPayload(): SnapshotPayload {
       payload.intuneRows.push({
         id: intuneId,
         device_name: name,
-        serial_number: scenario.serial,
-        entra_device_id: entraId,
+        serial_number: intuneSerial,
+        entra_device_id: intuneEntraId,
         os_version: hw.os,
-        compliance_state: scenario.kind === "drift_seed" ? "compliant" : "compliant",
+        compliance_state:
+          scenario.kind === "provisioning_stalled"
+            ? "noncompliant"
+            : scenario.kind === "drift_seed"
+              ? "compliant"
+              : "compliant",
         enrollment_type: scenario.tag === "Kiosk" ? "windowsAzureADJoin" : "windowsBulkUserless",
         managed_device_owner_type: "company",
         last_sync_datetime: lastSync,
@@ -376,10 +470,10 @@ function buildMockPayload(): SnapshotPayload {
         raw_json: JSON.stringify({
           id: intuneId,
           deviceName: name,
-          deviceId,
-          serialNumber: scenario.serial,
+          ...(intuneDeviceId ? { deviceId: intuneDeviceId } : {}),
+          serialNumber: intuneSerial,
           osVersion: hw.os,
-          complianceState: "compliant",
+          complianceState: scenario.kind === "provisioning_stalled" ? "noncompliant" : "compliant",
           model: hw.model,
           manufacturer: hw.manufacturer,
           enrollmentType: scenario.tag === "Kiosk" ? "windowsAzureADJoin" : "windowsBulkUserless"
@@ -390,28 +484,32 @@ function buildMockPayload(): SnapshotPayload {
     // ── Entra record ─────────────────────────────────────────────
     payload.entraRows.push({
       id: entraId,
-      device_id: deviceId,
+      device_id: entraDeviceId,
       display_name: name,
-      serial_number: scenario.serial,
+      serial_number: entraSerial,
       trust_type:
         scenario.kind === "hybrid_risk" ? "AzureAd" : scenario.kind === "orphaned" ? "ServerAd" : scenario.tag === "Kiosk" ? "AzureAd" : "ServerAd",
       is_managed: 1,
       mdm_app_id: "0000000a-0000-0000-c000-000000000000",
       registration_datetime: isoOffset(24 + index * 3),
       device_physical_ids:
-        scenario.kind === "identity_conflict"
+        scenario.kind === "identity_conflict" || scenario.kind === "missing_ztdid"
           ? JSON.stringify(["[OrderID]:North"])
-          : JSON.stringify(["[ZTDId]:ABC123", `[OrderID]:${scenario.tag}`]),
+          : JSON.stringify(["[ZTDID]:ABC123", `[OrderID]:${scenario.tag}`]),
       last_synced_at: now,
-      raw_json: JSON.stringify({ id: entraId, deviceId, displayName: name, trustType: scenario.kind === "hybrid_risk" ? "AzureAd" : "ServerAd" })
+      raw_json: JSON.stringify({ id: entraId, deviceId: entraDeviceId, displayName: name, trustType: scenario.kind === "hybrid_risk" ? "AzureAd" : "ServerAd" })
     });
 
     // ── Group memberships ────────────────────────────────────────
     const membershipTargets =
       scenario.kind === "group_miss"
         ? []
+        : scenario.kind === "no_profile"
+          ? ["grp-all-autopilot"]
         : scenario.kind === "tag_mismatch" && scenario.tag === "North"
           ? ["grp-south-devices"]
+          : scenario.kind === "mode_conflict"
+            ? ["grp-north-devices", "grp-kiosk-devices"]
           : scenario.kind === "hybrid_risk"
             ? ["grp-north-hybrid"]
             : [groupId];
@@ -565,12 +663,12 @@ function seedActionLog(db: Database.Database) {
     { serial: "CZC100003", name: "DESKTOP-NORTH-003", intuneId: "int-3", action: "rename", by: "operator.two@example.test", hoursAgo: 8, status: 204, notes: "Renamed to DESKTOP-NORTH-EXEC." },
     { serial: "CZC100009", name: "DESKTOP-South-009", intuneId: "int-9", action: "sync", by: "rpatel@example.test", hoursAgo: 1, status: 204, notes: "Sync initiated successfully." },
     { serial: "CZC100009", name: "DESKTOP-South-009", intuneId: "int-9", action: "rotate-laps", by: "rpatel@example.test", hoursAgo: 12, status: 200, notes: "LAPS password rotated." },
-    { serial: "CZC2000001", name: "DESKTOP-NORTH-019", intuneId: "int-19", action: "sync", by: "operator.one@example.test", hoursAgo: 3, status: 204, notes: "Sync initiated successfully." },
-    { serial: "CZC5000001", name: "DESKTOP-NORTH-026", intuneId: "int-26", action: "change-primary-user", by: "operator.one@example.test", hoursAgo: 6, status: 204, notes: "Primary user changed to operator.two@example.test." },
+    { serial: "CZC2000001", name: "DESKTOP-NORTH-043", intuneId: "int-43", action: "sync", by: "operator.one@example.test", hoursAgo: 3, status: 204, notes: "Sync initiated successfully." },
+    { serial: "CZC5000001", name: "DESKTOP-NORTH-052", intuneId: "int-52", action: "change-primary-user", by: "operator.one@example.test", hoursAgo: 6, status: 204, notes: "Primary user changed to operator.two@example.test." },
     { serial: "CZC100015", name: "DESKTOP-KIOSK-015", intuneId: "int-15", action: "autopilot-reset", by: "operator.three@example.test", hoursAgo: 48, status: 204, notes: "Autopilot reset initiated." },
     { serial: "CZC100015", name: "DESKTOP-KIOSK-015", intuneId: "int-15", action: "wipe", by: "operator.one@example.test", hoursAgo: 72, status: 204, notes: "Full wipe initiated." },
-    { serial: "CZC9100001", name: "DESKTOP-NORTH-037", intuneId: "int-37", action: "sync", by: "operator.one@example.test", hoursAgo: 0.5, status: 504, notes: "Gateway timeout — device unreachable." },
-    { serial: "CZC9100001", name: "DESKTOP-NORTH-037", intuneId: "int-37", action: "reboot", by: "operator.one@example.test", hoursAgo: 0.3, status: 504, notes: "Gateway timeout — device unreachable." },
+    { serial: "CZC9100001", name: "DESKTOP-NORTH-067", intuneId: "int-67", action: "sync", by: "operator.one@example.test", hoursAgo: 0.5, status: 504, notes: "Gateway timeout — device unreachable." },
+    { serial: "CZC9100001", name: "DESKTOP-NORTH-067", intuneId: "int-67", action: "reboot", by: "operator.one@example.test", hoursAgo: 0.3, status: 504, notes: "Gateway timeout — device unreachable." },
     { serial: null, name: null, intuneId: null, action: "create_group", by: "operator.one@example.test", hoursAgo: 96, status: 201, notes: "VIP-Executive-Devices (Assigned) — Group created." },
     { serial: "CZC100001", name: "DESKTOP-NORTH-001", intuneId: "int-1", action: "add_to_group", by: "operator.one@example.test", hoursAgo: 95, status: 204, notes: "Group grp-vip-devices — Member added." },
     { serial: "CZC100010", name: "DESKTOP-South-010", intuneId: "int-10", action: "sync", by: "lnguyen@example.test", hoursAgo: 5, status: 204, notes: "[bulk] Sync initiated successfully.", bulkRunId: sampleBulkRunId },
@@ -600,6 +698,15 @@ export async function seedMockData(db: Database.Database) {
   // entries from prior dev sessions (the live persist layer upserts and
   // would otherwise preserve them).
   db.prepare("DELETE FROM tag_config").run();
+  // Mock mode is a showcase workspace, so turn on the ConfigMgr/SCCM signal
+  // by default. Live installs still default this feature flag to off.
+  db.prepare(
+    `INSERT INTO feature_flags (key, enabled, updated_at)
+     VALUES ('sccm_detection', 1, ?)
+     ON CONFLICT(key) DO UPDATE SET
+       enabled = excluded.enabled,
+       updated_at = excluded.updated_at`
+  ).run(new Date().toISOString());
 
   const basePayload = buildMockPayload();
   persistSnapshot(db, basePayload);
