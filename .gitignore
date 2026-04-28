@@ -66,6 +66,7 @@ pnpm-debug.log*
 .codex/
 .tauri-runtime/
 .tmp-npm-tree.json
+demo/
 
 # Editor / IDE
 .idea/
