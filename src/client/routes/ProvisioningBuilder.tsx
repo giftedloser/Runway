@@ -224,7 +224,12 @@ export function ProvisioningBuilderPage() {
         }
       />
 
-      <div className="grid gap-5 2xl:grid-cols-[minmax(0,1.65fr)_360px]">
+      <div
+        className={cn(
+          "grid gap-5",
+          data ? "2xl:grid-cols-[minmax(0,1.65fr)_360px]" : "",
+        )}
+      >
         <div className="space-y-5">
           <Card className="overflow-hidden border-[var(--pc-border-hover)]">
             <div className="border-b border-[var(--pc-border)] bg-[var(--pc-surface)] px-5 py-4">
