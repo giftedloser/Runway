@@ -111,7 +111,12 @@ export async function fullSync(
       configProfiles: configProfileSync.profiles,
       deviceConfigStates: configProfileSync.deviceStates,
       mobileApps: appSync.apps,
-      deviceAppInstallStates: appSync.deviceStates
+      deviceAppInstallStates: appSync.deviceStates,
+      graphAssignments: [
+        ...appSync.graphAssignments,
+        ...configProfileSync.graphAssignments,
+        ...complianceSync.graphAssignments
+      ]
     });
 
     const devicesSynced = computeAllDeviceStates(db);

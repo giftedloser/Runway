@@ -146,6 +146,17 @@ export interface DeviceAppInstallStateRow {
   last_synced_at: string;
 }
 
+export interface GraphAssignmentRow {
+  payload_kind: "app" | "config" | "compliance";
+  payload_id: string;
+  payload_name: string;
+  group_id: string;
+  intent: string | null;
+  target_type: "include" | "exclude";
+  raw_json: string;
+  synced_at: string;
+}
+
 export interface ConditionalAccessPolicyRow {
   id: string;
   display_name: string;

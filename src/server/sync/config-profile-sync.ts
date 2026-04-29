@@ -1,4 +1,12 @@
-import type { ConfigProfileRow, DeviceConfigStateRow } from "../db/types.js";
+import type {
+  ConfigProfileRow,
+  DeviceConfigStateRow,
+  GraphAssignmentRow
+} from "../db/types.js";
+import {
+  normalizeGraphAssignments,
+  type GraphAssignmentWithTarget
+} from "./graph-assignment-normalize.js";
 import { GraphClient } from "./graph-client.js";
 
 interface GraphConfigProfileResponse {
@@ -6,6 +14,7 @@ interface GraphConfigProfileResponse {
   displayName?: string;
   description?: string;
   "@odata.type"?: string;
+  assignments?: GraphAssignmentWithTarget[];
 }
 
 interface GraphDeviceConfigStateResponse {
@@ -19,6 +28,7 @@ interface GraphDeviceConfigStateResponse {
 export interface ConfigProfileSyncResult {
   profiles: ConfigProfileRow[];
   deviceStates: DeviceConfigStateRow[];
+  graphAssignments: GraphAssignmentRow[];
 }
 
 export async function syncConfigProfiles(
@@ -28,7 +38,7 @@ export async function syncConfigProfiles(
   const now = new Date().toISOString();
 
   const rawProfiles = await client.getAllPages<GraphConfigProfileResponse>(
-    "/deviceManagement/deviceConfigurations?$select=id,displayName,description"
+    "/deviceManagement/deviceConfigurations?$select=id,displayName,description&$expand=assignments"
   );
 
   const profiles: ConfigProfileRow[] = rawProfiles.map((p) => ({
@@ -40,6 +50,16 @@ export async function syncConfigProfiles(
     last_synced_at: now,
     raw_json: JSON.stringify(p)
   }));
+
+  const graphAssignments = rawProfiles.flatMap((profile) =>
+    normalizeGraphAssignments({
+      payloadKind: "config",
+      payloadId: profile.id,
+      payloadName: profile.displayName ?? "Unknown Profile",
+      assignments: profile.assignments ?? [],
+      syncedAt: now
+    })
+  );
 
   // Fetch per-device config profile states in batches
   const deviceStates: DeviceConfigStateRow[] = [];
@@ -70,5 +90,5 @@ export async function syncConfigProfiles(
     deviceStates.push(...results.flat());
   }
 
-  return { profiles, deviceStates };
+  return { profiles, deviceStates, graphAssignments };
 }

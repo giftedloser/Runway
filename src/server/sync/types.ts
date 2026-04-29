@@ -6,6 +6,7 @@ import type {
   DeviceAppInstallStateRow,
   DeviceComplianceStateRow,
   DeviceConfigStateRow,
+  GraphAssignmentRow,
   EntraRow,
   GroupMembershipRow,
   GroupRow,
@@ -30,6 +31,7 @@ export interface SnapshotPayload {
   conditionalAccessPolicies?: ConditionalAccessPolicyRow[];
   mobileApps?: MobileAppRow[];
   deviceAppInstallStates?: DeviceAppInstallStateRow[];
+  graphAssignments?: GraphAssignmentRow[];
   tagConfigRows?: Array<{
     groupTag: string;
     expectedProfileNames: string[];
