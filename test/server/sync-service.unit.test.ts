@@ -91,9 +91,21 @@ beforeEach(() => {
   entraMock.mockReset().mockResolvedValue([]);
   groupMock.mockReset().mockResolvedValue({ groups: [], memberships: [] });
   profileMock.mockReset().mockResolvedValue({ profiles: [], assignments: [] });
-  complianceMock.mockReset().mockResolvedValue({ policies: [], deviceStates: [] });
-  configProfileMock.mockReset().mockResolvedValue({ profiles: [], deviceStates: [] });
-  appMock.mockReset().mockResolvedValue({ apps: [], deviceStates: [] });
+  complianceMock.mockReset().mockResolvedValue({
+    policies: [],
+    deviceStates: [],
+    graphAssignments: []
+  });
+  configProfileMock.mockReset().mockResolvedValue({
+    profiles: [],
+    deviceStates: [],
+    graphAssignments: []
+  });
+  appMock.mockReset().mockResolvedValue({
+    apps: [],
+    deviceStates: [],
+    graphAssignments: []
+  });
   caMock.mockReset().mockResolvedValue({ policies: [] });
 
   // Reset the module-level sync state between tests (it leaks otherwise).
@@ -214,5 +226,74 @@ describe("fullSync — partial failure handling", () => {
 
     releaseFirst();
     await firstRun;
+  });
+
+  it("replaces graph assignment rows so removed Intune assignments do not linger", async () => {
+    appMock
+      .mockResolvedValueOnce({
+        apps: [],
+        deviceStates: [],
+        graphAssignments: [
+          {
+            payload_kind: "app",
+            payload_id: "app-chrome",
+            payload_name: "Google Chrome Enterprise",
+            group_id: "group-kiosk",
+            intent: "required",
+            target_type: "include",
+            raw_json: "{}",
+            synced_at: "2026-04-29T10:00:00.000Z"
+          },
+          {
+            payload_kind: "app",
+            payload_id: "app-reader",
+            payload_name: "Adobe Acrobat Reader",
+            group_id: "group-kiosk",
+            intent: "required",
+            target_type: "include",
+            raw_json: "{}",
+            synced_at: "2026-04-29T10:00:00.000Z"
+          }
+        ]
+      })
+      .mockResolvedValueOnce({
+        apps: [],
+        deviceStates: [],
+        graphAssignments: [
+          {
+            payload_kind: "app",
+            payload_id: "app-chrome",
+            payload_name: "Google Chrome Enterprise",
+            group_id: "group-kiosk",
+            intent: "required",
+            target_type: "include",
+            raw_json: "{}",
+            synced_at: "2026-04-29T10:15:00.000Z"
+          }
+        ]
+      });
+
+    await fullSync(db, "manual");
+    await fullSync(db, "manual");
+
+    const rows = db
+      .prepare(
+        `SELECT payload_kind, payload_id, group_id
+         FROM graph_assignments
+         ORDER BY payload_id`
+      )
+      .all() as Array<{
+      payload_kind: string;
+      payload_id: string;
+      group_id: string;
+    }>;
+
+    expect(rows).toEqual([
+      {
+        payload_kind: "app",
+        payload_id: "app-chrome",
+        group_id: "group-kiosk"
+      }
+    ]);
   });
 });

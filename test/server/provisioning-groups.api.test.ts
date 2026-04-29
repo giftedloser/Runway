@@ -21,6 +21,100 @@ beforeEach(async () => {
 });
 
 // ──────────────────────────────────────────────
+// Provisioning — tags
+// ──────────────────────────────────────────────
+describe("GET /api/provisioning/tags", () => {
+  it("returns tags currently carried by devices", async () => {
+    const app = createApp(db);
+    const res = await request(app).get("/api/provisioning/tags").expect(200);
+
+    expect(Array.isArray(res.body)).toBe(true);
+    const north = res.body.find((tag: { groupTag: string }) => tag.groupTag === "North");
+    expect(north).toBeDefined();
+    expect(north.deviceCount).toBeGreaterThan(0);
+    expect(typeof north.lastSeenAt).toBe("string");
+    expect(north.configured).toBe(true);
+    expect(north.propertyLabel).toBe("North / River");
+  });
+
+  it("marks tags without tag_config as discovered-only", async () => {
+    db.prepare(
+      `UPDATE device_state
+       SET group_tag = 'Unmapped'
+       WHERE device_key = (SELECT device_key FROM device_state LIMIT 1)`
+    ).run();
+
+    const app = createApp(db);
+    const res = await request(app).get("/api/provisioning/tags").expect(200);
+
+    const unmapped = res.body.find((tag: { groupTag: string }) => tag.groupTag === "Unmapped");
+    expect(unmapped).toBeDefined();
+    expect(unmapped.configured).toBe(false);
+    expect(unmapped.propertyLabel).toBeNull();
+  });
+});
+
+describe("GET /api/provisioning/tag-devices", () => {
+  it("returns 400 when groupTag is missing", async () => {
+    const app = createApp(db);
+    await request(app).get("/api/provisioning/tag-devices").expect(400);
+  });
+
+  it("returns devices carrying a tag", async () => {
+    const app = createApp(db);
+    const res = await request(app)
+      .get("/api/provisioning/tag-devices?groupTag=North")
+      .expect(200);
+
+    expect(res.body.length).toBeGreaterThan(0);
+    expect(res.body[0]).toMatchObject({
+      deviceKey: expect.any(String),
+      health: expect.any(String)
+    });
+    expect("serialNumber" in res.body[0]).toBe(true);
+    expect("lastSyncAt" in res.body[0]).toBe(true);
+    expect("complianceState" in res.body[0]).toBe(true);
+  });
+});
+
+describe("provisioning tag counts", () => {
+  it("keeps Tags, discovery, and tagged-device counts on device_state", async () => {
+    db.prepare(
+      `UPDATE device_state
+       SET group_tag = 'ReviewOnly'
+       WHERE device_key = (SELECT device_key FROM device_state LIMIT 1)`
+    ).run();
+
+    const app = createApp(db);
+    const tags = await request(app).get("/api/provisioning/tags").expect(200);
+    const reviewOnly = tags.body.find(
+      (tag: { groupTag: string }) => tag.groupTag === "ReviewOnly"
+    );
+    expect(reviewOnly).toBeDefined();
+
+    const discovery = await request(app)
+      .get("/api/provisioning/discover?groupTag=ReviewOnly")
+      .expect(200);
+    const devices = await request(app)
+      .get("/api/provisioning/tag-devices?groupTag=ReviewOnly")
+      .expect(200);
+
+    expect(discovery.body.deviceCount).toBe(reviewOnly.deviceCount);
+    expect(devices.body).toHaveLength(reviewOnly.deviceCount);
+
+    const validation = await request(app)
+      .post("/api/provisioning/validate")
+      .send({ groupTag: "ReviewOnly" })
+      .expect(200);
+    expect(
+      validation.body.warnings.some((warning: string) =>
+        warning.includes('No devices currently have group tag "ReviewOnly"')
+      )
+    ).toBe(false);
+  });
+});
+
+// ──────────────────────────────────────────────
 // Provisioning — discover
 // ──────────────────────────────────────────────
 describe("GET /api/provisioning/discover", () => {
@@ -47,6 +141,61 @@ describe("GET /api/provisioning/discover", () => {
     expect(typeof res.body.deviceCount).toBe("number");
     expect(Array.isArray(res.body.matchingGroups)).toBe(true);
     expect(Array.isArray(res.body.matchingProfiles)).toBe(true);
+    expect(typeof res.body.buildPayloadByGroupId).toBe("object");
+  });
+
+  it("returns build payload keyed by matching group id", async () => {
+    db.prepare("DELETE FROM graph_assignments").run();
+    db.prepare(
+      `INSERT INTO graph_assignments (
+        payload_kind, payload_id, payload_name, group_id, intent, target_type, raw_json, synced_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?)`
+    ).run(
+      "app",
+      "app-chrome",
+      "Google Chrome Enterprise",
+      "grp-north-devices",
+      "required",
+      "include",
+      "{}",
+      "2026-04-29T10:00:00.000Z",
+      "config",
+      "cfg-baseline",
+      "Windows Baseline",
+      "grp-north-devices",
+      null,
+      "include",
+      "{}",
+      "2026-04-29T10:01:00.000Z",
+      "compliance",
+      "comp-default",
+      "Default Compliance",
+      "grp-north-devices",
+      null,
+      "include",
+      "{}",
+      "2026-04-29T10:02:00.000Z"
+    );
+
+    const app = createApp(db);
+    const res = await request(app)
+      .get("/api/provisioning/discover?groupTag=North")
+      .expect(200);
+
+    const payload = res.body.buildPayloadByGroupId["grp-north-devices"];
+    expect(payload.requiredApps).toHaveLength(1);
+    expect(payload.configProfiles).toHaveLength(1);
+    expect(payload.compliancePolicies).toHaveLength(1);
+    expect(payload.syncedAt).toBe("2026-04-29T10:02:00.000Z");
+    expect(payload.warnings).toHaveLength(0);
+
+    const hybridPayload = res.body.buildPayloadByGroupId["grp-north-hybrid"];
+    expect(hybridPayload.warnings).toContain(
+      "No required apps found for this target group."
+    );
+    expect(hybridPayload.warnings).toContain(
+      "Payload exists on another discovered group, but not this target group."
+    );
   });
 
   it("returns deviceCount and group/profile arrays for a tag with matches", async () => {
@@ -76,6 +225,7 @@ describe("GET /api/provisioning/discover", () => {
     expect(res.body.deviceCount).toBe(0);
     expect(res.body.matchingGroups).toHaveLength(0);
     expect(res.body.matchingProfiles).toHaveLength(0);
+    expect(res.body.buildPayloadByGroupId).toEqual({});
     expect(res.body.existingConfig).toBeNull();
   });
 
@@ -174,7 +324,7 @@ describe("POST /api/provisioning/validate", () => {
       .expect(200);
 
     expect(
-      res.body.warnings.some((w: string) => w.includes("No Autopilot devices"))
+      res.body.warnings.some((w: string) => w.includes("No devices"))
     ).toBe(true);
   });
 });

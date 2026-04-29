@@ -13,12 +13,46 @@ export interface DiscoverResult {
     deploymentMode: string | null;
     viaGroupId: string;
   }>;
+  buildPayloadByGroupId: Record<string, BuildPayloadGroup>;
   existingConfig: {
     groupTag: string;
     propertyLabel: string;
     expectedProfileNames: string[];
     expectedGroupNames: string[];
   } | null;
+}
+
+export interface TagInventoryItem {
+  groupTag: string;
+  deviceCount: number;
+  lastSeenAt: string | null;
+  configured: boolean;
+  propertyLabel: string | null;
+}
+
+export interface ProvisioningTagDevice {
+  deviceKey: string;
+  deviceName: string | null;
+  serialNumber: string | null;
+  lastSyncAt: string | null;
+  health: string;
+  complianceState: string | null;
+}
+
+export interface BuildPayloadItem {
+  payloadId: string;
+  payloadName: string;
+  intent: string | null;
+  targetType: "include" | "exclude";
+  syncedAt: string;
+}
+
+export interface BuildPayloadGroup {
+  requiredApps: BuildPayloadItem[];
+  configProfiles: BuildPayloadItem[];
+  compliancePolicies: BuildPayloadItem[];
+  warnings: string[];
+  syncedAt: string | null;
 }
 
 export interface ValidateResult {

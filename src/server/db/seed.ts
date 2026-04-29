@@ -94,6 +94,22 @@ const CONDITIONAL_ACCESS_POLICIES = [
 
 function buildMockPayload(): SnapshotPayload {
   const now = new Date().toISOString();
+  const graphAssignment = (
+    payload_kind: "app" | "config" | "compliance",
+    payload_id: string,
+    payload_name: string,
+    group_id: string,
+    intent: string | null = null
+  ) => ({
+    payload_kind,
+    payload_id,
+    payload_name,
+    group_id,
+    intent,
+    target_type: "include" as const,
+    raw_json: JSON.stringify({ id: payload_id, groupId: group_id, intent }),
+    synced_at: now
+  });
   const payload: SnapshotPayload = {
     autopilotRows: [],
     intuneRows: [],
@@ -265,6 +281,29 @@ function buildMockPayload(): SnapshotPayload {
       last_synced_at: now,
       raw_json: JSON.stringify(a)
     })),
+    graphAssignments: [
+      graphAssignment("app", "app-chrome", "Google Chrome Enterprise", "grp-north-devices", "required"),
+      graphAssignment("app", "app-reader", "Adobe Acrobat Reader", "grp-north-devices", "required"),
+      graphAssignment("app", "app-crowdstrike", "CrowdStrike Falcon Sensor", "grp-north-devices", "required"),
+      graphAssignment("config", "cfg-bitlocker", "BitLocker Encryption", "grp-north-devices"),
+      graphAssignment("config", "cfg-defender-atp", "Defender for Endpoint", "grp-north-devices"),
+      graphAssignment("compliance", "cp-bitlocker", "BitLocker Encryption Required", "grp-north-devices"),
+      graphAssignment("compliance", "cp-firewall", "Windows Firewall Enabled", "grp-north-devices"),
+      graphAssignment("app", "app-teams", "Microsoft Teams", "grp-south-devices", "required"),
+      graphAssignment("app", "app-chrome", "Google Chrome Enterprise", "grp-south-devices", "required"),
+      graphAssignment("app", "app-zoom", "Zoom Workplace", "grp-south-devices", "required"),
+      graphAssignment("app", "app-crowdstrike", "CrowdStrike Falcon Sensor", "grp-south-devices", "required"),
+      graphAssignment("config", "cfg-wifi-corp", "Corporate Wi-Fi", "grp-south-devices"),
+      graphAssignment("config", "cfg-windows-update", "Windows Update for Business", "grp-south-devices"),
+      graphAssignment("compliance", "cp-password", "Password Complexity Policy", "grp-south-devices"),
+      graphAssignment("compliance", "cp-os-version", "Minimum OS Version (24H2)", "grp-south-devices"),
+      graphAssignment("app", "app-chrome", "Google Chrome Enterprise", "grp-kiosk-devices", "required"),
+      graphAssignment("app", "app-7zip", "7-Zip", "grp-kiosk-devices", "required"),
+      graphAssignment("config", "cfg-defender-atp", "Defender for Endpoint", "grp-kiosk-devices"),
+      graphAssignment("config", "cfg-windows-update", "Windows Update for Business", "grp-kiosk-devices"),
+      graphAssignment("compliance", "cp-defender", "Defender Antivirus Active", "grp-kiosk-devices"),
+      graphAssignment("compliance", "cp-tpm", "TPM 2.0 Attestation", "grp-kiosk-devices")
+    ],
     deviceAppInstallStates: []
   };
 

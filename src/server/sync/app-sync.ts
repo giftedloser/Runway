@@ -1,4 +1,12 @@
-import type { MobileAppRow, DeviceAppInstallStateRow } from "../db/types.js";
+import type {
+  DeviceAppInstallStateRow,
+  GraphAssignmentRow,
+  MobileAppRow
+} from "../db/types.js";
+import {
+  normalizeGraphAssignments,
+  type GraphAssignmentWithTarget
+} from "./graph-assignment-normalize.js";
 import { GraphClient } from "./graph-client.js";
 
 interface GraphMobileAppResponse {
@@ -7,6 +15,7 @@ interface GraphMobileAppResponse {
   description?: string;
   publisher?: string;
   "@odata.type"?: string;
+  assignments?: GraphAssignmentWithTarget[];
 }
 
 interface GraphDetectedAppResponse {
@@ -17,6 +26,7 @@ interface GraphDetectedAppResponse {
 export interface AppSyncResult {
   apps: MobileAppRow[];
   deviceStates: DeviceAppInstallStateRow[];
+  graphAssignments: GraphAssignmentRow[];
 }
 
 export async function syncAppAssignments(
@@ -27,7 +37,7 @@ export async function syncAppAssignments(
 
   // Fetch assigned Windows apps
   const rawApps = await client.getAllPages<GraphMobileAppResponse>(
-    "/deviceAppManagement/mobileApps?$filter=isAssigned eq true&$select=id,displayName,description,publisher"
+    "/deviceAppManagement/mobileApps?$filter=isAssigned eq true&$select=id,displayName,description,publisher&$expand=assignments"
   );
 
   const apps: MobileAppRow[] = rawApps.map((a) => ({
@@ -39,6 +49,20 @@ export async function syncAppAssignments(
     last_synced_at: now,
     raw_json: JSON.stringify(a)
   }));
+
+  const graphAssignments = rawApps.flatMap((app) =>
+    normalizeGraphAssignments({
+      payloadKind: "app",
+      payloadId: app.id,
+      payloadName: app.displayName ?? "Unknown App",
+      // MVP: store required app assignments only. If available apps are added
+      // later, include intent in the primary key or model assignment IDs.
+      assignments: (app.assignments ?? []).filter(
+        (assignment) => assignment.intent?.toLowerCase() === "required"
+      ),
+      syncedAt: now
+    })
+  );
 
   // Fetch per-device app install states via managed app statuses
   const deviceStates: DeviceAppInstallStateRow[] = [];
@@ -69,5 +93,5 @@ export async function syncAppAssignments(
     deviceStates.push(...results.flat());
   }
 
-  return { apps, deviceStates };
+  return { apps, deviceStates, graphAssignments };
 }

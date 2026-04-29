@@ -108,6 +108,12 @@ const groupsRoute = createRoute({
   component: lazyRouteComponent(() => import("./routes/GroupInspector.js"), "GroupInspectorPage")
 });
 
+const tagsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/tags",
+  component: lazyRouteComponent(() => import("./routes/Tags.js"), "TagsPage")
+});
+
 const syncRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/sync",
@@ -129,6 +135,9 @@ const setupRoute = createRoute({
 const provisioningRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/provisioning",
+  validateSearch: (search: Record<string, unknown>) => ({
+    groupTag: typeof search.groupTag === "string" ? search.groupTag : undefined
+  }),
   component: lazyRouteComponent(
     () => import("./routes/ProvisioningBuilder.js"),
     "ProvisioningBuilderPage"
@@ -147,6 +156,7 @@ const routeTree = rootRoute.addChildren([
   deviceDetailRoute,
   profilesRoute,
   groupsRoute,
+  tagsRoute,
   syncRoute,
   settingsRoute,
   setupRoute,

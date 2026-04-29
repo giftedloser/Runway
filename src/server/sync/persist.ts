@@ -112,6 +112,13 @@ export function persistSnapshot(db: Database.Database, payload: SnapshotPayload)
     INSERT INTO device_app_install_states (id, device_id, app_id, app_name, install_state, error_code, last_synced_at)
     VALUES (@id, @device_id, @app_id, @app_name, @install_state, @error_code, @last_synced_at)
   `);
+  const insertGraphAssignment = db.prepare(`
+    INSERT INTO graph_assignments (
+      payload_kind, payload_id, payload_name, group_id, intent, target_type, raw_json, synced_at
+    ) VALUES (
+      @payload_kind, @payload_id, @payload_name, @group_id, @intent, @target_type, @raw_json, @synced_at
+    )
+  `);
   const insertConditionalAccessPolicy = db.prepare(`
     INSERT INTO conditional_access_policies (id, display_name, state, conditions_json, grant_controls_json, session_controls_json, last_synced_at, raw_json)
     VALUES (@id, @display_name, @state, @conditions_json, @grant_controls_json, @session_controls_json, @last_synced_at, @raw_json)
@@ -139,6 +146,7 @@ export function persistSnapshot(db: Database.Database, payload: SnapshotPayload)
     db.prepare("DELETE FROM device_config_states").run();
     db.prepare("DELETE FROM mobile_apps").run();
     db.prepare("DELETE FROM device_app_install_states").run();
+    db.prepare("DELETE FROM graph_assignments").run();
     if (shouldRefreshConditionalAccess) {
       db.prepare("DELETE FROM conditional_access_policies").run();
     }
@@ -190,6 +198,9 @@ export function persistSnapshot(db: Database.Database, payload: SnapshotPayload)
     }
     for (const row of payload.deviceAppInstallStates ?? []) {
       insertDeviceAppInstallState.run(row);
+    }
+    for (const row of payload.graphAssignments ?? []) {
+      insertGraphAssignment.run(row);
     }
     if (shouldRefreshConditionalAccess) {
       for (const row of payload.conditionalAccessPolicies ?? []) {

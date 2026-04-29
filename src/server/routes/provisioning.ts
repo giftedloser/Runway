@@ -1,10 +1,32 @@
 import { Router } from "express";
 import type Database from "better-sqlite3";
 
+import {
+  countDevicesForProvisioningTag,
+  devicesForProvisioningTag,
+  listProvisioningTags,
+  payloadForGroups
+} from "../db/queries/provisioning.js";
 import { asArray } from "../engine/normalize.js";
 
 export function provisioningRouter(db: Database.Database) {
   const router = Router();
+
+  // GET /api/provisioning/tags — list Autopilot group tags currently seen on devices
+  router.get("/tags", (_request, response) => {
+    response.json(listProvisioningTags(db));
+  });
+
+  // GET /api/provisioning/tag-devices?groupTag=X — devices carrying a tag
+  router.get("/tag-devices", (request, response) => {
+    const groupTag = typeof request.query.groupTag === "string" ? request.query.groupTag.trim() : "";
+    if (!groupTag) {
+      response.status(400).json({ message: "groupTag query parameter is required." });
+      return;
+    }
+
+    response.json(devicesForProvisioningTag(db, groupTag));
+  });
 
   // GET /api/provisioning/discover?groupTag=X — auto-discover matching groups and profiles for a tag
   router.get("/discover", (request, response) => {
@@ -58,12 +80,7 @@ export function provisioningRouter(db: Database.Database) {
       property_label: string;
     } | undefined;
 
-    // Count devices with this group tag
-    const deviceCount = (
-      db
-        .prepare(`SELECT COUNT(*) as count FROM autopilot_devices WHERE group_tag = ?`)
-        .get(groupTag) as { count: number }
-    ).count;
+    const deviceCount = countDevicesForProvisioningTag(db, groupTag);
 
     response.json({
       groupTag,
@@ -80,6 +97,7 @@ export function provisioningRouter(db: Database.Database) {
         deploymentMode: p.deployment_mode,
         viaGroupId: p.group_id
       })),
+      buildPayloadByGroupId: payloadForGroups(db, groupIds),
       existingConfig: existingConfig
         ? {
             groupTag: existingConfig.group_tag,
@@ -112,13 +130,9 @@ export function provisioningRouter(db: Database.Database) {
 
     // Check group tag has devices
     if (groupTag) {
-      const deviceCount = (
-        db
-          .prepare(`SELECT COUNT(*) as count FROM autopilot_devices WHERE group_tag = ?`)
-          .get(groupTag) as { count: number }
-      ).count;
+      const deviceCount = countDevicesForProvisioningTag(db, groupTag);
       if (deviceCount === 0) {
-        warnings.push(`No Autopilot devices currently have group tag "${groupTag}".`);
+        warnings.push(`No devices currently have group tag "${groupTag}".`);
       }
     }
 

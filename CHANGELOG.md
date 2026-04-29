@@ -11,6 +11,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 No entries yet.
 
+## [1.5.0] - 2026-04-29
+
+### Added
+
+- Added the Tags view for provisioning tag triage, including tag-level
+  health, assignment summaries, and direct navigation into scoped device
+  lists.
+- Added the Devices panel for provisioning tags so admins can inspect
+  devices attached to a tag without leaving the provisioning workflow.
+- Added Build Payload Preview support, including Graph assignment
+  normalization and persistence for app, compliance, and configuration
+  profile assignment payloads.
+- Added database migration `013-graph-assignments.sql` and server query
+  coverage for provisioning group and build payload data.
+
+### Fixed
+
+- Aligned provisioning tag counts with the underlying device and
+  assignment data so tag summaries match the detailed views.
+
 ## [1.0.1] - 2026-04-28
 
 ### Fixed
@@ -231,6 +251,7 @@ No entries yet.
 - README, CONTRIBUTING, SECURITY, `docs/` (architecture, engine,
   graph-setup), MIT LICENSE.
 
-[Unreleased]: https://github.com/giftedloser/Runway/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/giftedloser/Runway/compare/v1.5.0...HEAD
+[1.5.0]: https://github.com/giftedloser/Runway/compare/v1.0.1...v1.5.0
 [1.0.1]: https://github.com/giftedloser/Runway/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/giftedloser/Runway/releases/tag/v1.0.0

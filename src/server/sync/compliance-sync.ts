@@ -1,4 +1,12 @@
-import type { CompliancePolicyRow, DeviceComplianceStateRow } from "../db/types.js";
+import type {
+  CompliancePolicyRow,
+  DeviceComplianceStateRow,
+  GraphAssignmentRow
+} from "../db/types.js";
+import {
+  normalizeGraphAssignments,
+  type GraphAssignmentWithTarget
+} from "./graph-assignment-normalize.js";
 import { GraphClient } from "./graph-client.js";
 
 interface GraphCompliancePolicyResponse {
@@ -6,6 +14,7 @@ interface GraphCompliancePolicyResponse {
   displayName?: string;
   description?: string;
   "@odata.type"?: string;
+  assignments?: GraphAssignmentWithTarget[];
 }
 
 interface GraphDeviceComplianceStateResponse {
@@ -19,6 +28,7 @@ interface GraphDeviceComplianceStateResponse {
 export interface ComplianceSyncResult {
   policies: CompliancePolicyRow[];
   deviceStates: DeviceComplianceStateRow[];
+  graphAssignments: GraphAssignmentRow[];
 }
 
 export async function syncCompliancePolicies(
@@ -29,7 +39,7 @@ export async function syncCompliancePolicies(
 
   // Fetch all compliance policies
   const rawPolicies = await client.getAllPages<GraphCompliancePolicyResponse>(
-    "/deviceManagement/deviceCompliancePolicies?$select=id,displayName,description"
+    "/deviceManagement/deviceCompliancePolicies?$select=id,displayName,description&$expand=assignments"
   );
 
   const policies: CompliancePolicyRow[] = rawPolicies.map((p) => ({
@@ -40,6 +50,16 @@ export async function syncCompliancePolicies(
     last_synced_at: now,
     raw_json: JSON.stringify(p)
   }));
+
+  const graphAssignments = rawPolicies.flatMap((policy) =>
+    normalizeGraphAssignments({
+      payloadKind: "compliance",
+      payloadId: policy.id,
+      payloadName: policy.displayName ?? "Unknown Policy",
+      assignments: policy.assignments ?? [],
+      syncedAt: now
+    })
+  );
 
   // Fetch per-device compliance policy states in batches
   const deviceStates: DeviceComplianceStateRow[] = [];
@@ -70,5 +90,5 @@ export async function syncCompliancePolicies(
     deviceStates.push(...results.flat());
   }
 
-  return { policies, deviceStates };
+  return { policies, deviceStates, graphAssignments };
 }

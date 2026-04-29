@@ -8,6 +8,8 @@ export default tseslint.config(
       "dist/**",
       "coverage/**",
       "data/**",
+      ".codex/**",
+      ".playwright-cli/**",
       "src-tauri/target/**",
       ".tauri-runtime/**",
       "scripts/**"

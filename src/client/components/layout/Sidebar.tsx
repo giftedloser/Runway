@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   Sun,
   TabletSmartphone,
+  Tags,
   UsersRound,
 } from "lucide-react";
 
@@ -69,7 +70,8 @@ const navGroups: NavGroup[] = [
     items: [
       { to: "/profiles", label: "Profiles", icon: ShieldCheck },
       { to: "/groups", label: "Groups", icon: UsersRound },
-      { to: "/provisioning", label: "Provisioning", icon: GitBranch },
+      { to: "/tags", label: "Tags", icon: Tags },
+      { to: "/provisioning", label: "Provisioning Builder", icon: GitBranch },
     ],
   },
   {
