@@ -16,6 +16,112 @@ const dashboardPayload = {
 const settingsPayload = {
   graph: { configured: true, missing: [] },
   appAccess: { mode: "disabled", required: false, allowedUsersConfigured: false },
+  appSettings: [
+    {
+      key: "sync.intervalMinutes",
+      section: "sync-data",
+      label: "Sync interval",
+      description: "How often Runway pulls fresh device and assignment data from Microsoft Graph.",
+      value: 15,
+      defaultValue: 15,
+      valueType: "number",
+      source: "default",
+      envVar: "SYNC_INTERVAL_MINUTES",
+      updatedAt: null,
+      restartRequired: false
+    },
+    {
+      key: "sync.onLaunch",
+      section: "sync-data",
+      label: "Sync on app launch",
+      description: "Triggers a sync shortly after Runway starts when Graph is configured.",
+      value: true,
+      defaultValue: true,
+      valueType: "boolean",
+      source: "default",
+      envVar: null,
+      updatedAt: null,
+      restartRequired: false
+    },
+    {
+      key: "sync.manualOnly",
+      section: "sync-data",
+      label: "Manual sync only",
+      description: "Disables scheduled background sync while keeping manual sync available.",
+      value: false,
+      defaultValue: false,
+      valueType: "boolean",
+      source: "default",
+      envVar: null,
+      updatedAt: null,
+      restartRequired: false
+    },
+    {
+      key: "sync.paused",
+      section: "sync-data",
+      label: "Pause sync",
+      description: "Emergency stop for launch and scheduled background sync until re-enabled.",
+      value: false,
+      defaultValue: false,
+      valueType: "boolean",
+      source: "default",
+      envVar: null,
+      updatedAt: null,
+      restartRequired: false
+    },
+    {
+      key: "retention.deviceHistoryDays",
+      section: "sync-data",
+      label: "Device history retention",
+      description: "Days of device health history to keep before retention sweeps prune older rows.",
+      value: 90,
+      defaultValue: 90,
+      valueType: "number",
+      source: "default",
+      envVar: "HISTORY_RETENTION_DAYS",
+      updatedAt: null,
+      restartRequired: false
+    },
+    {
+      key: "retention.actionLogDays",
+      section: "sync-data",
+      label: "Action log retention",
+      description: "Days of remote action audit entries to retain.",
+      value: 180,
+      defaultValue: 180,
+      valueType: "number",
+      source: "default",
+      envVar: "ACTION_LOG_RETENTION_DAYS",
+      updatedAt: null,
+      restartRequired: false
+    },
+    {
+      key: "retention.syncLogDays",
+      section: "sync-data",
+      label: "Sync log retention",
+      description: "Days of sync run history to retain.",
+      value: 30,
+      defaultValue: 30,
+      valueType: "number",
+      source: "default",
+      envVar: "SYNC_LOG_RETENTION_DAYS",
+      updatedAt: null,
+      restartRequired: false
+    },
+    {
+      key: "retention.sweepIntervalHours",
+      section: "sync-data",
+      label: "Retention sweep interval",
+      description: "Hours between background retention sweeps.",
+      value: 24,
+      defaultValue: 24,
+      valueType: "number",
+      source: "default",
+      envVar: "RETENTION_INTERVAL_HOURS",
+      updatedAt: null,
+      restartRequired: false
+    }
+  ],
   featureFlags: { sccm_detection: true },
   tagConfig: [
     { groupTag: "North", expectedProfileNames: ["North-UD"], expectedGroupNames: [], propertyLabel: "North" }
@@ -142,9 +248,20 @@ describe("client drilldown", () => {
         status,
         headers: { "Content-Type": "application/json" }
       });
-    global.fetch = vi.fn(async (input) => {
+    global.fetch = vi.fn(async (input, init) => {
       const url = String(input);
       if (url.includes("/api/dashboard")) return jsonResponse(dashboardPayload);
+      if (url.includes("/api/settings/graph/env")) {
+        return jsonResponse({ envPath: "C:\\Runway\\.env", configured: true, missing: [] });
+      }
+      if (url.includes("/api/settings/sync.intervalMinutes") && init?.method === "PUT") {
+        return jsonResponse({
+          ...settingsPayload.appSettings[0],
+          value: 30,
+          source: "db",
+          updatedAt: "2026-04-29T12:00:00.000Z"
+        });
+      }
       if (url.includes("/api/settings")) return jsonResponse(settingsPayload);
       if (url.includes("/api/sync/status"))
         return jsonResponse({ inProgress: false, lastError: null });
@@ -215,6 +332,29 @@ describe("client drilldown", () => {
     expect(
       await screen.findByText("No Profile Assigned", {}, { timeout: 3000 })
     ).toBeInTheDocument();
+  });
+
+  it("saves sync interval from Settings", async () => {
+    await renderApp();
+    expect(await findDashboardTitle()).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("link", { name: "Settings" }));
+    expect(await screen.findByText("Sync & Data")).toBeInTheDocument();
+
+    fireEvent.change(screen.getByDisplayValue("15 minutes"), {
+      target: { value: "30" }
+    });
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith(
+        "/api/settings/sync.intervalMinutes",
+        expect.objectContaining({
+          method: "PUT",
+          body: JSON.stringify({ value: 30 })
+        })
+      );
+    });
+    expect(await screen.findByText("Setting saved")).toBeInTheDocument();
   });
 
   it("surfaces overview master search results and opens a device", async () => {

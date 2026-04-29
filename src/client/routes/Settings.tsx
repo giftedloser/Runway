@@ -21,6 +21,7 @@ import { ConfirmDialog } from "../components/shared/ConfirmDialog.js";
 import { PageHeader } from "../components/layout/PageHeader.js";
 import { LogViewerSection } from "../components/settings/LogViewerSection.js";
 import { RulesSection } from "../components/settings/RulesSection.js";
+import { SyncDataSection } from "../components/settings/SyncDataSection.js";
 import { SystemHealthSection } from "../components/settings/SystemHealthSection.js";
 import { GraphCredentialsWizard } from "../components/setup/GraphCredentialsWizard.js";
 import { ErrorState, LoadingState } from "../components/shared/ErrorState.js";
@@ -204,10 +205,15 @@ export function SettingsPage() {
 
       <SettingsJumpNav />
 
-      {/* Section 1: Graph integration */}
+      <SyncDataSection
+        appSettings={settings.data.appSettings}
+        adminSignedIn={isAuthed}
+      />
+
+      {/* Section 2: Graph integration */}
       <section id="graph" className="scroll-mt-6 space-y-3">
         <SettingsSectionHeader
-          index="1"
+          index="2"
           title="Graph Integration"
           detail="Read-only ingestion for dashboards and joins"
         />
@@ -284,10 +290,10 @@ export function SettingsPage() {
         </Card>
       </section>
 
-      {/* Section 2: App access gate */}
+      {/* Section 3: App access gate */}
       <section id="access" className="scroll-mt-6 space-y-3">
         <SettingsSectionHeader
-          index="2"
+          index="3"
           title="App Access"
           detail="Optional Entra login before workspace access"
         />
@@ -362,10 +368,10 @@ export function SettingsPage() {
         </Card>
       </section>
 
-      {/* Section 3: Delegated sign-in */}
+      {/* Section 4: Delegated sign-in */}
       <section id="admin" className="scroll-mt-6 space-y-3">
         <SettingsSectionHeader
-          index="3"
+          index="4"
           title="Admin Sign-In"
           detail="Required for actions, secrets, and settings changes"
         />
@@ -446,10 +452,10 @@ export function SettingsPage() {
         </Card>
       </section>
 
-      {/* Section 4: SCCM / ConfigMgr */}
+      {/* Section 5: SCCM / ConfigMgr */}
       <section id="signals" className="scroll-mt-6 space-y-3">
         <SettingsSectionHeader
-          index="4"
+          index="5"
           title="SCCM / ConfigMgr Signal"
           detail="Optional ConfigMgr visibility on device pages"
         />
@@ -546,10 +552,10 @@ export function SettingsPage() {
         </Card>
       </section>
 
-      {/* Section 5: Sources */}
+      {/* Section 6: Sources */}
       <section id="sources" className="scroll-mt-6 space-y-3">
         <SettingsSectionHeader
-          index="5"
+          index="6"
           title="Data Sources"
           detail="Synced Microsoft service data"
         />
@@ -589,10 +595,10 @@ export function SettingsPage() {
         </Card>
       </section>
 
-      {/* Section 6: Tag mapping */}
+      {/* Section 7: Tag mapping */}
       <section id="tags" className="scroll-mt-6 space-y-3">
         <SettingsSectionHeader
-          index="6"
+          index="7"
           title="Tag Mapping"
           detail="Expected property, group, and profile per group tag"
           actions={
@@ -977,13 +983,13 @@ export function SettingsPage() {
         )}
       </section>
 
-      {/* Section 7: System health & retention */}
+      {/* Section 8: System health & retention */}
       <SystemHealthSection />
 
-      {/* Section 8: Custom rules */}
+      {/* Section 9: Custom rules */}
       <RulesSection />
 
-      {/* Section 9: Recent logs */}
+      {/* Section 10: Recent logs */}
       <LogViewerSection />
 
       <ConfirmDialog

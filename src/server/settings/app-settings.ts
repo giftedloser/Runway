@@ -34,6 +34,30 @@ export const APP_SETTING_DEFINITIONS = [
     allowedValues: [5, 15, 30, 60]
   },
   {
+    key: "sync.onLaunch",
+    section: "sync-data",
+    label: "Sync on app launch",
+    description: "Triggers a sync shortly after Runway starts when Graph is configured.",
+    valueType: "boolean",
+    defaultValue: true
+  },
+  {
+    key: "sync.manualOnly",
+    section: "sync-data",
+    label: "Manual sync only",
+    description: "Disables scheduled background sync while keeping manual sync available.",
+    valueType: "boolean",
+    defaultValue: false
+  },
+  {
+    key: "sync.paused",
+    section: "sync-data",
+    label: "Pause sync",
+    description: "Emergency stop for launch and scheduled background sync until re-enabled.",
+    valueType: "boolean",
+    defaultValue: false
+  },
+  {
     key: "rules.profileAssignedNotEnrolledHours",
     section: "rules-thresholds",
     label: "Profile assigned but not enrolled",
@@ -132,6 +156,9 @@ export interface EffectiveAppSetting {
 
 export interface AppSettingValues {
   syncIntervalMinutes: number;
+  syncOnLaunch: boolean;
+  syncManualOnly: boolean;
+  syncPaused: boolean;
   profileAssignedNotEnrolledHours: number;
   provisioningStalledHours: number;
   deviceHistoryRetentionDays: number;
@@ -320,6 +347,9 @@ export function getAppSettingValues(db: Database.Database): AppSettingValues {
   const settings = new Map(listEffectiveAppSettings(db).map((setting) => [setting.key, setting.value]));
   return {
     syncIntervalMinutes: settings.get("sync.intervalMinutes") as number,
+    syncOnLaunch: settings.get("sync.onLaunch") as boolean,
+    syncManualOnly: settings.get("sync.manualOnly") as boolean,
+    syncPaused: settings.get("sync.paused") as boolean,
     profileAssignedNotEnrolledHours: settings.get("rules.profileAssignedNotEnrolledHours") as number,
     provisioningStalledHours: settings.get("rules.provisioningStalledHours") as number,
     deviceHistoryRetentionDays: settings.get("retention.deviceHistoryDays") as number,

@@ -47,6 +47,18 @@ describe("app settings service", () => {
       defaultValue: 15,
       source: "default"
     });
+    expect(settings.find((setting) => setting.key === "sync.onLaunch")).toMatchObject({
+      value: true,
+      source: "default"
+    });
+    expect(settings.find((setting) => setting.key === "sync.manualOnly")).toMatchObject({
+      value: false,
+      source: "default"
+    });
+    expect(settings.find((setting) => setting.key === "sync.paused")).toMatchObject({
+      value: false,
+      source: "default"
+    });
     expect((db.prepare("SELECT COUNT(*) as count FROM app_settings").get() as { count: number }).count).toBe(0);
   });
 
@@ -87,6 +99,18 @@ describe("app settings service", () => {
       source: "default"
     });
     expect((db.prepare("SELECT COUNT(*) as count FROM app_settings").get() as { count: number }).count).toBe(0);
+  });
+
+  it("resets only app_settings rows", () => {
+    setAppSetting(db, "retention.deviceHistoryDays", 120);
+    db.prepare(
+      "INSERT INTO sync_log (sync_type, started_at, completed_at, devices_synced, errors) VALUES (?, ?, ?, ?, ?)"
+    ).run("manual", "2026-04-29T12:00:00.000Z", "2026-04-29T12:00:01.000Z", 7, "[]");
+
+    resetAppSettings(db);
+
+    expect((db.prepare("SELECT COUNT(*) as count FROM app_settings").get() as { count: number }).count).toBe(0);
+    expect((db.prepare("SELECT COUNT(*) as count FROM sync_log").get() as { count: number }).count).toBe(1);
   });
 
   it("rejects invalid values before writing", () => {

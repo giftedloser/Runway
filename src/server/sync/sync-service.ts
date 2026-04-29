@@ -141,15 +141,19 @@ export function startBackgroundSync(db: Database.Database) {
     return;
   }
 
-  const scheduleNext = () => {
-    const appSettings = getAppSettingValues(db);
-    setTimeout(() => {
-      scheduleNext();
-      fullSync(db, "full").catch((error) => {
-        logger.error({ err: error }, "Background sync failed.");
-      });
-    }, appSettings.syncIntervalMinutes * 60 * 1000).unref();
-  };
+  const pollMs = 30_000;
+  let lastAttemptAt = Date.now();
 
-  scheduleNext();
+  setInterval(() => {
+    const appSettings = getAppSettingValues(db);
+    if (appSettings.syncPaused || appSettings.syncManualOnly || state.inProgress) return;
+
+    const intervalMs = appSettings.syncIntervalMinutes * 60 * 1000;
+    if (Date.now() - lastAttemptAt < intervalMs) return;
+
+    lastAttemptAt = Date.now();
+    fullSync(db, "full").catch((error) => {
+      logger.error({ err: error }, "Background sync failed.");
+    });
+  }, pollMs).unref();
 }

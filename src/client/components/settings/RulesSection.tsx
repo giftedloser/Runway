@@ -204,7 +204,7 @@ export function RulesSection() {
     <section id="rules" className="scroll-mt-6 space-y-3">
       <div className="flex items-baseline gap-2">
         <h2 className="text-[13px] font-semibold uppercase tracking-wide text-[var(--pc-text-secondary)]">
-          8. Custom Rules
+          9. Custom Rules
         </h2>
         <span className="text-[11px] text-[var(--pc-text-muted)]">
           Encode your own join, configuration, and posture expectations

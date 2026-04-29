@@ -10,6 +10,7 @@ import { SourceBadge } from "../shared/SourceBadge.js";
 import { Card } from "../ui/card.js";
 
 const SETTINGS_NAV = [
+  { href: "#sync-data", label: "Sync" },
   { href: "#graph", label: "Graph" },
   { href: "#access", label: "Access" },
   { href: "#admin", label: "Admin" },
