@@ -1,6 +1,7 @@
 import { Router } from "express";
 import type Database from "better-sqlite3";
 
+import { payloadForGroups } from "../db/queries/provisioning.js";
 import { asArray } from "../engine/normalize.js";
 
 export function provisioningRouter(db: Database.Database) {
@@ -80,6 +81,7 @@ export function provisioningRouter(db: Database.Database) {
         deploymentMode: p.deployment_mode,
         viaGroupId: p.group_id
       })),
+      buildPayloadByGroupId: payloadForGroups(db, groupIds),
       existingConfig: existingConfig
         ? {
             groupTag: existingConfig.group_tag,

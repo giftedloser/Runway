@@ -47,6 +47,60 @@ describe("GET /api/provisioning/discover", () => {
     expect(typeof res.body.deviceCount).toBe("number");
     expect(Array.isArray(res.body.matchingGroups)).toBe(true);
     expect(Array.isArray(res.body.matchingProfiles)).toBe(true);
+    expect(typeof res.body.buildPayloadByGroupId).toBe("object");
+  });
+
+  it("returns build payload keyed by matching group id", async () => {
+    db.prepare(
+      `INSERT INTO graph_assignments (
+        payload_kind, payload_id, payload_name, group_id, intent, target_type, raw_json, synced_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?)`
+    ).run(
+      "app",
+      "app-chrome",
+      "Google Chrome Enterprise",
+      "grp-north-devices",
+      "required",
+      "include",
+      "{}",
+      "2026-04-29T10:00:00.000Z",
+      "config",
+      "cfg-baseline",
+      "Windows Baseline",
+      "grp-north-devices",
+      null,
+      "include",
+      "{}",
+      "2026-04-29T10:01:00.000Z",
+      "compliance",
+      "comp-default",
+      "Default Compliance",
+      "grp-north-devices",
+      null,
+      "include",
+      "{}",
+      "2026-04-29T10:02:00.000Z"
+    );
+
+    const app = createApp(db);
+    const res = await request(app)
+      .get("/api/provisioning/discover?groupTag=North")
+      .expect(200);
+
+    const payload = res.body.buildPayloadByGroupId["grp-north-devices"];
+    expect(payload.requiredApps).toHaveLength(1);
+    expect(payload.configProfiles).toHaveLength(1);
+    expect(payload.compliancePolicies).toHaveLength(1);
+    expect(payload.syncedAt).toBe("2026-04-29T10:02:00.000Z");
+    expect(payload.warnings).toHaveLength(0);
+
+    const hybridPayload = res.body.buildPayloadByGroupId["grp-north-hybrid"];
+    expect(hybridPayload.warnings).toContain(
+      "No required apps found for this target group."
+    );
+    expect(hybridPayload.warnings).toContain(
+      "Payload exists on another discovered group, but not this target group."
+    );
   });
 
   it("returns deviceCount and group/profile arrays for a tag with matches", async () => {
@@ -76,6 +130,7 @@ describe("GET /api/provisioning/discover", () => {
     expect(res.body.deviceCount).toBe(0);
     expect(res.body.matchingGroups).toHaveLength(0);
     expect(res.body.matchingProfiles).toHaveLength(0);
+    expect(res.body.buildPayloadByGroupId).toEqual({});
     expect(res.body.existingConfig).toBeNull();
   });
 
