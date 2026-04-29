@@ -21,6 +21,63 @@ beforeEach(async () => {
 });
 
 // ──────────────────────────────────────────────
+// Provisioning — tags
+// ──────────────────────────────────────────────
+describe("GET /api/provisioning/tags", () => {
+  it("returns tags currently carried by devices", async () => {
+    const app = createApp(db);
+    const res = await request(app).get("/api/provisioning/tags").expect(200);
+
+    expect(Array.isArray(res.body)).toBe(true);
+    const north = res.body.find((tag: { groupTag: string }) => tag.groupTag === "North");
+    expect(north).toBeDefined();
+    expect(north.deviceCount).toBeGreaterThan(0);
+    expect(typeof north.lastSeenAt).toBe("string");
+    expect(north.configured).toBe(true);
+    expect(north.propertyLabel).toBe("North / River");
+  });
+
+  it("marks tags without tag_config as discovered-only", async () => {
+    db.prepare(
+      `UPDATE device_state
+       SET group_tag = 'Unmapped'
+       WHERE device_key = (SELECT device_key FROM device_state LIMIT 1)`
+    ).run();
+
+    const app = createApp(db);
+    const res = await request(app).get("/api/provisioning/tags").expect(200);
+
+    const unmapped = res.body.find((tag: { groupTag: string }) => tag.groupTag === "Unmapped");
+    expect(unmapped).toBeDefined();
+    expect(unmapped.configured).toBe(false);
+    expect(unmapped.propertyLabel).toBeNull();
+  });
+});
+
+describe("GET /api/provisioning/tag-devices", () => {
+  it("returns 400 when groupTag is missing", async () => {
+    const app = createApp(db);
+    await request(app).get("/api/provisioning/tag-devices").expect(400);
+  });
+
+  it("returns devices carrying a tag", async () => {
+    const app = createApp(db);
+    const res = await request(app)
+      .get("/api/provisioning/tag-devices?groupTag=North")
+      .expect(200);
+
+    expect(res.body.length).toBeGreaterThan(0);
+    expect(res.body[0]).toMatchObject({
+      deviceKey: expect.any(String),
+      health: expect.any(String)
+    });
+    expect("serialNumber" in res.body[0]).toBe(true);
+    expect("lastSyncAt" in res.body[0]).toBe(true);
+    expect("complianceState" in res.body[0]).toBe(true);
+  });
+});
+
+// ──────────────────────────────────────────────
 // Provisioning — discover
 // ──────────────────────────────────────────────
 describe("GET /api/provisioning/discover", () => {

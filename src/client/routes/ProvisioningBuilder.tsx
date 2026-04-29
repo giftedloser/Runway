@@ -1,4 +1,5 @@
 ﻿import { useState } from "react";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   CheckCircle2,
@@ -46,8 +47,11 @@ import type { DiscoverResult, ValidateResult } from "../components/provisioning/
 
 export function ProvisioningBuilderPage() {
   const toast = useToast();
-  const [groupTag, setGroupTag] = useState("");
-  const [searchTag, setSearchTag] = useState("");
+  const routeSearch = useSearch({ from: "/provisioning" });
+  const navigate = useNavigate({ from: "/provisioning" });
+  const initialGroupTag = routeSearch.groupTag?.trim() ?? "";
+  const [groupTag, setGroupTag] = useState(initialGroupTag);
+  const [searchTag, setSearchTag] = useState(initialGroupTag);
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(
     null,
@@ -77,8 +81,10 @@ export function ProvisioningBuilderPage() {
   });
 
   const handleDiscover = () => {
-    if (groupTag.trim()) {
-      setSearchTag(groupTag.trim());
+    const nextTag = groupTag.trim();
+    if (nextTag) {
+      void navigate({ search: () => ({ groupTag: nextTag }) });
+      setSearchTag(nextTag);
       setSelectedGroupId(null);
       setSelectedProfileId(null);
       validate.reset();

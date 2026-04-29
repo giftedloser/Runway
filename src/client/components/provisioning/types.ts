@@ -22,6 +22,23 @@ export interface DiscoverResult {
   } | null;
 }
 
+export interface TagInventoryItem {
+  groupTag: string;
+  deviceCount: number;
+  lastSeenAt: string | null;
+  configured: boolean;
+  propertyLabel: string | null;
+}
+
+export interface ProvisioningTagDevice {
+  deviceKey: string;
+  deviceName: string | null;
+  serialNumber: string | null;
+  lastSyncAt: string | null;
+  health: string;
+  complianceState: string | null;
+}
+
 export interface BuildPayloadItem {
   payloadId: string;
   payloadName: string;

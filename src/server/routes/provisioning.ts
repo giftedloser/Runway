@@ -1,11 +1,31 @@
 import { Router } from "express";
 import type Database from "better-sqlite3";
 
-import { payloadForGroups } from "../db/queries/provisioning.js";
+import {
+  devicesForProvisioningTag,
+  listProvisioningTags,
+  payloadForGroups
+} from "../db/queries/provisioning.js";
 import { asArray } from "../engine/normalize.js";
 
 export function provisioningRouter(db: Database.Database) {
   const router = Router();
+
+  // GET /api/provisioning/tags — list Autopilot group tags currently seen on devices
+  router.get("/tags", (_request, response) => {
+    response.json(listProvisioningTags(db));
+  });
+
+  // GET /api/provisioning/tag-devices?groupTag=X — devices carrying a tag
+  router.get("/tag-devices", (request, response) => {
+    const groupTag = typeof request.query.groupTag === "string" ? request.query.groupTag.trim() : "";
+    if (!groupTag) {
+      response.status(400).json({ message: "groupTag query parameter is required." });
+      return;
+    }
+
+    response.json(devicesForProvisioningTag(db, groupTag));
+  });
 
   // GET /api/provisioning/discover?groupTag=X — auto-discover matching groups and profiles for a tag
   router.get("/discover", (request, response) => {
