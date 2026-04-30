@@ -182,7 +182,16 @@ describe("delegated auth flow", () => {
       mode: "disabled",
       authenticated: false
     });
-    await request(app).get("/api/settings").expect(401);
+    const publicSettings = await request(app).get("/api/settings").expect(200);
+    expect(publicSettings.body.appAccess).toMatchObject({
+      allowedUsersConfigured: true,
+      allowedUsersCount: 2
+    });
+    expect(publicSettings.body.appAccess).not.toHaveProperty("allowedUsers");
+    await request(app)
+      .put("/api/settings/sync.intervalMinutes")
+      .send({ value: 30 })
+      .expect(401);
 
     await agent.get("/api/auth/login").expect(200);
     await agent
@@ -190,12 +199,12 @@ describe("delegated auth flow", () => {
       .query({ code: "abc123", state: "test-state" })
       .expect(200);
 
-    const settings = await agent.get("/api/settings").expect(200);
-    expect(settings.body.appAccess).toMatchObject({
+    const authedSettings = await agent.get("/api/settings").expect(200);
+    expect(authedSettings.body.appAccess).toMatchObject({
       allowedUsersConfigured: true,
       allowedUsersCount: 2
     });
-    expect(settings.body.appAccess).not.toHaveProperty("allowedUsers");
+    expect(authedSettings.body.appAccess).not.toHaveProperty("allowedUsers");
   });
 
   it.each([
@@ -250,7 +259,7 @@ describe("delegated auth flow", () => {
       name: "Tech User"
     });
 
-    await agent.get("/api/settings").expect(401);
+    await agent.get("/api/settings").expect(200);
 
     await agent.get("/api/auth/login").expect(200);
     await agent

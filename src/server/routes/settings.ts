@@ -109,7 +109,7 @@ export function settingsRouter(db: Database.Database) {
     response.status(204).send();
   });
 
-  router.get("/", requireDelegatedAuth, (_request, response) => {
+  router.get("/", (_request, response) => {
     response.json(getSettings(db));
   });
 
