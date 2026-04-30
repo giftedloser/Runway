@@ -1,6 +1,5 @@
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { formatDistanceToNow } from "date-fns";
 import {
   ArrowRight,
   CheckCircle2,
@@ -16,11 +15,13 @@ import { SourceBadge } from "../components/shared/SourceBadge.js";
 import { Card } from "../components/ui/card.js";
 import { Input } from "../components/ui/input.js";
 import type { TagInventoryItem } from "../components/provisioning/types.js";
+import { useTimestampFormatter } from "../hooks/useTimestampFormatter.js";
 import { apiRequest } from "../lib/api.js";
 import { cn } from "../lib/utils.js";
 
 export function TagsPage() {
   const [search, setSearch] = useState("");
+  const formatTimestamp = useTimestampFormatter();
   const tags = useQuery({
     queryKey: ["provisioning-tags"],
     queryFn: () => apiRequest<TagInventoryItem[]>("/api/provisioning/tags"),
@@ -138,7 +139,7 @@ export function TagsPage() {
                     {tag.deviceCount.toLocaleString()}
                   </div>
                   <div className="text-[11.5px] text-[var(--pc-text-muted)]">
-                    {formatLastSeen(tag.lastSeenAt)}
+                    {tag.lastSeenAt ? formatTimestamp(tag.lastSeenAt) : "No sync"}
                   </div>
                   <div>
                     <ConfigStatus configured={tag.configured} />
@@ -201,11 +202,4 @@ function ConfigStatus({ configured }: { configured: boolean }) {
       {configured ? "Configured" : "Discovered-only"}
     </span>
   );
-}
-
-function formatLastSeen(value: string | null) {
-  if (!value) return "No sync";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Unknown";
-  return formatDistanceToNow(date, { addSuffix: true });
 }

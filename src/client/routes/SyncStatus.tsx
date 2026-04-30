@@ -1,4 +1,3 @@
-import { formatDistanceToNow } from "date-fns";
 import {
   AlertTriangle,
   CheckCircle,
@@ -13,11 +12,13 @@ import { SourceBadge } from "../components/shared/SourceBadge.js";
 import { SyncIndicator } from "../components/shared/SyncIndicator.js";
 import { Button } from "../components/ui/button.js";
 import { Card } from "../components/ui/card.js";
+import { useTimestampFormatter } from "../hooks/useTimestampFormatter.js";
 import { useSyncStatus, useTriggerSync } from "../hooks/useSync.js";
 
 export function SyncStatusPage() {
   const status = useSyncStatus();
   const trigger = useTriggerSync();
+  const formatTimestamp = useTimestampFormatter();
 
   if (status.isLoading) return <LoadingState label="Loading sync status…" />;
   if (status.isError || !status.data) {
@@ -196,7 +197,7 @@ export function SyncStatusPage() {
                         <div className="flex items-center gap-1.5">
                           <Clock className="h-3 w-3" />
                           <span title={started.toLocaleString()}>
-                            {formatDistanceToNow(started, { addSuffix: true })}
+                            {formatTimestamp(started)}
                           </span>
                         </div>
                       </td>

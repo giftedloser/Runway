@@ -10,10 +10,13 @@ import { SourceBadge } from "../shared/SourceBadge.js";
 import { Card } from "../ui/card.js";
 
 const SETTINGS_NAV = [
+  { href: "#sync-data", label: "Sync" },
+  { href: "#rule-thresholds", label: "Thresholds" },
+  { href: "#display-behavior", label: "Display" },
   { href: "#graph", label: "Graph" },
-  { href: "#access", label: "Access" },
-  { href: "#admin", label: "Admin" },
+  { href: "#access-security", label: "Security" },
   { href: "#signals", label: "Signals" },
+  { href: "#about", label: "About" },
   { href: "#sources", label: "Sources" },
   { href: "#tags", label: "Tags" },
   { href: "#health", label: "Health" },

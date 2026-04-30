@@ -4,6 +4,7 @@ import { getDb } from "./db/database.js";
 import { runMigrations } from "./db/migrate.js";
 import { logger } from "./logger.js";
 import { startRetentionScheduler } from "./maintenance/retention.js";
+import { getAppSettingValues } from "./settings/app-settings.js";
 import { fullSync, getSyncState, startBackgroundSync } from "./sync/sync-service.js";
 
 const SHUTDOWN_TIMEOUT_MS = 10_000;
@@ -14,10 +15,11 @@ async function bootstrap() {
 
   const stateCount = (db.prepare("SELECT COUNT(*) as count FROM device_state").get() as { count: number })
     .count;
+  const appSettings = getAppSettingValues(db);
 
   // First-run seed/sync. fullSync owns the mock-vs-real branching now —
   // we just trigger it once here when device_state is empty.
-  if (stateCount === 0) {
+  if (stateCount === 0 && appSettings.syncOnLaunch && !appSettings.syncPaused) {
     fullSync(db, "full").catch((error) => {
       logger.error({ err: error }, "Initial sync/seed failed.");
     });

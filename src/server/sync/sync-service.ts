@@ -5,6 +5,7 @@ import { createSyncLog, completeSyncLog } from "../db/queries/sync.js";
 import { computeAllDeviceStates } from "../engine/compute-all-device-states.js";
 import { config } from "../config.js";
 import { seedMockData } from "../db/seed.js";
+import { getAppSettingValues } from "../settings/app-settings.js";
 import { persistSnapshot } from "./persist.js";
 import { GraphClient } from "./graph-client.js";
 import { syncAutopilotDevices } from "./autopilot-sync.js";
@@ -45,6 +46,7 @@ export async function fullSync(
 
   try {
     if (!config.isGraphConfigured) {
+      const appSettings = getAppSettingValues(db);
       // Mock mode: seed fake data only when the DB is empty *and*
       // SEED_MODE permits it. We never overwrite an operator's data on
       // subsequent "syncs", and we never seed when the operator has
@@ -52,7 +54,7 @@ export async function fullSync(
       const existing = (
         db.prepare("SELECT COUNT(*) as count FROM device_state").get() as { count: number }
       ).count;
-      const seeded = existing === 0 && config.SEED_MODE === "mock";
+      const seeded = existing === 0 && appSettings.seedMode === "mock";
       if (seeded) {
         await seedMockData(db);
       }
@@ -62,7 +64,7 @@ export async function fullSync(
       const errors: string[] = [];
       if (!seeded && existing > 0) {
         errors.push("Mock mode: skipped reseed because device_state is not empty.");
-      } else if (!seeded && config.SEED_MODE !== "mock") {
+      } else if (!seeded && appSettings.seedMode !== "mock") {
         errors.push("Graph not configured and SEED_MODE is not 'mock'; nothing to do.");
       }
       completeSyncLog(db, log.id, { devicesSynced: count, errors });
@@ -135,13 +137,23 @@ export async function fullSync(
 
 export function startBackgroundSync(db: Database.Database) {
   if (!config.isGraphConfigured) {
-    logger.info("Graph credentials missing; background sync disabled and mock mode enabled.");
+    logger.info("Graph credentials missing; background sync disabled.");
     return;
   }
 
+  const pollMs = 30_000;
+  let lastAttemptAt = Date.now();
+
   setInterval(() => {
+    const appSettings = getAppSettingValues(db);
+    if (appSettings.syncPaused || appSettings.syncManualOnly || state.inProgress) return;
+
+    const intervalMs = appSettings.syncIntervalMinutes * 60 * 1000;
+    if (Date.now() - lastAttemptAt < intervalMs) return;
+
+    lastAttemptAt = Date.now();
     fullSync(db, "full").catch((error) => {
       logger.error({ err: error }, "Background sync failed.");
     });
-  }, config.SYNC_INTERVAL_MINUTES * 60 * 1000).unref();
+  }, pollMs).unref();
 }

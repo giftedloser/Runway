@@ -2,6 +2,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { ChevronRight, SearchX, Inbox } from "lucide-react";
 import { useEffect, useMemo, useRef } from "react";
 
+import { useTimestampFormatter } from "../../hooks/useTimestampFormatter.js";
 import type { DeviceListItem } from "../../lib/types.js";
 import { cn } from "../../lib/utils.js";
 import { Card } from "../ui/card.js";
@@ -37,6 +38,7 @@ export function DeviceTable({
   onClearFilters
 }: DeviceTableProps) {
   const navigate = useNavigate();
+  const formatTimestamp = useTimestampFormatter();
   const tableRef = useRef<HTMLTableElement>(null);
   const cellY = density === "compact" ? "py-1.5" : "py-3";
   const cellX = "px-4";
@@ -210,7 +212,7 @@ export function DeviceTable({
                   )}
                   {columns.map((col) => (
                     <td key={col.id} className={cn(cell, col.cellClassName)}>
-                      {col.render(device, density)}
+                      {col.render(device, density, formatTimestamp)}
                     </td>
                   ))}
                   <td className={cn("px-2", cellY)}>

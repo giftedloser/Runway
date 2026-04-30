@@ -1,13 +1,13 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useMemo, useSyncExternalStore } from "react";
 
 import { usePreference } from "./usePreference.js";
 
-export type Theme = "canopy-light" | "canopy-dark" | "carbon" | "studio";
-export type AppliedTheme = Theme;
+export type Theme = "system" | "canopy-light" | "canopy-dark";
+export type AppliedTheme = Exclude<Theme, "system">;
 
-const THEMES: Theme[] = ["canopy-light", "canopy-dark", "carbon", "studio"];
-const DEFAULT_THEME: Theme = "canopy-light";
-const DARK_SCHEME_THEMES = new Set<AppliedTheme>(["canopy-dark", "carbon"]);
+const THEMES: Theme[] = ["system", "canopy-light", "canopy-dark"];
+const DEFAULT_THEME: Theme = "system";
+const DARK_SCHEME_THEMES = new Set<AppliedTheme>(["canopy-dark"]);
 
 function isTheme(value: unknown): value is Theme {
   return typeof value === "string" && THEMES.includes(value as Theme);
@@ -19,11 +19,33 @@ function applyTheme(resolved: AppliedTheme) {
   root.style.colorScheme = DARK_SCHEME_THEMES.has(resolved) ? "dark" : "light";
 }
 
-export function useTheme(): [Theme, () => void, AppliedTheme] {
+function subscribeToSystemTheme(callback: () => void) {
+  if (typeof window === "undefined" || !window.matchMedia) return () => undefined;
+  const media = window.matchMedia("(prefers-color-scheme: dark)");
+  media.addEventListener("change", callback);
+  return () => media.removeEventListener("change", callback);
+}
+
+function getSystemTheme(): AppliedTheme {
+  if (typeof window !== "undefined" && window.matchMedia?.("(prefers-color-scheme: dark)").matches) {
+    return "canopy-dark";
+  }
+  return "canopy-light";
+}
+
+export function useTheme(): [Theme, () => void, AppliedTheme, (value: Theme) => void] {
   const [storedTheme, setTheme] = usePreference<Theme>("theme", DEFAULT_THEME);
   const theme = isTheme(storedTheme) ? storedTheme : DEFAULT_THEME;
+  const systemTheme = useSyncExternalStore<AppliedTheme>(
+    subscribeToSystemTheme,
+    getSystemTheme,
+    () => "canopy-light"
+  );
 
-  const resolved = theme;
+  const resolved = useMemo<AppliedTheme>(
+    () => (theme === "system" ? systemTheme : (theme as AppliedTheme)),
+    [systemTheme, theme]
+  );
 
   // Apply on mount and whenever theme changes
   useEffect(() => {
@@ -35,5 +57,5 @@ export function useTheme(): [Theme, () => void, AppliedTheme] {
     setTheme(THEMES[(idx + 1) % THEMES.length]);
   }, [theme, setTheme]);
 
-  return [theme, cycle, resolved];
+  return [theme, cycle, resolved, setTheme];
 }

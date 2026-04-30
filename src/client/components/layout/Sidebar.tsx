@@ -5,10 +5,9 @@ import {
   GitBranch,
   History,
   LayoutDashboard,
+  Monitor,
   Moon,
-  Palette,
   Search,
-  Flame,
   Settings2,
   ShieldCheck,
   Sun,
@@ -34,16 +33,14 @@ const appVersion =
     : ((globalThis as { __APP_VERSION__?: string }).__APP_VERSION__ ?? "dev");
 
 const themeIcons: Record<Theme, typeof Sun> = {
+  system: Monitor,
   "canopy-light": Sun,
-  "canopy-dark": Moon,
-  carbon: Flame,
-  studio: Palette,
+  "canopy-dark": Moon
 };
 const themeLabels: Record<Theme, string> = {
+  system: "System",
   "canopy-light": "Canopy Light",
-  "canopy-dark": "Canopy Dark",
-  carbon: "Carbon",
-  studio: "Studio",
+  "canopy-dark": "Canopy Dark"
 };
 
 interface NavItem {

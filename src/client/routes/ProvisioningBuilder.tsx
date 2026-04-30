@@ -1,7 +1,6 @@
 ﻿import { useState } from "react";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { formatDistanceToNow } from "date-fns";
 import {
   ArrowRight,
   CheckCircle2,
@@ -57,6 +56,7 @@ import type {
   ProvisioningTagDevice,
   ValidateResult,
 } from "../components/provisioning/types.js";
+import { useTimestampFormatter } from "../hooks/useTimestampFormatter.js";
 
 export function ProvisioningBuilderPage() {
   const toast = useToast();
@@ -974,6 +974,7 @@ function BuildPayloadPanel({
   payload: BuildPayloadGroup | null;
   selectedGroupName: string | null;
 }) {
+  const formatTimestamp = useTimestampFormatter();
   const totalPayload =
     (payload?.requiredApps.length ?? 0) +
     (payload?.configProfiles.length ?? 0) +
@@ -996,7 +997,7 @@ function BuildPayloadPanel({
         </div>
         <div className="inline-flex items-center gap-1.5 rounded-md border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-2.5 py-1.5 text-[11px] text-[var(--pc-text-muted)]">
           <Clock3 className="h-3.5 w-3.5" />
-          {formatRelativeTime(payload?.syncedAt ?? null)}
+          {payload?.syncedAt ? formatTimestamp(payload.syncedAt) : "No sync"}
         </div>
       </div>
 
@@ -1052,6 +1053,7 @@ function PayloadSection({
   items: BuildPayloadItem[];
   emptyLabel: string;
 }) {
+  const formatTimestamp = useTimestampFormatter();
   return (
     <div className="rounded-xl border border-[var(--pc-border)] bg-[var(--pc-surface-raised)]/55">
       <div className="flex items-center justify-between gap-3 border-b border-[var(--pc-border)] px-3 py-2.5">
@@ -1079,7 +1081,7 @@ function PayloadSection({
               </div>
               <div className="mt-1 flex flex-wrap items-center gap-2 text-[10.5px] uppercase tracking-wide text-[var(--pc-text-muted)]">
                 <span>{item.intent ?? item.targetType}</span>
-                <span>{formatRelativeTime(item.syncedAt)}</span>
+                <span>{item.syncedAt ? formatTimestamp(item.syncedAt) : "No sync"}</span>
               </div>
             </div>
           ))}
@@ -1104,6 +1106,7 @@ function TagDevicesPanel({
   error: unknown;
   onRetry: () => void;
 }) {
+  const formatTimestamp = useTimestampFormatter();
   return (
     <Card className="overflow-hidden">
       <div className="flex flex-col gap-3 border-b border-[var(--pc-border)] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
@@ -1163,11 +1166,11 @@ function TagDevicesPanel({
                     {device.deviceName ?? "No hostname"}
                   </div>
                   <div className="mt-0.5 text-[11px] text-[var(--pc-text-muted)] sm:hidden">
-                    {formatRelativeTime(device.lastSyncAt)}
+                    {device.lastSyncAt ? formatTimestamp(device.lastSyncAt) : "No sync"}
                   </div>
                 </div>
                 <div className="hidden text-[11.5px] text-[var(--pc-text-muted)] sm:block">
-                  {formatRelativeTime(device.lastSyncAt)}
+                  {device.lastSyncAt ? formatTimestamp(device.lastSyncAt) : "No sync"}
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <StatusBadge health={device.health as HealthLevel} />
@@ -1185,11 +1188,4 @@ function TagDevicesPanel({
       )}
     </Card>
   );
-}
-
-function formatRelativeTime(value: string | null) {
-  if (!value) return "No sync";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Unknown";
-  return formatDistanceToNow(date, { addSuffix: true });
 }

@@ -1,4 +1,3 @@
-import { formatDistanceToNow } from "date-fns";
 import { Link } from "@tanstack/react-router";
 
 import type { DeviceListItem } from "../../lib/types.js";
@@ -36,7 +35,11 @@ export interface DeviceColumnDef {
   locked?: boolean;
   /** Tailwind classes appended to the cell. */
   cellClassName?: string;
-  render: (device: DeviceListItem, density: "comfortable" | "compact") => React.ReactNode;
+  render: (
+    device: DeviceListItem,
+    density: "comfortable" | "compact",
+    formatTimestamp: (value: string | null | undefined) => string
+  ) => React.ReactNode;
 }
 
 const dash = "\u2014";
@@ -140,14 +143,14 @@ export const DEVICE_COLUMNS: DeviceColumnDef[] = [
     id: "lastSeen",
     label: "Last Seen",
     defaultVisible: true,
-    render: (device, density) => {
+    render: (device, density, formatTimestamp) => {
       if (!device.lastCheckinAt) {
         return <span className="text-[var(--pc-text-muted)]">Never</span>;
       }
       const ageMs = Date.now() - new Date(device.lastCheckinAt).getTime();
       const staleHours = 24;
       const isStale = ageMs > staleHours * 60 * 60 * 1000;
-      const label = formatDistanceToNow(new Date(device.lastCheckinAt), { addSuffix: true });
+      const label = formatTimestamp(device.lastCheckinAt);
       if (density === "compact") {
         return (
           <span

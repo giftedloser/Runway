@@ -35,6 +35,7 @@ import { useToast } from "../components/shared/toast.js";
 import { Button } from "../components/ui/button.js";
 import { useDevices } from "../hooks/useDevices.js";
 import { usePreference } from "../hooks/usePreference.js";
+import { useSettings } from "../hooks/useSettings.js";
 import { apiRequest } from "../lib/api.js";
 import { devicesToCsv } from "../lib/csv.js";
 import { cn } from "../lib/utils.js";
@@ -42,7 +43,17 @@ import { cn } from "../lib/utils.js";
 export function DeviceListPage() {
   const search = useSearch({ from: "/devices" });
   const navigate = useNavigate({ from: "/devices" });
-  const devices = useDevices(search);
+  const settings = useSettings();
+  const configuredPageSize =
+    settings.data?.appSettings.find((setting) => setting.key === "display.tablePageSize")
+      ?.value;
+  const defaultPageSize =
+    typeof configuredPageSize === "number" ? configuredPageSize : 50;
+  const effectiveSearch = {
+    ...search,
+    pageSize: search.pageSize ?? defaultPageSize,
+  };
+  const devices = useDevices(effectiveSearch);
   const [density, setDensity] = usePreference<DeviceTableDensity>(
     "device-density",
     "comfortable",
@@ -277,7 +288,7 @@ export function DeviceListPage() {
                   property: undefined,
                   profile: undefined,
                   page: 1,
-                  pageSize: search.pageSize ?? 25,
+                  pageSize: search.pageSize ?? defaultPageSize,
                 }),
               })
             }

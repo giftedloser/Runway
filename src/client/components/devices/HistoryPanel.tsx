@@ -1,7 +1,8 @@
-import { format, formatDistanceToNow } from "date-fns";
+import { format } from "date-fns";
 import { ArrowRight, Clock, Minus, Plus } from "lucide-react";
 
 import { useDeviceHistory } from "../../hooks/useDevices.js";
+import { useTimestampFormatter } from "../../hooks/useTimestampFormatter.js";
 import { humanizeFlag } from "../../lib/flags.js";
 import type { DeviceDetailResponse, HealthLevel } from "../../lib/types.js";
 import { cn } from "../../lib/utils.js";
@@ -25,6 +26,7 @@ const HEALTH_LABEL: Record<HealthLevel, string> = {
 
 export function HistoryPanel({ device }: { device: DeviceDetailResponse }) {
   const history = useDeviceHistory(device.summary.deviceKey);
+  const formatTimestamp = useTimestampFormatter();
 
   return (
     <Card className="p-5">
@@ -78,7 +80,7 @@ export function HistoryPanel({ device }: { device: DeviceDetailResponse }) {
                     className="text-[11px] text-[var(--pc-text-muted)]"
                     title={format(new Date(entry.computedAt), "PPpp")}
                   >
-                    {formatDistanceToNow(new Date(entry.computedAt), { addSuffix: true })}
+                    {formatTimestamp(entry.computedAt)}
                   </div>
                 </div>
 

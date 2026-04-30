@@ -18,6 +18,7 @@ import { Card } from "../components/ui/card.js";
 import { Input } from "../components/ui/input.js";
 import { useSettings, useTagConfigMutations } from "../hooks/useSettings.js";
 import { useSyncStatus, useTriggerSync } from "../hooks/useSync.js";
+import { useTimestampFormatter } from "../hooks/useTimestampFormatter.js";
 
 interface StepShellProps {
   number: number;
@@ -60,6 +61,7 @@ export function SetupPage() {
   const sync = useSyncStatus();
   const triggerSync = useTriggerSync();
   const mutations = useTagConfigMutations();
+  const formatTimestamp = useTimestampFormatter();
   const [tagForm, setTagForm] = useState({
     groupTag: "",
     propertyLabel: "",
@@ -120,7 +122,7 @@ export function SetupPage() {
           <Database className="h-4 w-4 text-[var(--pc-accent)]" />
           <div className="flex-1 text-[12px] text-[var(--pc-text-secondary)]">
             {hasSync
-              ? `Last sync completed ${sync.data?.lastCompletedAt ? new Date(sync.data.lastCompletedAt).toLocaleString() : "recently"}.`
+              ? `Last sync completed ${sync.data?.lastCompletedAt ? formatTimestamp(sync.data.lastCompletedAt) : "recently"}.`
               : "No completed sync yet. The first one may take a minute."}
           </div>
           <Button

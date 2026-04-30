@@ -1,8 +1,8 @@
 import type Database from "better-sqlite3";
 
-import { config } from "../config.js";
 import { snapshotDatabase } from "../db/snapshot.js";
 import { logger } from "../logger.js";
+import { getAppSettingValues } from "../settings/app-settings.js";
 
 /**
  * Rolling tables grow forever otherwise: device_state_history records
@@ -41,25 +41,26 @@ export function runRetention(db: Database.Database): RetentionResult {
   // silently shred history. Failure to snapshot does not block the
   // sweep — the snapshot helper logs and continues.
   snapshotDatabase(db, "pre-retention");
+  const appSettings = getAppSettingValues(db);
 
   const ranAt = new Date().toISOString();
   const deletedHistoryRows = pruneOlderThan(
     db,
     "device_state_history",
     "computed_at",
-    config.HISTORY_RETENTION_DAYS
+    appSettings.deviceHistoryRetentionDays
   );
   const deletedActionLogRows = pruneOlderThan(
     db,
     "action_log",
     "triggered_at",
-    config.ACTION_LOG_RETENTION_DAYS
+    appSettings.actionLogRetentionDays
   );
   const deletedSyncLogRows = pruneOlderThan(
     db,
     "sync_log",
     "started_at",
-    config.SYNC_LOG_RETENTION_DAYS
+    appSettings.syncLogRetentionDays
   );
 
   return { ranAt, deletedHistoryRows, deletedActionLogRows, deletedSyncLogRows };
@@ -72,10 +73,6 @@ export function getLastRetentionResult(): RetentionResult | null {
 }
 
 export function startRetentionScheduler(db: Database.Database) {
-  // Run once shortly after boot so the very first sweep doesn't wait a
-  // full interval on a fresh start, then on the configured cadence.
-  const intervalMs = config.RETENTION_INTERVAL_HOURS * 60 * 60 * 1000;
-
   const sweep = () => {
     try {
       lastResult = runRetention(db);
@@ -85,7 +82,14 @@ export function startRetentionScheduler(db: Database.Database) {
     }
   };
 
+  const scheduleNext = (delayMs: number) => {
+    setTimeout(() => {
+      sweep();
+      const appSettings = getAppSettingValues(db);
+      scheduleNext(appSettings.retentionSweepIntervalHours * 60 * 60 * 1000);
+    }, delayMs).unref();
+  };
+
   // Initial run after a short delay (5s) so we don't block startup.
-  setTimeout(sweep, 5_000).unref();
-  setInterval(sweep, intervalMs).unref();
+  scheduleNext(5_000);
 }

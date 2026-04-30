@@ -10,6 +10,7 @@ import {
   XCircle
 } from "lucide-react";
 
+import { useTimestampFormatter } from "../../hooks/useTimestampFormatter.js";
 import type { DeviceDetailResponse } from "../../lib/types.js";
 import { getConfigMgrSignal } from "../../lib/config-mgr.js";
 import { cn } from "../../lib/utils.js";
@@ -50,7 +51,11 @@ function StageStatusIcon({ tone }: { tone: StageTone }) {
   return <CircleDashed className="h-3.5 w-3.5 text-[var(--pc-text-muted)]" />;
 }
 
-function buildStages(device: DeviceDetailResponse, showConfigMgrSignal: boolean): JoinStage[] {
+function buildStages(
+  device: DeviceDetailResponse,
+  showConfigMgrSignal: boolean,
+  formatTimestamp: (value: string | null | undefined) => string
+): JoinStage[] {
   const path = device.assignmentPath;
   const targetGroup = path.targetingGroups.find((group) => group.membershipState === "member");
   const missingTargetGroup = path.targetingGroups.find(
@@ -114,7 +119,7 @@ function buildStages(device: DeviceDetailResponse, showConfigMgrSignal: boolean)
       source: "intune",
       value: device.identity.intuneId ? "Enrolled" : "Not enrolled",
       detail: device.summary.lastCheckinAt
-        ? `Last check-in ${new Date(device.summary.lastCheckinAt).toLocaleString()}`
+        ? `Last check-in ${formatTimestamp(device.summary.lastCheckinAt)}`
         : "Managed-device record",
       tone: device.identity.intuneId ? "ok" : "broken",
       icon: Radio
@@ -143,7 +148,8 @@ export function JoinPicturePanel({
   device: DeviceDetailResponse;
   showConfigMgrSignal: boolean;
 }) {
-  const stages = buildStages(device, showConfigMgrSignal);
+  const formatTimestamp = useTimestampFormatter();
+  const stages = buildStages(device, showConfigMgrSignal, formatTimestamp);
   const firstProblem = stages.find((stage) => stage.tone === "broken" || stage.tone === "warning");
 
   return (

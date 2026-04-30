@@ -3,8 +3,6 @@ import {
   Cable,
   CheckCircle2,
   Download,
-  KeyRound,
-  LockKeyhole,
   Plus,
   Search,
   Tag,
@@ -21,6 +19,11 @@ import { ConfirmDialog } from "../components/shared/ConfirmDialog.js";
 import { PageHeader } from "../components/layout/PageHeader.js";
 import { LogViewerSection } from "../components/settings/LogViewerSection.js";
 import { RulesSection } from "../components/settings/RulesSection.js";
+import { RulesThresholdsSection } from "../components/settings/RulesThresholdsSection.js";
+import { SyncDataSection } from "../components/settings/SyncDataSection.js";
+import { DisplayBehaviorSection } from "../components/settings/DisplayBehaviorSection.js";
+import { AccessSecuritySection } from "../components/settings/AccessSecuritySection.js";
+import { AboutSection } from "../components/settings/AboutSection.js";
 import { SystemHealthSection } from "../components/settings/SystemHealthSection.js";
 import { GraphCredentialsWizard } from "../components/setup/GraphCredentialsWizard.js";
 import { ErrorState, LoadingState } from "../components/shared/ErrorState.js";
@@ -28,7 +31,7 @@ import { SourceBadge } from "../components/shared/SourceBadge.js";
 import { Button } from "../components/ui/button.js";
 import { Card } from "../components/ui/card.js";
 import { Input } from "../components/ui/input.js";
-import { useAuthStatus, useLogin, useLogout } from "../hooks/useAuth.js";
+import { useAuthStatus } from "../hooks/useAuth.js";
 import {
   usePreviewTagConfig,
   useSetFeatureFlag,
@@ -50,21 +53,9 @@ const REQUIRED_ENV = [
   { key: "AZURE_CLIENT_SECRET", purpose: "Read-only Graph access" },
 ] as const;
 
-const DELEGATED_SCOPES = [
-  "DeviceManagementManagedDevices.ReadWrite.All",
-  "DeviceManagementManagedDevices.PrivilegedOperations.All",
-  "DeviceLocalCredential.Read.All",
-  "BitLockerKey.Read.All",
-  "Group.ReadWrite.All",
-  "DeviceManagementServiceConfig.ReadWrite.All",
-  "User.Read",
-];
-
 export function SettingsPage() {
   const settings = useSettings();
   const auth = useAuthStatus();
-  const login = useLogin();
-  const logout = useLogout();
   const mutations = useTagConfigMutations();
   const preview = usePreviewTagConfig();
   const featureFlagMutation = useSetFeatureFlag();
@@ -204,10 +195,25 @@ export function SettingsPage() {
 
       <SettingsJumpNav />
 
-      {/* Section 1: Graph integration */}
+      <SyncDataSection
+        appSettings={settings.data.appSettings}
+        adminSignedIn={isAuthed}
+      />
+
+      <RulesThresholdsSection
+        appSettings={settings.data.appSettings}
+        adminSignedIn={isAuthed}
+      />
+
+      <DisplayBehaviorSection
+        appSettings={settings.data.appSettings}
+        adminSignedIn={isAuthed}
+      />
+
+      {/* Section 4: Graph integration */}
       <section id="graph" className="scroll-mt-6 space-y-3">
         <SettingsSectionHeader
-          index="1"
+          index="4"
           title="Graph Integration"
           detail="Read-only ingestion for dashboards and joins"
         />
@@ -284,172 +290,16 @@ export function SettingsPage() {
         </Card>
       </section>
 
-      {/* Section 2: App access gate */}
-      <section id="access" className="scroll-mt-6 space-y-3">
-        <SettingsSectionHeader
-          index="2"
-          title="App Access"
-          detail="Optional Entra login before workspace access"
-        />
-        <Card className="p-5">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div className="flex items-start gap-3">
-              <div
-                className={
-                  appAccess.required
-                    ? "flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--pc-healthy-muted)]"
-                    : "flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--pc-tint-subtle)]"
-                }
-              >
-                <LockKeyhole
-                  className={
-                    appAccess.required
-                      ? "h-4 w-4 text-[var(--pc-healthy)]"
-                      : "h-4 w-4 text-[var(--pc-text-muted)]"
-                  }
-                />
-              </div>
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <div className="text-[13px] font-semibold text-[var(--pc-text)]">
-                    {appAccess.required
-                      ? "Entra gate active"
-                      : "Entra gate not enforced"}
-                  </div>
-                  <span
-                    className={
-                      appAccess.required
-                        ? "rounded-md bg-[var(--pc-healthy-muted)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--pc-healthy)]"
-                        : "rounded-md bg-[var(--pc-tint-subtle)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--pc-text-muted)]"
-                    }
-                  >
-                    APP_ACCESS_MODE={appAccess.mode}
-                  </span>
-                </div>
-                <p className="mt-1 max-w-2xl text-[12px] leading-relaxed text-[var(--pc-text-muted)]">
-                  Set <span className="font-mono">APP_ACCESS_MODE=entra</span>{" "}
-                  to require a tenant sign-in before Runway loads. It only
-                  becomes enforceable after Graph credentials are configured, so
-                  first-run setup remains reachable.
-                </p>
-                <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                  <div className="rounded-lg border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] p-3">
-                    <div className="font-mono text-[11px] text-[var(--pc-text-secondary)]">
-                      APP_ACCESS_ALLOWED_USERS
-                    </div>
-                    <div className="mt-1 text-[11px] text-[var(--pc-text-muted)]">
-                      {appAccess.allowedUsersConfigured
-                        ? "Allow-list configured."
-                        : "Blank: any user in the configured tenant can enter."}
-                    </div>
-                  </div>
-                  <div className="rounded-lg border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] p-3">
-                    <div className="font-mono text-[11px] text-[var(--pc-text-secondary)]">
-                      Recovery path
-                    </div>
-                    <div className="mt-1 text-[11px] text-[var(--pc-text-muted)]">
-                      Set{" "}
-                      <span className="font-mono">
-                        APP_ACCESS_MODE=disabled
-                      </span>{" "}
-                      in .env and restart if an allow-list ever locks you out.
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </Card>
-      </section>
+      <AccessSecuritySection
+        appSettings={settings.data.appSettings}
+        appAccess={appAccess}
+        adminSignedIn={isAuthed}
+      />
 
-      {/* Section 3: Delegated sign-in */}
-      <section id="admin" className="scroll-mt-6 space-y-3">
-        <SettingsSectionHeader
-          index="3"
-          title="Admin Sign-In"
-          detail="Required for actions, secrets, and settings changes"
-        />
-        <Card className="p-5">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div className="flex items-start gap-3">
-              <div
-                className={
-                  isAuthed
-                    ? "flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--pc-healthy-muted)]"
-                    : "flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--pc-tint-subtle)]"
-                }
-              >
-                <KeyRound
-                  className={
-                    isAuthed
-                      ? "h-4 w-4 text-[var(--pc-healthy)]"
-                      : "h-4 w-4 text-[var(--pc-text-muted)]"
-                  }
-                />
-              </div>
-              <div className="min-w-0">
-                <div className="text-[13px] font-semibold text-[var(--pc-text)]">
-                  {isAuthed ? "Signed in" : "Not signed in"}
-                </div>
-                <div className="mt-0.5 text-[12px] text-[var(--pc-text-muted)]">
-                  {isAuthed && auth.data ? (
-                    <>
-                      <span className="text-[var(--pc-text-secondary)]">
-                        {auth.data.user}
-                      </span>
-                      {auth.data.expiresAt ? (
-                        <>
-                          {" - token expires "}
-                          {new Date(auth.data.expiresAt).toLocaleString()}
-                        </>
-                      ) : null}
-                    </>
-                  ) : (
-                    "Sign in with a delegated admin account to issue remote actions and retrieve LAPS passwords."
-                  )}
-                </div>
-                <div className="mt-3 text-[11px] text-[var(--pc-text-muted)]">
-                  Required scopes:
-                </div>
-                <ul className="mt-1 flex flex-wrap gap-1.5">
-                  {DELEGATED_SCOPES.map((scope) => (
-                    <li
-                      key={scope}
-                      className="rounded-md border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-2 py-0.5 font-mono text-[10.5px] text-[var(--pc-text-secondary)]"
-                    >
-                      {scope}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-            <div className="shrink-0">
-              {isAuthed ? (
-                <Button variant="secondary" onClick={() => logout.mutate()}>
-                  Sign out
-                </Button>
-              ) : (
-                <Button
-                  onClick={() => login.mutate()}
-                  disabled={login.isPending || !login.canStart}
-                  title={login.blockedReason ?? undefined}
-                >
-                  {!login.canStart
-                    ? "Unavailable"
-                    : login.isPending
-                      ? "Opening…"
-                      : "Sign in"}
-                </Button>
-              )}
-            </div>
-          </div>
-        </Card>
-      </section>
-
-      {/* Section 4: SCCM / ConfigMgr */}
+      {/* Section 6: SCCM / ConfigMgr */}
       <section id="signals" className="scroll-mt-6 space-y-3">
         <SettingsSectionHeader
-          index="4"
+          index="6"
           title="SCCM / ConfigMgr Signal"
           detail="Optional ConfigMgr visibility on device pages"
         />
@@ -546,10 +396,12 @@ export function SettingsPage() {
         </Card>
       </section>
 
-      {/* Section 5: Sources */}
+      <AboutSection about={settings.data.about} />
+
+      {/* Section 8: Sources */}
       <section id="sources" className="scroll-mt-6 space-y-3">
         <SettingsSectionHeader
-          index="5"
+          index="8"
           title="Data Sources"
           detail="Synced Microsoft service data"
         />
@@ -589,10 +441,10 @@ export function SettingsPage() {
         </Card>
       </section>
 
-      {/* Section 6: Tag mapping */}
+      {/* Section 9: Tag mapping */}
       <section id="tags" className="scroll-mt-6 space-y-3">
         <SettingsSectionHeader
-          index="6"
+          index="9"
           title="Tag Mapping"
           detail="Expected property, group, and profile per group tag"
           actions={
@@ -977,13 +829,13 @@ export function SettingsPage() {
         )}
       </section>
 
-      {/* Section 7: System health & retention */}
+      {/* Section 10: System health & retention */}
       <SystemHealthSection />
 
-      {/* Section 8: Custom rules */}
+      {/* Section 11: Custom rules */}
       <RulesSection />
 
-      {/* Section 9: Recent logs */}
+      {/* Section 12: Recent logs */}
       <LogViewerSection />
 
       <ConfirmDialog

@@ -25,19 +25,7 @@ const envSchema = z.object({
   RUNWAY_DESKTOP_TOKEN: z.string().min(32).optional(),
   PORT: z.coerce.number().default(3001),
   CLIENT_PORT: z.coerce.number().default(5173),
-  DATABASE_PATH: z.string().default("./data/pilotcheck.sqlite"),
-  SYNC_INTERVAL_MINUTES: z.coerce.number().default(15),
-  PROFILE_ASSIGNED_NOT_ENROLLED_HOURS: z.coerce.number().default(2),
-  PROVISIONING_STALLED_HOURS: z.coerce.number().default(8),
-  SEED_MODE: z.enum(["mock", "none"]).default("mock"),
-  // Retention windows for the rolling tables. Set to 0 to disable a
-  // particular sweep (we leave history untouched). The scheduler runs
-  // every RETENTION_INTERVAL_HOURS and is also exposed as a manual
-  // /api/health/retention endpoint for ops to trigger ad-hoc.
-  HISTORY_RETENTION_DAYS: z.coerce.number().int().min(0).default(90),
-  ACTION_LOG_RETENTION_DAYS: z.coerce.number().int().min(0).default(180),
-  SYNC_LOG_RETENTION_DAYS: z.coerce.number().int().min(0).default(30),
-  RETENTION_INTERVAL_HOURS: z.coerce.number().min(0.5).default(24)
+  DATABASE_PATH: z.string().default("./data/pilotcheck.sqlite")
 });
 
 const parsed = envSchema.parse(process.env);

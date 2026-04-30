@@ -1,6 +1,6 @@
 import { Clock } from "lucide-react";
-import { format } from "date-fns";
 
+import { useTimestampFormatter } from "../../hooks/useTimestampFormatter.js";
 import type { DeviceDetailResponse } from "../../lib/types.js";
 import { Card } from "../ui/card.js";
 import { cn } from "../../lib/utils.js";
@@ -10,16 +10,8 @@ interface Milestone {
   date: string | null;
 }
 
-function formatDate(iso: string | null): string | null {
-  if (!iso) return null;
-  try {
-    return format(new Date(iso), "MMM d, yyyy h:mm a");
-  } catch {
-    return iso;
-  }
-}
-
 export function ProvisioningTimeline({ device }: { device: DeviceDetailResponse }) {
+  const formatTimestamp = useTimestampFormatter();
   const t = device.provisioningTimeline;
 
   const milestones: Milestone[] = [
@@ -47,7 +39,7 @@ export function ProvisioningTimeline({ device }: { device: DeviceDetailResponse 
 
         {milestones.map((m) => {
           const reached = Boolean(m.date);
-          const formatted = formatDate(m.date);
+          const formatted = m.date ? formatTimestamp(m.date) : null;
           return (
             <div key={m.label} className="relative z-10 flex flex-1 flex-col items-center text-center">
               <div

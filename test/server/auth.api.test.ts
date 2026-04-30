@@ -170,8 +170,10 @@ describe("delegated auth flow", () => {
 
   it("keeps the explicit disabled access mode available for local-only/dev runs", async () => {
     process.env.APP_ACCESS_MODE = "disabled";
+    process.env.APP_ACCESS_ALLOWED_USERS = "admin@example.com,other@example.com";
     const { createApp } = await import("../../src/server/app.js");
     const app = createApp(db);
+    const agent = request.agent(app);
 
     const status = await request(app).get("/api/auth/access-status").expect(200);
     expect(status.body).toMatchObject({
@@ -180,7 +182,47 @@ describe("delegated auth flow", () => {
       mode: "disabled",
       authenticated: false
     });
-    await request(app).get("/api/settings").expect(200);
+    await request(app).get("/api/settings").expect(401);
+
+    await agent.get("/api/auth/login").expect(200);
+    await agent
+      .get("/api/auth/callback")
+      .query({ code: "abc123", state: "test-state" })
+      .expect(200);
+
+    const settings = await agent.get("/api/settings").expect(200);
+    expect(settings.body.appAccess).toMatchObject({
+      allowedUsersConfigured: true,
+      allowedUsersCount: 2
+    });
+    expect(settings.body.appAccess).not.toHaveProperty("allowedUsers");
+  });
+
+  it.each([
+    "AZURE_CLIENT_SECRET",
+    "SESSION_SECRET",
+    "AZURE_CLIENT_CERT_PATH",
+    "AZURE_CLIENT_CERT_THUMBPRINT",
+    "APP_ACCESS_ALLOWED_USERS"
+  ])("rejects secret-tier key %s for delegated admins", async (key) => {
+    process.env.APP_ACCESS_MODE = "disabled";
+    const { createApp } = await import("../../src/server/app.js");
+    const app = createApp(db);
+    const agent = request.agent(app);
+
+    await agent.get("/api/auth/login").expect(200);
+    await agent
+      .get("/api/auth/callback")
+      .query({ code: "abc123", state: "test-state" })
+      .expect(200);
+
+    await agent
+      .put(`/api/settings/${key}`)
+      .send({ value: "should-not-store" })
+      .expect(400)
+      .expect((response) => {
+        expect(response.body.message).toBe(`Unknown app setting "${key}".`);
+      });
   });
 
   it("requires app access for API routes when the Entra gate is enabled", async () => {
@@ -207,6 +249,15 @@ describe("delegated auth flow", () => {
       user: "tech@example.com",
       name: "Tech User"
     });
+
+    await agent.get("/api/settings").expect(401);
+
+    await agent.get("/api/auth/login").expect(200);
+    await agent
+      .get("/api/auth/callback")
+      .query({ code: "abc123", state: "test-state" })
+      .expect(200);
+
     await agent.get("/api/settings").expect(200);
   });
 

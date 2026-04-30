@@ -1,7 +1,7 @@
-import { formatDistanceToNow } from "date-fns";
 import { AlertTriangle, Clock, Loader2 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 
+import { useTimestampFormatter } from "../../hooks/useTimestampFormatter.js";
 import { cn } from "../../lib/utils.js";
 
 interface SyncIndicatorProps {
@@ -13,6 +13,7 @@ interface SyncIndicatorProps {
 }
 
 export function SyncIndicator({ lastSync, inProgress, lastError }: SyncIndicatorProps) {
+  const formatTimestamp = useTimestampFormatter();
   const staleHours = 6;
   const isStale =
     lastSync !== null &&
@@ -53,7 +54,7 @@ export function SyncIndicator({ lastSync, inProgress, lastError }: SyncIndicator
         : lastError
           ? "Sync error"
           : lastSync
-            ? `Synced ${formatDistanceToNow(new Date(lastSync), { addSuffix: true })}`
+            ? `Synced ${formatTimestamp(lastSync)}`
             : "Never synced"}
       {isStale && !inProgress && !lastError && (
         <span className="rounded bg-[var(--pc-warning-muted)] px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-[var(--pc-warning)]">

@@ -1,9 +1,9 @@
 import type Database from "better-sqlite3";
 
 import type { AssignmentPath, FlagCode, TagConfigRecord } from "../../shared/types.js";
-import { config } from "../config.js";
 import { loadStateEngineInput, replaceDeviceStates } from "../db/queries/devices.js";
 import { listRules } from "../db/queries/rules.js";
+import { getAppSettingValues } from "../settings/app-settings.js";
 import type { GroupRow, ProfileRow } from "../db/types.js";
 import { computeOverallHealth } from "./compute-health.js";
 import { hasConfigMgrClient } from "./config-mgr.js";
@@ -45,6 +45,7 @@ function firstOf<T>(values: T[]) {
 export function computeAllDeviceStates(db: Database.Database) {
   const input = loadStateEngineInput(db);
   const rules = listRules(db);
+  const appSettings = getAppSettingValues(db);
   const correlations = correlateDevices(input);
   const previousByKey = new Map(input.previousStates.map((row) => [row.device_key, row]));
   const previousBySerial = new Map(
@@ -249,7 +250,7 @@ export function computeAllDeviceStates(db: Database.Database) {
           isOlderThan(
             bundle.autopilotRecord?.first_profile_assigned_at ??
               bundle.autopilotRecord?.first_seen_at,
-            config.PROFILE_ASSIGNED_NOT_ENROLLED_HOURS
+            appSettings.profileAssignedNotEnrolledHours
           )
       ),
       not_in_target_group: Boolean(
@@ -266,7 +267,7 @@ export function computeAllDeviceStates(db: Database.Database) {
       user_mismatch: userAssignmentMatch === 0,
       provisioning_stalled: Boolean(
         bundle.intuneRecord &&
-          isOlderThan(bundle.intuneRecord.last_sync_datetime, config.PROVISIONING_STALLED_HOURS) &&
+          isOlderThan(bundle.intuneRecord.last_sync_datetime, appSettings.provisioningStalledHours) &&
           (!assignmentPath.chainComplete ||
             ["unknown", "noncompliant"].includes(
               (bundle.intuneRecord.compliance_state ?? "unknown").toLowerCase()

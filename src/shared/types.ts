@@ -312,6 +312,14 @@ export interface AppAccessSettings {
   mode: "disabled" | "entra";
   required: boolean;
   allowedUsersConfigured: boolean;
+  allowedUsersCount: number;
+}
+
+export interface SettingsAbout {
+  appVersion: string;
+  databaseSchemaVersion: string;
+  lastMigration: string | null;
+  logLevel: string;
 }
 
 /**
@@ -329,9 +337,29 @@ export interface FeatureFlagMap {
   sccm_detection: boolean;
 }
 
+export type AppSettingValueType = "string" | "number" | "boolean" | "json";
+export type AppSettingSource = "db" | "env" | "default";
+export type AppSettingValue = string | number | boolean | Record<string, unknown> | null;
+
+export interface EffectiveAppSetting {
+  key: string;
+  section: string;
+  label: string;
+  description: string;
+  value: AppSettingValue;
+  defaultValue: AppSettingValue;
+  valueType: AppSettingValueType;
+  source: AppSettingSource;
+  envVar: string | null;
+  updatedAt: string | null;
+  restartRequired: boolean;
+}
+
 export interface SettingsResponse {
   graph: GraphReadiness;
   appAccess: AppAccessSettings;
+  about: SettingsAbout;
+  appSettings: EffectiveAppSetting[];
   tagConfig: TagConfigRecord[];
   featureFlags: FeatureFlagMap;
 }

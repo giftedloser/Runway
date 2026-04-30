@@ -63,7 +63,7 @@ const devicesRoute = createRoute({
         ? search.pageSize
         : typeof search.pageSize === "string"
           ? Number(search.pageSize)
-          : 25
+          : undefined
   }),
   component: lazyRouteComponent(() => import("./routes/DeviceList.js"), "DeviceListPage")
 });

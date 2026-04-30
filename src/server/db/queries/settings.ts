@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+
 import type Database from "better-sqlite3";
 
 import type {
@@ -7,6 +9,34 @@ import type {
 } from "../../../shared/types.js";
 import { config } from "../../config.js";
 import { asArray } from "../../engine/normalize.js";
+import { listEffectiveAppSettings } from "../../settings/app-settings.js";
+
+function getAppVersion() {
+  try {
+    const pkg = JSON.parse(readFileSync("package.json", "utf8")) as { version?: string };
+    return pkg.version ?? "dev";
+  } catch {
+    return process.env.npm_package_version ?? "dev";
+  }
+}
+
+function getSchemaInfo(db: Database.Database) {
+  const tableExists =
+    (
+      db
+        .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'schema_migrations'")
+        .get() as { name?: string } | undefined
+    )?.name === "schema_migrations";
+  if (!tableExists) {
+    return { databaseSchemaVersion: "0", lastMigration: null };
+  }
+  const row = db
+    .prepare("SELECT id FROM schema_migrations ORDER BY id DESC LIMIT 1")
+    .get() as { id: string } | undefined;
+  const lastMigration = row?.id ?? null;
+  const databaseSchemaVersion = lastMigration?.match(/^(\d+)/)?.[1] ?? "0";
+  return { databaseSchemaVersion, lastMigration };
+}
 
 /**
  * Known feature-flag keys. Declaring them centrally means every read/write
@@ -69,6 +99,7 @@ export function listTagConfig(db: Database.Database): TagConfigRecord[] {
 }
 
 export function getSettings(db: Database.Database): SettingsResponse {
+  const schemaInfo = getSchemaInfo(db);
   return {
     graph: {
       configured: config.isGraphConfigured,
@@ -77,8 +108,16 @@ export function getSettings(db: Database.Database): SettingsResponse {
     appAccess: {
       mode: config.APP_ACCESS_MODE,
       required: config.isAppAccessRequired,
-      allowedUsersConfigured: config.appAccessAllowedUsers.length > 0
+      allowedUsersConfigured: config.appAccessAllowedUsers.length > 0,
+      allowedUsersCount: config.appAccessAllowedUsers.length
     },
+    about: {
+      appVersion: getAppVersion(),
+      databaseSchemaVersion: schemaInfo.databaseSchemaVersion,
+      lastMigration: schemaInfo.lastMigration,
+      logLevel: process.env.LOG_LEVEL ?? "info"
+    },
+    appSettings: listEffectiveAppSettings(db),
     tagConfig: listTagConfig(db),
     featureFlags: listFeatureFlags(db)
   };

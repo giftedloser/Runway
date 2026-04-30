@@ -17,6 +17,11 @@ import {
 import { scheduleRecompute } from "../engine/recompute-scheduler.js";
 import { previewTagConfig } from "../engine/preview-tag-config.js";
 import { logger } from "../logger.js";
+import {
+  isAppSettingKey,
+  resetAppSettings,
+  setAppSetting
+} from "../settings/app-settings.js";
 
 const tagConfigSchema = z.object({
   groupTag: z.string().min(1),
@@ -104,7 +109,7 @@ export function settingsRouter(db: Database.Database) {
     response.status(204).send();
   });
 
-  router.get("/", (_request, response) => {
+  router.get("/", requireDelegatedAuth, (_request, response) => {
     response.json(getSettings(db));
   });
 
@@ -131,6 +136,44 @@ export function settingsRouter(db: Database.Database) {
     }
     setFeatureFlag(db, key, body.data.enabled);
     response.json(getSettings(db).featureFlags);
+  });
+
+  const resetBodySchema = z.object({ confirmationToken: z.literal("RESET_APP_SETTINGS") });
+  router.post("/reset", requireDelegatedAuth, (request, response) => {
+    const body = resetBodySchema.safeParse(request.body);
+    if (!body.success) {
+      response.status(400).json({
+        message: "Reset requires confirmationToken: \"RESET_APP_SETTINGS\".",
+        errors: body.error.flatten().fieldErrors
+      });
+      return;
+    }
+    resetAppSettings(db);
+    response.json(getSettings(db).appSettings);
+  });
+
+  const appSettingBodySchema = z.object({ value: z.unknown() });
+  router.put("/:key", requireDelegatedAuth, (request, response) => {
+    const key = String(request.params.key);
+    if (!isAppSettingKey(key)) {
+      response.status(400).json({ message: `Unknown app setting "${key}".` });
+      return;
+    }
+    const body = appSettingBodySchema.safeParse(request.body);
+    if (!body.success) {
+      response.status(400).json({
+        message: "Body must be {\"value\": ...}.",
+        errors: body.error.flatten().fieldErrors
+      });
+      return;
+    }
+    try {
+      response.json(setAppSetting(db, key, body.data.value));
+    } catch (error) {
+      response.status(400).json({
+        message: error instanceof Error ? error.message : "Invalid app setting value."
+      });
+    }
   });
 
   // GET /api/settings/graph/env — where the wizard would write, plus a

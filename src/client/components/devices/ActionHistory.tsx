@@ -1,8 +1,8 @@
-import { formatDistanceToNow } from "date-fns";
 import { CheckCircle2, History, XCircle } from "lucide-react";
 
 import { useAuthStatus } from "../../hooks/useAuth.js";
 import { useDeviceActionLogs } from "../../hooks/useActions.js";
+import { useTimestampFormatter } from "../../hooks/useTimestampFormatter.js";
 import type { DeviceDetailResponse } from "../../lib/types.js";
 import { Card } from "../ui/card.js";
 
@@ -25,6 +25,7 @@ function isSuccess(status: number | null): boolean {
 
 export function ActionHistory({ device }: { device: DeviceDetailResponse }) {
   const auth = useAuthStatus();
+  const formatTimestamp = useTimestampFormatter();
   const isAuthed = auth.data?.authenticated === true;
   const logs = useDeviceActionLogs(isAuthed ? device.summary.deviceKey : undefined, 25);
 
@@ -69,7 +70,7 @@ export function ActionHistory({ device }: { device: DeviceDetailResponse }) {
                       {ACTION_LABELS[entry.actionType] ?? entry.actionType}
                     </div>
                     <div className="shrink-0 text-[11px] text-[var(--pc-text-muted)]" title={entry.triggeredAt}>
-                      {formatDistanceToNow(new Date(entry.triggeredAt), { addSuffix: true })}
+                      {formatTimestamp(entry.triggeredAt)}
                     </div>
                   </div>
                   <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11.5px] text-[var(--pc-text-muted)]">

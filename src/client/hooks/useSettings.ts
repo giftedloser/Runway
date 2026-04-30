@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import type {
   FeatureFlagMap,
+  EffectiveAppSetting,
   SettingsResponse,
   TagConfigPreviewResponse,
   TagConfigRecord
@@ -68,6 +69,21 @@ export function useSetFeatureFlag() {
       }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["settings"] });
+    }
+  });
+}
+
+export function useSetAppSetting() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ key, value }: { key: string; value: unknown }) =>
+      apiRequest<EffectiveAppSetting>(`/api/settings/${encodeURIComponent(key)}`, {
+        method: "PUT",
+        body: JSON.stringify({ value })
+      }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["settings"] });
+      void queryClient.invalidateQueries({ queryKey: ["sync-status"] });
     }
   });
 }

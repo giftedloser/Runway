@@ -1,8 +1,8 @@
 import { Link } from "@tanstack/react-router";
-import { formatDistanceToNow } from "date-fns";
 import { ArrowDownRight, ArrowRight, ArrowUpRight, Clock, Minus } from "lucide-react";
 import { useMemo, useState } from "react";
 
+import { useTimestampFormatter } from "../../hooks/useTimestampFormatter.js";
 import type { RecentTransition, TransitionDirection } from "../../lib/types.js";
 import { humanizeFlag } from "../../lib/flags.js";
 import { cn } from "../../lib/utils.js";
@@ -33,6 +33,7 @@ const DIRECTION_META: Record<
 
 export function RecentChanges({ transitions }: { transitions: RecentTransition[] }) {
   const [filter, setFilter] = useState<DirectionFilter>("all");
+  const formatTimestamp = useTimestampFormatter();
 
   const counts = useMemo(() => {
     let regression = 0;
@@ -143,7 +144,7 @@ export function RecentChanges({ transitions }: { transitions: RecentTransition[]
                     </div>
                     <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-[var(--pc-text-muted)]">
                       <span title={computed.toLocaleString()}>
-                        {formatDistanceToNow(computed, { addSuffix: true })}
+                        {formatTimestamp(t.computedAt)}
                       </span>
                       {t.propertyLabel ? (
                         <>

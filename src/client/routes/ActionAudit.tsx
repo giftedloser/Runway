@@ -1,5 +1,4 @@
 import { Link } from "@tanstack/react-router";
-import { formatDistanceToNow } from "date-fns";
 import {
   AlertCircle,
   CheckCircle,
@@ -26,6 +25,7 @@ import { Button } from "../components/ui/button.js";
 import { Card } from "../components/ui/card.js";
 import { useActionLogs } from "../hooks/useActions.js";
 import { useAuthStatus, useLogin } from "../hooks/useAuth.js";
+import { useTimestampFormatter } from "../hooks/useTimestampFormatter.js";
 import type { ActionLogEntry } from "../lib/types.js";
 import { cn } from "../lib/utils.js";
 
@@ -61,6 +61,7 @@ export function ActionAuditPage() {
   const auth = useAuthStatus();
   const login = useLogin();
   const logs = useActionLogs(200);
+  const formatTimestamp = useTimestampFormatter();
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [actionFilter, setActionFilter] = useState<string>("all");
 
@@ -297,7 +298,7 @@ export function ActionAuditPage() {
                     </div>
                     <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-[var(--pc-text-muted)]">
                       <span title={triggered.toLocaleString()}>
-                        {formatDistanceToNow(triggered, { addSuffix: true })}
+                        {formatTimestamp(triggered)}
                       </span>
                       <span>·</span>
                       <span>by {entry.triggeredBy}</span>
