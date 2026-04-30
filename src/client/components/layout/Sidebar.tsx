@@ -17,8 +17,14 @@ import {
   UsersRound,
 } from "lucide-react";
 
-import { useSettings } from "../../hooks/useSettings.js";
-import { useTheme, type Theme } from "../../hooks/useTheme.js";
+import { useSetAppSetting, useSettings } from "../../hooks/useSettings.js";
+import {
+  appThemeToLocalTheme,
+  THEME_LABELS,
+  THEMES,
+  useTheme,
+  type Theme
+} from "../../hooks/useTheme.js";
 import { cn } from "../../lib/utils.js";
 import { requestCommandPaletteOpen } from "../command/events.js";
 import { AuthIndicator } from "./AuthIndicator.js";
@@ -40,14 +46,6 @@ const themeIcons: Record<Theme, typeof Sun> = {
   slate: Moon,
   studio: Palette
 };
-const themeLabels: Record<Theme, string> = {
-  system: "System",
-  "canopy-light": "Canopy Light",
-  oled: "OLED",
-  slate: "Slate",
-  studio: "Studio"
-};
-
 interface NavItem {
   to: string;
   label: string;
@@ -91,7 +89,25 @@ export function Sidebar() {
     select: (state) => state.location.pathname,
   });
   const settings = useSettings();
-  const [theme, cycleTheme] = useTheme();
+  const [, , , setTheme] = useTheme();
+  const setAppSetting = useSetAppSetting();
+  const theme = appThemeToLocalTheme(
+    String(
+      settings.data?.appSettings.find((setting) => setting.key === "display.theme")?.value ??
+        "system"
+    )
+  );
+  const cycleTheme = () => {
+    const nextTheme = THEMES[(THEMES.indexOf(theme) + 1) % THEMES.length];
+    setAppSetting.mutate(
+      { key: "display.theme", value: nextTheme },
+      {
+        onSuccess: (updated) => {
+          setTheme(appThemeToLocalTheme(String(updated.value)));
+        }
+      }
+    );
+  };
 
   // Properties pulled from tag_config so each casino's leader can jump
   // straight to "their" devices. Deduped because the same property label
@@ -130,8 +146,9 @@ export function Sidebar() {
               type="button"
               onClick={cycleTheme}
               className="ml-auto inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--pc-sidebar-border)] bg-[var(--pc-sidebar-bg)] text-[var(--pc-sidebar-text)] transition-[border-color,color,background-color,transform] hover:-translate-y-0.5 hover:border-[var(--pc-border-hover)] hover:bg-[var(--pc-sidebar-border)] hover:text-[var(--pc-sidebar-text-active)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]"
-              title={`Current: ${themeLabels[theme]}. Click to cycle.`}
-              aria-label={`Current theme: ${themeLabels[theme]}. Click to cycle theme.`}
+              disabled={setAppSetting.isPending}
+              title={`Current: ${THEME_LABELS[theme]}. Click to cycle.`}
+              aria-label={`Current theme: ${THEME_LABELS[theme]}. Click to cycle theme.`}
             >
               <ThemeIcon aria-hidden="true" className="h-4 w-4" />
             </button>
@@ -216,11 +233,12 @@ export function Sidebar() {
                 type="button"
                 onClick={cycleTheme}
                 className="flex items-center gap-1.5 rounded-md border border-[var(--pc-sidebar-border)] bg-[var(--pc-sidebar-bg)] px-2 py-1 text-[10.5px] text-[var(--pc-sidebar-text)] transition-[border-color,color,background-color] hover:border-[var(--pc-border-hover)] hover:bg-[var(--pc-sidebar-border)] hover:text-[var(--pc-sidebar-text-active)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]"
-                title={`Current: ${themeLabels[theme]}. Click to cycle.`}
-                aria-label={`Current theme: ${themeLabels[theme]}. Click to cycle theme.`}
+                disabled={setAppSetting.isPending}
+                title={`Current: ${THEME_LABELS[theme]}. Click to cycle.`}
+                aria-label={`Current theme: ${THEME_LABELS[theme]}. Click to cycle theme.`}
               >
                 <ThemeIcon aria-hidden="true" className="h-3 w-3" />
-                {themeLabels[theme]}
+                {THEME_LABELS[theme]}
               </button>
             );
           })()}

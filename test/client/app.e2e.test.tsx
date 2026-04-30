@@ -218,19 +218,6 @@ const settingsPayload = {
       restartRequired: false
     },
     {
-      key: "behavior.confirmDestructiveActions",
-      section: "display-behavior",
-      label: "Confirm before destructive actions",
-      description: "Require confirmation before destructive operations.",
-      value: true,
-      defaultValue: true,
-      valueType: "boolean",
-      source: "default",
-      envVar: null,
-      updatedAt: null,
-      restartRequired: false
-    },
-    {
       key: "security.sessionTimeoutMinutes",
       section: "access-security",
       label: "Session timeout",

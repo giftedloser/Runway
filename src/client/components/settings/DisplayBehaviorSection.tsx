@@ -1,13 +1,17 @@
 import { LayoutPanelTop, MonitorCog } from "lucide-react";
 
 import type { EffectiveAppSetting } from "../../lib/types.js";
-import { useTheme, type Theme } from "../../hooks/useTheme.js";
+import {
+  appThemeToLocalTheme,
+  THEME_LABELS,
+  useTheme,
+  type Theme
+} from "../../hooks/useTheme.js";
 import { Card } from "../ui/card.js";
 import { SettingsSectionHeader } from "./SettingsShared.js";
 import {
   SelectControl,
   SettingShell,
-  ToggleControl,
   settingByKey,
   useSettingSave
 } from "./AppSettingControls.js";
@@ -36,23 +40,6 @@ const LANDING_OPTIONS = [
   { value: "tags", label: "Tags" },
   { value: "provisioning", label: "Provisioning Builder" }
 ] as const;
-
-function appThemeToLocalTheme(value: string): Theme {
-  if (value === "light") return "canopy-light";
-  if (value === "dark") return "oled";
-  if (value === "canopy-light" || value === "oled" || value === "slate" || value === "studio") {
-    return value;
-  }
-  return "system";
-}
-
-const THEME_LABELS: Record<Theme, string> = {
-  system: "System",
-  "canopy-light": "Canopy Light",
-  oled: "OLED",
-  slate: "Slate",
-  studio: "Studio"
-};
 
 export function DisplayBehaviorSection({
   appSettings,
@@ -94,7 +81,7 @@ export function DisplayBehaviorSection({
                 Operator preferences
               </div>
               <p className="mt-1 max-w-3xl text-[12px] leading-relaxed text-[var(--pc-text-muted)]">
-                Changes apply immediately in the current window. Theme is currently applied through the browser shell and saved as a Runway app setting.
+                Changes apply immediately in the current window. Theme is saved as a Runway app setting and shared with the sidebar cycler.
               </p>
             </div>
           </div>
@@ -130,7 +117,7 @@ export function DisplayBehaviorSection({
             </SettingShell>
           </div>
 
-          <div className="grid gap-3 lg:grid-cols-3">
+          <div className="grid gap-3 lg:grid-cols-2">
             <SettingShell setting={settingByKey(appSettings, "display.tablePageSize")}>
               <SelectControl
                 setting={settingByKey(appSettings, "display.tablePageSize")}
@@ -143,13 +130,6 @@ export function DisplayBehaviorSection({
               <SelectControl
                 setting={settingByKey(appSettings, "display.defaultLandingScreen")}
                 options={LANDING_OPTIONS}
-                disabled={saveDisabled}
-                onSave={save}
-              />
-            </SettingShell>
-            <SettingShell setting={settingByKey(appSettings, "behavior.confirmDestructiveActions")}>
-              <ToggleControl
-                setting={settingByKey(appSettings, "behavior.confirmDestructiveActions")}
                 disabled={saveDisabled}
                 onSave={save}
               />

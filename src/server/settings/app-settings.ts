@@ -189,14 +189,6 @@ export const APP_SETTING_DEFINITIONS = [
     allowedValues: ["devices", "tags", "provisioning"]
   },
   {
-    key: "behavior.confirmDestructiveActions",
-    section: "display-behavior",
-    label: "Confirm before destructive actions",
-    description: "Requires confirmation before destructive remediation actions.",
-    valueType: "boolean",
-    defaultValue: true
-  },
-  {
     key: "security.sessionTimeoutMinutes",
     section: "access-security",
     label: "Session timeout",
@@ -251,7 +243,6 @@ export interface AppSettingValues {
   timeFormat: "12h" | "24h";
   tablePageSize: 25 | 50 | 100 | 200;
   defaultLandingScreen: "devices" | "tags" | "provisioning";
-  confirmDestructiveActions: boolean;
   sessionTimeoutMinutes: number;
   seedMode: "mock" | "none";
 }
@@ -451,7 +442,6 @@ export function getAppSettingValues(db: Database.Database): AppSettingValues {
     timeFormat: settings.get("display.timeFormat") as "12h" | "24h",
     tablePageSize: settings.get("display.tablePageSize") as 25 | 50 | 100 | 200,
     defaultLandingScreen: settings.get("display.defaultLandingScreen") as "devices" | "tags" | "provisioning",
-    confirmDestructiveActions: settings.get("behavior.confirmDestructiveActions") as boolean,
     sessionTimeoutMinutes: settings.get("security.sessionTimeoutMinutes") as number,
     seedMode: settings.get("developer.seedMode") as "mock" | "none"
   };

@@ -9,7 +9,7 @@ import { Sidebar } from "./Sidebar.js";
 import { UnauthenticatedListener } from "./UnauthenticatedListener.js";
 import { useAppAccessLogout, useAppAccessStatus, useAuthStatus, useLogout } from "../../hooks/useAuth.js";
 import { useSettings } from "../../hooks/useSettings.js";
-import { useTheme, type Theme } from "../../hooks/useTheme.js";
+import { appThemeToLocalTheme, useTheme } from "../../hooks/useTheme.js";
 
 const LANDING_ROUTES: Record<string, "/devices" | "/tags" | "/provisioning"> = {
   devices: "/devices",
@@ -20,15 +20,6 @@ const LANDING_ROUTES: Record<string, "/devices" | "/tags" | "/provisioning"> = {
 function settingValue<T>(settings: ReturnType<typeof useSettings>, key: string, fallback: T): T {
   const setting = settings.data?.appSettings.find((item) => item.key === key);
   return (setting?.value as T | undefined) ?? fallback;
-}
-
-function appThemeToLocalTheme(value: string): Theme {
-  if (value === "light") return "canopy-light";
-  if (value === "dark") return "oled";
-  if (value === "canopy-light" || value === "oled" || value === "slate" || value === "studio") {
-    return value;
-  }
-  return "system";
 }
 
 function SettingsBehaviorController() {
@@ -48,7 +39,7 @@ function SettingsBehaviorController() {
   useEffect(() => {
     if (!settings.data) return;
     const theme = settingValue(settings, "display.theme", "system");
-    setTheme(appThemeToLocalTheme(theme));
+    setTheme(appThemeToLocalTheme(String(theme)));
   }, [settings.data?.appSettings, setTheme]);
 
   useEffect(() => {

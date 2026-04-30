@@ -81,7 +81,17 @@ export function useSetAppSetting() {
         method: "PUT",
         body: JSON.stringify({ value })
       }),
-    onSuccess: () => {
+    onSuccess: (updated) => {
+      queryClient.setQueryData<SettingsResponse>(["settings"], (current) =>
+        current
+          ? {
+              ...current,
+              appSettings: current.appSettings.map((setting) =>
+                setting.key === updated.key ? updated : setting
+              )
+            }
+          : current
+      );
       void queryClient.invalidateQueries({ queryKey: ["settings"] });
       void queryClient.invalidateQueries({ queryKey: ["sync-status"] });
     }
