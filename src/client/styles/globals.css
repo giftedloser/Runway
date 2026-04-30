@@ -73,66 +73,94 @@
   color-scheme: light;
 }
 
-:root[data-theme="canopy-dark"] {
+:root[data-theme="oled"] {
   color-scheme: dark;
-  --pc-sidebar-bg: #0f1117;
-  --pc-sidebar-text: #5a6478;
-  --pc-sidebar-text-active: #e8ecf4;
-  --pc-sidebar-border: #1e2230;
+  --pc-sidebar-bg: #000000;
+  --pc-sidebar-text: #707070;
+  --pc-sidebar-text-active: #ffffff;
+  --pc-sidebar-border: #1a1a1a;
   --pc-titlebar-bg: var(--pc-sidebar-bg);
   --pc-titlebar-border: var(--pc-sidebar-border);
   --pc-titlebar-text: var(--pc-sidebar-text-active);
   --pc-titlebar-text-muted: var(--pc-sidebar-text);
   --pc-titlebar-control: var(--pc-sidebar-text);
-  --pc-titlebar-control-hover: #1e2230;
-  --pc-bg: #0f1117;
-  --pc-surface: #181c24;
-  --pc-surface-raised: #1e2230;
-  --pc-border: #242830;
-  --pc-border-hover: #303848;
-  --pc-text-muted: #5a6478;
-  --pc-text-secondary: #a8b4c8;
-  --pc-text: #e8ecf4;
-  --pc-text-body: #a8b4c8;
-  --pc-text-heading: #e8ecf4;
+  --pc-titlebar-control-hover: #0a0a0a;
+  --pc-bg: #000000;
+  --pc-surface: #0a0a0a;
+  --pc-surface-raised: #121212;
+  --pc-border: #1a1a1a;
+  --pc-border-hover: #222222;
+  --pc-text-muted: #707070;
+  --pc-text-secondary: #c8c8c8;
+  --pc-text: #f0f0f0;
+  --pc-text-body: #c8c8c8;
+  --pc-text-heading: #ffffff;
+  --pc-accent: #ff8c1a;
+  --pc-accent-hover: #ffa33d;
+  --pc-accent-contrast: #ffffff;
+  --pc-input-bg: #0a0a0a;
+  --pc-input-border: #1a1a1a;
+  --pc-input-text: #f0f0f0;
+  --pc-placeholder: #505050;
+  --pc-accent-muted: #ff8c1a24;
+  --pc-accent-2: #00d8ff;
+  --pc-accent-2-muted: #00d8ff24;
+  --pc-critical: #ff4d5e;
+  --pc-critical-muted: #ff4d5e24;
+  --pc-danger: #ff4d5e;
+  --pc-warning: #ffb020;
+  --pc-warning-muted: #ffb02024;
+  --pc-info: #2ea8ff;
+  --pc-info-muted: #2ea8ff24;
+  --pc-healthy: #22e07a;
+  --pc-healthy-muted: #22e07a24;
+  --pc-success: #22e07a;
+  --pc-gradient-page: var(--pc-bg);
+}
+
+:root[data-theme="slate"] {
+  color-scheme: dark;
+  --pc-sidebar-bg: #141414;
+  --pc-sidebar-text: #7a7a7a;
+  --pc-sidebar-text-active: #f5f5f5;
+  --pc-sidebar-border: #262626;
+  --pc-titlebar-bg: var(--pc-sidebar-bg);
+  --pc-titlebar-border: var(--pc-sidebar-border);
+  --pc-titlebar-text: var(--pc-sidebar-text-active);
+  --pc-titlebar-text-muted: var(--pc-sidebar-text);
+  --pc-titlebar-control: var(--pc-sidebar-text);
+  --pc-titlebar-control-hover: #1a1a1a;
+  --pc-bg: #1a1a1a;
+  --pc-surface: #222222;
+  --pc-surface-raised: #2a2a2a;
+  --pc-border: #333333;
+  --pc-border-hover: #404040;
+  --pc-text-muted: #7a7a7a;
+  --pc-text-secondary: #bababa;
+  --pc-text: #e8e8e8;
+  --pc-text-body: #bababa;
+  --pc-text-heading: #f5f5f5;
   --pc-accent: #e8820c;
   --pc-accent-hover: #f09030;
   --pc-accent-contrast: #ffffff;
-  --pc-input-bg: #181c24;
-  --pc-input-border: #242830;
-  --pc-input-text: #e8ecf4;
-  --pc-placeholder: #3a4050;
-}
-
-:root[data-theme="carbon"] {
-  color-scheme: dark;
-  --pc-sidebar-bg: #111210;
-  --pc-sidebar-text: #606858;
-  --pc-sidebar-text-active: #eaf0e4;
-  --pc-sidebar-border: #1e2018;
-  --pc-titlebar-bg: var(--pc-sidebar-bg);
-  --pc-titlebar-border: var(--pc-sidebar-border);
-  --pc-titlebar-text: var(--pc-sidebar-text-active);
-  --pc-titlebar-text-muted: var(--pc-sidebar-text);
-  --pc-titlebar-control: var(--pc-sidebar-text);
-  --pc-titlebar-control-hover: #1e2018;
-  --pc-bg: #111210;
-  --pc-surface: #1a1c18;
-  --pc-surface-raised: #222420;
-  --pc-border: #272a24;
-  --pc-border-hover: #343830;
-  --pc-text-muted: #606858;
-  --pc-text-secondary: #a8b0a0;
-  --pc-text: #eaf0e4;
-  --pc-text-body: #a8b0a0;
-  --pc-text-heading: #eaf0e4;
-  --pc-accent: #6dbf6d;
-  --pc-accent-hover: #80d080;
-  --pc-accent-contrast: #ffffff;
-  --pc-input-bg: #1a1c18;
-  --pc-input-border: #272a24;
-  --pc-input-text: #eaf0e4;
-  --pc-placeholder: #404840;
+  --pc-input-bg: #222222;
+  --pc-input-border: #333333;
+  --pc-input-text: #e8e8e8;
+  --pc-placeholder: #505050;
+  --pc-accent-muted: #e8820c1f;
+  --pc-accent-2: #36c5b0;
+  --pc-accent-2-muted: #36c5b01f;
+  --pc-critical: #ef6b77;
+  --pc-critical-muted: #ef6b771f;
+  --pc-danger: #ef6b77;
+  --pc-warning: #e4a02c;
+  --pc-warning-muted: #e4a02c1f;
+  --pc-info: #5faee3;
+  --pc-info-muted: #5faee31f;
+  --pc-healthy: #57c98a;
+  --pc-healthy-muted: #57c98a1f;
+  --pc-success: #57c98a;
+  --pc-gradient-page: var(--pc-bg);
 }
 
 :root[data-theme="studio"] {

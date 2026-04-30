@@ -12,10 +12,12 @@ import {
   useSettingSave
 } from "./AppSettingControls.js";
 
-const THEME_OPTIONS: Array<{ value: "light" | "dark" | "system"; label: string }> = [
+const THEME_OPTIONS: Array<{ value: Theme; label: string }> = [
   { value: "system", label: "System" },
-  { value: "light", label: "Light" },
-  { value: "dark", label: "Dark" }
+  { value: "canopy-light", label: "Canopy Light" },
+  { value: "oled", label: "OLED" },
+  { value: "slate", label: "Slate" },
+  { value: "studio", label: "Studio" }
 ];
 const DATE_FORMAT_OPTIONS = [
   { value: "relative", label: "Relative" },
@@ -37,9 +39,20 @@ const LANDING_OPTIONS = [
 
 function appThemeToLocalTheme(value: string): Theme {
   if (value === "light") return "canopy-light";
-  if (value === "dark") return "canopy-dark";
+  if (value === "dark") return "oled";
+  if (value === "canopy-light" || value === "oled" || value === "slate" || value === "studio") {
+    return value;
+  }
   return "system";
 }
+
+const THEME_LABELS: Record<Theme, string> = {
+  system: "System",
+  "canopy-light": "Canopy Light",
+  oled: "OLED",
+  slate: "Slate",
+  studio: "Studio"
+};
 
 export function DisplayBehaviorSection({
   appSettings,
@@ -49,6 +62,12 @@ export function DisplayBehaviorSection({
   adminSignedIn: boolean;
 }) {
   const [, , resolvedTheme, setTheme] = useTheme();
+  const themeSetting = settingByKey(appSettings, "display.theme");
+  const normalizedThemeSetting = {
+    ...themeSetting,
+    value: appThemeToLocalTheme(String(themeSetting.value)),
+    defaultValue: appThemeToLocalTheme(String(themeSetting.defaultValue))
+  };
   const { save, isSaving } = useSettingSave((updated) => {
     if (updated.key === "display.theme" && typeof updated.value === "string") {
       setTheme(appThemeToLocalTheme(updated.value));
@@ -83,11 +102,11 @@ export function DisplayBehaviorSection({
         <div className="space-y-3 p-5">
           <div className="grid gap-3 lg:grid-cols-3">
             <SettingShell
-              setting={settingByKey(appSettings, "display.theme")}
-              help={`Current applied theme: ${resolvedTheme === "canopy-dark" ? "Canopy Dark" : "Canopy Light"}.`}
+              setting={normalizedThemeSetting}
+              help={`Current applied theme: ${THEME_LABELS[resolvedTheme]}.`}
             >
               <SelectControl
-                setting={settingByKey(appSettings, "display.theme")}
+                setting={normalizedThemeSetting}
                 options={THEME_OPTIONS}
                 disabled={saveDisabled}
                 onSave={save}

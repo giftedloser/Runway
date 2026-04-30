@@ -2,12 +2,12 @@ import { useCallback, useEffect, useMemo, useSyncExternalStore } from "react";
 
 import { usePreference } from "./usePreference.js";
 
-export type Theme = "system" | "canopy-light" | "canopy-dark";
+export type Theme = "system" | "canopy-light" | "oled" | "slate" | "studio";
 export type AppliedTheme = Exclude<Theme, "system">;
 
-const THEMES: Theme[] = ["system", "canopy-light", "canopy-dark"];
+const THEMES: Theme[] = ["system", "canopy-light", "oled", "slate", "studio"];
 const DEFAULT_THEME: Theme = "system";
-const DARK_SCHEME_THEMES = new Set<AppliedTheme>(["canopy-dark"]);
+const DARK_SCHEME_THEMES = new Set<AppliedTheme>(["oled", "slate"]);
 
 function isTheme(value: unknown): value is Theme {
   return typeof value === "string" && THEMES.includes(value as Theme);
@@ -28,7 +28,7 @@ function subscribeToSystemTheme(callback: () => void) {
 
 function getSystemTheme(): AppliedTheme {
   if (typeof window !== "undefined" && window.matchMedia?.("(prefers-color-scheme: dark)").matches) {
-    return "canopy-dark";
+    return "oled";
   }
   return "canopy-light";
 }

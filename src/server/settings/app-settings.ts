@@ -22,6 +22,8 @@ const SETTINGS_SECTION_LABELS: Record<AppSettingSection, string> = {
   developer: "Developer"
 };
 
+type AppTheme = "canopy-light" | "oled" | "slate" | "studio" | "system" | "light" | "dark";
+
 interface AppSettingDefinition {
   key: string;
   section: AppSettingSection;
@@ -147,7 +149,7 @@ export const APP_SETTING_DEFINITIONS = [
     description: "Controls the Runway color theme. System follows Windows and falls back to Canopy Light.",
     valueType: "string",
     defaultValue: "system",
-    allowedValues: ["light", "dark", "system"]
+    allowedValues: ["canopy-light", "oled", "slate", "studio", "system", "light", "dark"]
   },
   {
     key: "display.dateFormat",
@@ -244,7 +246,7 @@ export interface AppSettingValues {
   actionLogRetentionDays: number;
   syncLogRetentionDays: number;
   retentionSweepIntervalHours: number;
-  theme: "light" | "dark" | "system";
+  theme: AppTheme;
   dateFormat: "relative" | "absolute";
   timeFormat: "12h" | "24h";
   tablePageSize: 25 | 50 | 100 | 200;
@@ -444,7 +446,7 @@ export function getAppSettingValues(db: Database.Database): AppSettingValues {
     actionLogRetentionDays: settings.get("retention.actionLogDays") as number,
     syncLogRetentionDays: settings.get("retention.syncLogDays") as number,
     retentionSweepIntervalHours: settings.get("retention.sweepIntervalHours") as number,
-    theme: settings.get("display.theme") as "light" | "dark" | "system",
+    theme: settings.get("display.theme") as AppTheme,
     dateFormat: settings.get("display.dateFormat") as "relative" | "absolute",
     timeFormat: settings.get("display.timeFormat") as "12h" | "24h",
     tablePageSize: settings.get("display.tablePageSize") as 25 | 50 | 100 | 200,

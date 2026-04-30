@@ -163,7 +163,7 @@ function WindowButton({
       className={cn(
         "grid w-11 place-items-center text-[var(--pc-titlebar-control)] transition-[background-color,color] focus-visible:outline focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-[var(--pc-accent)]",
         danger
-          ? "hover:bg-[#d93025] hover:text-[var(--pc-accent-contrast)]"
+          ? "hover:bg-[var(--pc-danger)] hover:text-[var(--pc-accent-contrast)]"
           : "hover:bg-[var(--pc-titlebar-control-hover)] hover:text-[var(--pc-titlebar-text)]"
       )}
     >

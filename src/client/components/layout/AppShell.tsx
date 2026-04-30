@@ -24,7 +24,10 @@ function settingValue<T>(settings: ReturnType<typeof useSettings>, key: string, 
 
 function appThemeToLocalTheme(value: string): Theme {
   if (value === "light") return "canopy-light";
-  if (value === "dark") return "canopy-dark";
+  if (value === "dark") return "oled";
+  if (value === "canopy-light" || value === "oled" || value === "slate" || value === "studio") {
+    return value;
+  }
   return "system";
 }
 
@@ -43,6 +46,7 @@ function SettingsBehaviorController() {
     appAccess.data?.authenticated === true || auth.data?.authenticated === true;
 
   useEffect(() => {
+    if (!settings.data) return;
     const theme = settingValue(settings, "display.theme", "system");
     setTheme(appThemeToLocalTheme(theme));
   }, [settings.data?.appSettings, setTheme]);

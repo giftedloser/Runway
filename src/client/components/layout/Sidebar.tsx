@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   Monitor,
   Moon,
+  Palette,
   Search,
   Settings2,
   ShieldCheck,
@@ -35,12 +36,16 @@ const appVersion =
 const themeIcons: Record<Theme, typeof Sun> = {
   system: Monitor,
   "canopy-light": Sun,
-  "canopy-dark": Moon
+  oled: Moon,
+  slate: Moon,
+  studio: Palette
 };
 const themeLabels: Record<Theme, string> = {
   system: "System",
   "canopy-light": "Canopy Light",
-  "canopy-dark": "Canopy Dark"
+  oled: "OLED",
+  slate: "Slate",
+  studio: "Studio"
 };
 
 interface NavItem {
