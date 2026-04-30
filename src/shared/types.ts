@@ -312,7 +312,7 @@ export interface AppAccessSettings {
   mode: "disabled" | "entra";
   required: boolean;
   allowedUsersConfigured: boolean;
-  allowedUsers: string[];
+  allowedUsersCount: number;
 }
 
 export interface SettingsAbout {

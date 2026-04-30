@@ -109,7 +109,7 @@ export function getSettings(db: Database.Database): SettingsResponse {
       mode: config.APP_ACCESS_MODE,
       required: config.isAppAccessRequired,
       allowedUsersConfigured: config.appAccessAllowedUsers.length > 0,
-      allowedUsers: config.appAccessAllowedUsers
+      allowedUsersCount: config.appAccessAllowedUsers.length
     },
     about: {
       appVersion: getAppVersion(),

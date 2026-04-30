@@ -84,9 +84,13 @@ export function AccessSecuritySection({
             />
             <ReadOnlyEnvCard
               label="APP_ACCESS_ALLOWED_USERS"
-              value={appAccess.allowedUsers.length > 0 ? appAccess.allowedUsers.join(", ") : "Any tenant user"}
+              value={
+                appAccess.allowedUsersConfigured
+                  ? `${appAccess.allowedUsersCount} users configured. Edit .env to change.`
+                  : "Any tenant user"
+              }
               detail={
-                appAccess.allowedUsers.length > 0
+                appAccess.allowedUsersConfigured
                   ? "Only listed users can pass the app access gate."
                   : "Blank allow-list means any signed-in user in the tenant can enter."
               }

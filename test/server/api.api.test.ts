@@ -132,4 +132,22 @@ describe("Runway API", () => {
     expect(historyRetention.value).toBe(90);
     expect(historyRetention.source).not.toBe("db");
   });
+
+  it.each([
+    "AZURE_CLIENT_SECRET",
+    "SESSION_SECRET",
+    "AZURE_CLIENT_CERT_PATH",
+    "AZURE_CLIENT_CERT_THUMBPRINT",
+    "APP_ACCESS_ALLOWED_USERS"
+  ])("rejects secret-tier key %s through the app settings API", async (key) => {
+    const app = createApp(db);
+
+    await request(app)
+      .put(`/api/settings/${key}`)
+      .send({ value: "should-not-store" })
+      .expect(400)
+      .expect((response) => {
+        expect(response.body.message).toBe(`Unknown app setting "${key}".`);
+      });
+  });
 });

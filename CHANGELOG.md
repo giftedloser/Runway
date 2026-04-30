@@ -9,7 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-No entries yet.
+### Added
+
+- Added database-backed app settings with DB / environment / code-default
+  precedence and reset-to-defaults support.
+- Moved operational tunables out of `.env` and into the Settings UI while
+  keeping legacy environment overrides working with a one-time boot warning.
+- Added live settings for theme, date/time format, sync triggers, session
+  timeout, table page size, default landing screen, and destructive-action
+  confirmation.
 
 ## [1.5.0] - 2026-04-29
 

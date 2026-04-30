@@ -5,12 +5,26 @@ import { logger } from "../logger.js";
 export type AppSettingValueType = "string" | "number" | "boolean" | "json";
 export type AppSettingSource = "db" | "env" | "default";
 export type AppSettingPrimitive = string | number | boolean;
+type AppSettingSection =
+  | "sync-data"
+  | "rules-thresholds"
+  | "display-behavior"
+  | "access-security"
+  | "developer";
 
 const envWarningKeys = new Set<string>();
 
+const SETTINGS_SECTION_LABELS: Record<AppSettingSection, string> = {
+  "sync-data": "Sync & Data",
+  "rules-thresholds": "Rules & Thresholds",
+  "display-behavior": "Display & Behavior",
+  "access-security": "Access & Security",
+  developer: "Developer"
+};
+
 interface AppSettingDefinition {
   key: string;
-  section: "sync-data" | "rules-thresholds" | "display-behavior" | "access-security" | "developer";
+  section: AppSettingSection;
   label: string;
   description: string;
   valueType: Exclude<AppSettingValueType, "json">;
@@ -335,7 +349,9 @@ function getEnvValue(definition: AppSettingDefinition) {
     envWarningKeys.add(definition.envVar);
     logger.warn(
       { envVar: definition.envVar, settingKey: definition.key },
-      "Legacy environment override is set for an app setting; Settings UI values take precedence."
+      `Legacy environment override is set for an app setting. Set this value in Settings -> ${
+        SETTINGS_SECTION_LABELS[definition.section]
+      } going forward; the env override is honored for backward compatibility. Settings UI values take precedence.`
     );
   }
   const parsed = parseValue(definition, rawValue);

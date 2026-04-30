@@ -19,7 +19,7 @@ const settingsPayload = {
     mode: "disabled",
     required: false,
     allowedUsersConfigured: false,
-    allowedUsers: []
+    allowedUsersCount: 0
   },
   appSettings: [
     {
