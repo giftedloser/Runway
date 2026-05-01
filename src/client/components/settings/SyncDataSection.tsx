@@ -41,7 +41,7 @@ export function SyncDataSection({
   return (
     <section id="sync-data" className="scroll-mt-6 space-y-3">
       <SettingsSectionHeader
-        index="1"
+        index="3"
         title="Sync & Data"
         detail="Cadence, launch behavior, and retention windows"
       />

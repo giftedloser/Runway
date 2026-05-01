@@ -206,8 +206,8 @@ export const APP_SETTING_DEFINITIONS = [
     label: "Default landing screen",
     description: "Route Runway opens on app launch.",
     valueType: "string",
-    defaultValue: "devices",
-    allowedValues: ["devices", "tags", "provisioning"]
+    defaultValue: "overview",
+    allowedValues: ["overview", "devices", "tags", "provisioning"]
   },
   {
     key: "security.sessionTimeoutMinutes",
@@ -266,7 +266,7 @@ export interface AppSettingValues {
   dateFormat: "relative" | "absolute";
   timeFormat: "12h" | "24h";
   tablePageSize: 25 | 50 | 100 | 200;
-  defaultLandingScreen: "devices" | "tags" | "provisioning";
+  defaultLandingScreen: "overview" | "devices" | "tags" | "provisioning";
   sessionTimeoutMinutes: number;
   seedMode: "mock" | "none";
 }
@@ -490,7 +490,11 @@ export function getAppSettingValues(db: Database.Database): AppSettingValues {
     dateFormat: settings.get("display.dateFormat") as "relative" | "absolute",
     timeFormat: settings.get("display.timeFormat") as "12h" | "24h",
     tablePageSize: settings.get("display.tablePageSize") as 25 | 50 | 100 | 200,
-    defaultLandingScreen: settings.get("display.defaultLandingScreen") as "devices" | "tags" | "provisioning",
+    defaultLandingScreen: settings.get("display.defaultLandingScreen") as
+      | "overview"
+      | "devices"
+      | "tags"
+      | "provisioning",
     sessionTimeoutMinutes: settings.get("security.sessionTimeoutMinutes") as number,
     seedMode: settings.get("developer.seedMode") as "mock" | "none"
   };

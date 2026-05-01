@@ -209,8 +209,8 @@ const settingsPayload = {
       section: "display-behavior",
       label: "Default landing screen",
       description: "Route opened at app launch.",
-      value: "devices",
-      defaultValue: "devices",
+      value: "overview",
+      defaultValue: "overview",
       valueType: "string",
       source: "default",
       envVar: null,
@@ -433,15 +433,16 @@ describe("client drilldown", () => {
   }
 
   async function openOverview() {
-    await waitFor(() => expect(window.location.pathname).not.toBe("/"));
-    fireEvent.click(await screen.findByRole("link", { name: "Overview" }));
+    if (window.location.pathname !== "/") {
+      fireEvent.click(await screen.findByRole("link", { name: "Overview" }));
+    }
     return findDashboardTitle();
   }
 
-  it("navigates from dashboard to devices to a device detail", async () => {
+  it("navigates from overview to devices to a device detail", async () => {
     await renderApp();
 
-    // Default landing opens Devices; Overview remains one click away.
+    // Default landing opens Overview.
     expect(await openOverview()).toBeInTheDocument();
 
     // Drill into the Critical Devices quick-action link → device queue
@@ -468,7 +469,7 @@ describe("client drilldown", () => {
 
   it("saves sync interval from Settings", async () => {
     await renderApp();
-    expect(await screen.findByText("Device Queue")).toBeInTheDocument();
+    expect(await screen.findByText("Fleet Health")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("link", { name: "Settings" }));
     expect(await screen.findByText("Sync & Data")).toBeInTheDocument();

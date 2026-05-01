@@ -26,7 +26,7 @@ export function AboutSection({ about }: { about: SettingsAbout }) {
   return (
     <section id="about" className="scroll-mt-6 space-y-3">
       <SettingsSectionHeader
-        index="7"
+        index="12"
         title="About"
         detail="Version, database migration state, and project links"
       />

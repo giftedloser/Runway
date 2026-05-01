@@ -38,6 +38,7 @@ const PAGE_SIZE_OPTIONS = [25, 50, 100, 200].map((value) => ({
   label: `${value} rows`
 }));
 const LANDING_OPTIONS = [
+  { value: "overview", label: "Overview" },
   { value: "devices", label: "Devices" },
   { value: "tags", label: "Tags" },
   { value: "provisioning", label: "Provisioning Builder" }
@@ -66,7 +67,7 @@ export function DisplayBehaviorSection({
   return (
     <section id="display-behavior" className="scroll-mt-6 space-y-3">
       <SettingsSectionHeader
-        index="3"
+        index="1"
         title="Display & Behavior"
         detail="Theme, timestamp style, table defaults, and launch behavior"
       />

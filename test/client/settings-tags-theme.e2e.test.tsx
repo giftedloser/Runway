@@ -334,6 +334,7 @@ describe("cleanup settings flows", () => {
     await renderApp();
 
     expect(await screen.findByText("Display & Behavior")).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Overview" })).toBeInTheDocument();
     fireEvent.click(screen.getAllByRole("button", { name: /current theme: system/i })[0]);
 
     await waitFor(() => {

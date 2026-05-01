@@ -333,7 +333,7 @@ export function SetupPage() {
         title={activeStep === 5 ? "Setup complete" : "Finish setup"}
         description={
           activeStep === 5
-            ? "Head to the dashboard to start triaging."
+            ? "Head to Overview to start triaging."
             : "Complete the required setup steps before triaging live data."
         }
         done={activeStep === 5}
@@ -342,7 +342,7 @@ export function SetupPage() {
         <div className="flex items-center gap-3">
           <Link to="/">
             <Button>
-              Go to dashboard
+              Go to Overview
               <ArrowRight className="h-3.5 w-3.5" />
             </Button>
           </Link>

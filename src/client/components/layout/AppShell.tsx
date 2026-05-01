@@ -13,7 +13,8 @@ import { useAppAccessLogout, useAppAccessStatus, useAuthStatus, useLogout } from
 import { useSettings } from "../../hooks/useSettings.js";
 import { appThemeToLocalTheme, useTheme } from "../../hooks/useTheme.js";
 
-const LANDING_ROUTES: Record<string, "/devices" | "/tags" | "/provisioning"> = {
+const LANDING_ROUTES: Record<string, "/" | "/devices" | "/tags" | "/provisioning"> = {
+  overview: "/",
   devices: "/devices",
   tags: "/tags",
   provisioning: "/provisioning"
@@ -49,9 +50,11 @@ function SettingsBehaviorController() {
     if (pathname !== "/") return;
 
     redirectedOnBootRef.current = true;
-    const landing = settingValue(settings, "display.defaultLandingScreen", "devices");
-    const route = LANDING_ROUTES[landing] ?? "/devices";
-    void navigate({ to: route, replace: true });
+    const landing = settingValue(settings, "display.defaultLandingScreen", "overview");
+    const route = LANDING_ROUTES[landing] ?? "/";
+    if (route !== pathname) {
+      void navigate({ to: route, replace: true });
+    }
   }, [navigate, pathname, settings]);
 
   useEffect(() => {

@@ -41,7 +41,7 @@ export function AccessSecuritySection({
   return (
     <section id="access-security" className="scroll-mt-6 space-y-3">
       <SettingsSectionHeader
-        index="5"
+        index="6"
         title="Access & Security"
         detail="Environment-controlled access gate, admin session, and idle timeout"
       />

@@ -166,27 +166,17 @@ export function SettingsPage() {
 
       <SettingsJumpNav />
 
-      <SyncDataSection
-        appSettings={settings.data.appSettings}
-        adminSignedIn={isAuthed}
-      />
-
-      <RulesThresholdsSection
-        appSettings={settings.data.appSettings}
-        adminSignedIn={isAuthed}
-      />
-
       <DisplayBehaviorSection
         appSettings={settings.data.appSettings}
         adminSignedIn={isAuthed}
       />
 
-      {/* Section 4: Graph integration */}
+      {/* Section 2: Graph integration */}
       <section id="graph" className="scroll-mt-6 space-y-3">
         <SettingsSectionHeader
-          index="4"
+          index="2"
           title="Graph Integration"
-          detail="Read-only ingestion for dashboards and joins"
+          detail="Read-only ingestion for Overview and joins"
         />
 
         <Card className="p-5">
@@ -261,16 +251,97 @@ export function SettingsPage() {
         </Card>
       </section>
 
+      <SyncDataSection
+        appSettings={settings.data.appSettings}
+        adminSignedIn={isAuthed}
+      />
+
+      {/* Section 4: Tag mapping */}
+      <section id="tags" className="scroll-mt-6 space-y-3">
+        <SettingsSectionHeader
+          index="4"
+          title="Tag Mapping"
+          detail="Bulk import/export only; edit individual mappings in Tags"
+          actions={
+            <div className="flex flex-wrap items-center gap-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="application/json,.json"
+                className="hidden"
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  if (file) void importTagConfig(file);
+                }}
+              />
+              <Button
+                variant="secondary"
+                className="h-8 px-2.5 text-[11.5px]"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={importing || !isAuthed}
+                title={
+                  isAuthed
+                    ? "Import tag mappings from JSON (upserts by group tag)"
+                    : "Admin sign-in required to import tag mappings"
+                }
+              >
+                <Upload className="h-3.5 w-3.5" />
+                {importing ? "Importing..." : "Import JSON"}
+              </Button>
+              <Button
+                variant="secondary"
+                className="h-8 px-2.5 text-[11.5px]"
+                onClick={exportTagConfig}
+                disabled={(settings.data?.tagConfig.length ?? 0) === 0}
+                title="Download all tag mappings as JSON"
+              >
+                <Download className="h-3.5 w-3.5" />
+                Export JSON
+              </Button>
+            </div>
+          }
+        />
+
+        <Card className="p-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--pc-accent-muted)]">
+                <Tag className="h-4 w-4 text-[var(--pc-accent-hover)]" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-[13px] font-semibold text-[var(--pc-text)]">
+                  Bulk mapping exchange
+                </div>
+                <p className="mt-1 max-w-3xl text-[12px] leading-relaxed text-[var(--pc-text-muted)]">
+                  Keep JSON import/export here for fleet handoff and backup. Day-to-day mapping edits now live with the tag inventory so Settings stays calm.
+                </p>
+              </div>
+            </div>
+            <Link
+              to="/tags"
+              className="inline-flex h-9 shrink-0 items-center justify-center rounded-[var(--pc-radius-sm)] border border-[var(--pc-border)] bg-[var(--pc-surface)] px-3 text-[12px] font-medium text-[var(--pc-text-body)] transition-[background-color,border-color,color,transform] hover:-translate-y-px hover:border-[var(--pc-border-hover)] hover:bg-[var(--pc-surface-raised)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]"
+            >
+              Manage individual mappings in Tags view →
+            </Link>
+          </div>
+        </Card>
+      </section>
+
+      <RulesThresholdsSection
+        appSettings={settings.data.appSettings}
+        adminSignedIn={isAuthed}
+      />
+
       <AccessSecuritySection
         appSettings={settings.data.appSettings}
         appAccess={appAccess}
         adminSignedIn={isAuthed}
       />
 
-      {/* Section 6: SCCM / ConfigMgr */}
+      {/* Section 7: SCCM / ConfigMgr */}
       <section id="signals" className="scroll-mt-6 space-y-3">
         <SettingsSectionHeader
-          index="6"
+          index="7"
           title="SCCM / ConfigMgr Signal"
           detail="Optional ConfigMgr visibility on device pages"
         />
@@ -367,8 +438,6 @@ export function SettingsPage() {
         </Card>
       </section>
 
-      <AboutSection about={settings.data.about} />
-
       {/* Section 8: Sources */}
       <section id="sources" className="scroll-mt-6 space-y-3">
         <SettingsSectionHeader
@@ -412,84 +481,16 @@ export function SettingsPage() {
         </Card>
       </section>
 
-      {/* Section 9: Tag mapping */}
-      <section id="tags" className="scroll-mt-6 space-y-3">
-        <SettingsSectionHeader
-          index="9"
-          title="Tag Mapping"
-          detail="Bulk import/export only; edit individual mappings in Tags"
-          actions={
-            <div className="flex flex-wrap items-center gap-2">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="application/json,.json"
-                className="hidden"
-                onChange={(event) => {
-                  const file = event.target.files?.[0];
-                  if (file) void importTagConfig(file);
-                }}
-              />
-              <Button
-                variant="secondary"
-                className="h-8 px-2.5 text-[11.5px]"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={importing || !isAuthed}
-                title={
-                  isAuthed
-                    ? "Import tag mappings from JSON (upserts by group tag)"
-                    : "Admin sign-in required to import tag mappings"
-                }
-              >
-                <Upload className="h-3.5 w-3.5" />
-                {importing ? "Importing..." : "Import JSON"}
-              </Button>
-              <Button
-                variant="secondary"
-                className="h-8 px-2.5 text-[11.5px]"
-                onClick={exportTagConfig}
-                disabled={(settings.data?.tagConfig.length ?? 0) === 0}
-                title="Download all tag mappings as JSON"
-              >
-                <Download className="h-3.5 w-3.5" />
-                Export JSON
-              </Button>
-            </div>
-          }
-        />
-
-        <Card className="p-5">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-start gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--pc-accent-muted)]">
-                <Tag className="h-4 w-4 text-[var(--pc-accent-hover)]" />
-              </div>
-              <div className="min-w-0">
-                <div className="text-[13px] font-semibold text-[var(--pc-text)]">
-                  Bulk mapping exchange
-                </div>
-                <p className="mt-1 max-w-3xl text-[12px] leading-relaxed text-[var(--pc-text-muted)]">
-                  Keep JSON import/export here for fleet handoff and backup. Day-to-day mapping edits now live with the tag inventory so Settings stays calm.
-                </p>
-              </div>
-            </div>
-            <Link
-              to="/tags"
-              className="inline-flex h-9 shrink-0 items-center justify-center rounded-[var(--pc-radius-sm)] border border-[var(--pc-border)] bg-[var(--pc-surface)] px-3 text-[12px] font-medium text-[var(--pc-text-body)] transition-[background-color,border-color,color,transform] hover:-translate-y-px hover:border-[var(--pc-border-hover)] hover:bg-[var(--pc-surface-raised)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]"
-            >
-              Manage individual mappings in Tags view →
-            </Link>
-          </div>
-        </Card>
-      </section>
-      {/* Section 10: System health & retention */}
+      {/* Section 9: System health & retention */}
       <SystemHealthSection />
 
-      {/* Section 11: Custom rules */}
+      {/* Section 10: Custom rules */}
       <RulesSection />
 
-      {/* Section 12: Recent logs */}
+      {/* Section 11: Recent logs */}
       <LogViewerSection />
+
+      <AboutSection about={settings.data.about} />
 
     </div>
   );

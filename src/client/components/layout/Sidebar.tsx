@@ -71,30 +71,6 @@ const navGroups: NavGroup[] = [
     items: [
       { to: "/", label: "Overview", icon: LayoutDashboard },
       { to: "/devices", label: "Devices", icon: TabletSmartphone },
-    ],
-  },
-  {
-    label: "Inspect",
-    items: [
-      { to: "/profiles", label: "Profiles", icon: ShieldCheck },
-      {
-        to: "/groups",
-        label: "Groups",
-        icon: UsersRound,
-        help: {
-          id: "sidebar-groups",
-          text: "Group Inspector shows synced Entra groups, membership, assignment rules, and targeted profiles."
-        }
-      },
-      {
-        to: "/tags",
-        label: "Tags",
-        icon: Tags,
-        help: {
-          id: "sidebar-tags",
-          text: "Tags lists Autopilot group tags discovered from synced devices and the local mappings Runway uses for property context."
-        }
-      },
       {
         to: "/provisioning",
         label: "Provisioning Builder",
@@ -107,11 +83,40 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
+    label: "Inventory",
+    items: [
+      {
+        to: "/tags",
+        label: "Tags",
+        icon: Tags,
+        help: {
+          id: "sidebar-tags",
+          text: "Tags lists Autopilot group tags discovered from synced devices and the local mappings Runway uses for property context."
+        }
+      },
+      {
+        to: "/groups",
+        label: "Groups",
+        icon: UsersRound,
+        help: {
+          id: "sidebar-groups",
+          text: "Group Inspector shows synced Entra groups, membership, assignment rules, and targeted profiles."
+        }
+      },
+      { to: "/profiles", label: "Profiles", icon: ShieldCheck },
+    ],
+  },
+  {
+    label: "Operations",
+    items: [
+      { to: "/actions", label: "Action Audit", icon: History },
+      { to: "/sync", label: "Sync", icon: DatabaseZap },
+    ],
+  },
+  {
     label: "System",
     items: [
-      { to: "/sync", label: "Sync", icon: DatabaseZap },
       { to: "/setup", label: "Setup", icon: CircleAlert, firstRunIndicator: true },
-      { to: "/actions", label: "Action Audit", icon: History },
       {
         to: "/settings",
         label: "Settings",

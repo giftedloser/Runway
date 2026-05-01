@@ -48,7 +48,7 @@ function settingsPayload({
       appSetting("display.dateFormat", "relative"),
       appSetting("display.timeFormat", "24h"),
       appSetting("display.tablePageSize", 50),
-      appSetting("display.defaultLandingScreen", "devices"),
+      appSetting("display.defaultLandingScreen", "overview"),
       appSetting("security.sessionTimeoutMinutes", 60),
       appSetting("developer.seedMode", seedMode),
     ],

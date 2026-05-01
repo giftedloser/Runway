@@ -21,9 +21,9 @@ export function RulesThresholdsSection({
   const saveDisabled = !adminSignedIn || isSaving;
 
   return (
-    <section id="rule-thresholds" className="scroll-mt-6 space-y-3">
+    <section id="rules-thresholds" className="scroll-mt-6 space-y-3">
       <SettingsSectionHeader
-        index="2"
+        index="5"
         title="Rules & Thresholds"
         detail="Time windows used by built-in bad-state detection"
       />

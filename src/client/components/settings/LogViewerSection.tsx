@@ -66,7 +66,7 @@ export function LogViewerSection() {
   return (
     <section id="logs" className="scroll-mt-6 space-y-3">
       <SettingsSectionHeader
-        index="12"
+        index="11"
         title="Recent Logs"
         detail="Last 500 runtime entries from the in-memory ring buffer"
         actions={

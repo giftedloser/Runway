@@ -156,7 +156,7 @@ export function KeyboardShortcuts() {
     {
       label: "Go to",
       items: [
-        { keys: ["g", "d"], label: "Dashboard" },
+        { keys: ["g", "d"], label: "Overview" },
         { keys: ["g", "v"], label: "Devices" },
         { keys: ["g", "c"], label: "Critical devices" },
         { keys: ["g", "p"], label: "Profiles" },
