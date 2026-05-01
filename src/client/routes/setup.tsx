@@ -17,6 +17,8 @@ import { Button } from "../components/ui/button.js";
 import { Card } from "../components/ui/card.js";
 import { Input } from "../components/ui/input.js";
 import { useSettings, useTagConfigMutations } from "../hooks/useSettings.js";
+import { useAuthStatus } from "../hooks/useAuth.js";
+import { useFirstRunStatus } from "../hooks/useSetup.js";
 import { useSyncStatus, useTriggerSync } from "../hooks/useSync.js";
 import { useTimestampFormatter } from "../hooks/useTimestampFormatter.js";
 
@@ -59,6 +61,8 @@ function StepShell({ number, title, description, done, active, children }: StepS
 export function SetupPage() {
   const settings = useSettings();
   const sync = useSyncStatus();
+  const auth = useAuthStatus();
+  const firstRun = useFirstRunStatus();
   const triggerSync = useTriggerSync();
   const mutations = useTagConfigMutations();
   const formatTimestamp = useTimestampFormatter();
@@ -83,17 +87,19 @@ export function SetupPage() {
 
   const graphConfigured = settings.data.graph.configured;
   const hasMappings = settings.data.tagConfig.length > 0;
-  const hasSync = Boolean(sync.data?.lastCompletedAt);
+  const hasSync = firstRun.data?.successfulSyncCompleted ?? Boolean(sync.data?.lastCompletedAt);
+  const hasDeviceRows = firstRun.data?.deviceRowsPresent ?? false;
+  const isAuthed = auth.data?.authenticated === true;
 
   // Active step is the first incomplete one.
-  const activeStep = !graphConfigured ? 1 : !hasSync ? 2 : !hasMappings ? 3 : 4;
+  const activeStep = !graphConfigured ? 1 : !hasSync ? 2 : !hasDeviceRows ? 3 : !hasMappings ? 4 : 5;
 
   return (
     <div className="space-y-6">
       <PageHeader
         eyebrow="Welcome"
         title="First-run Setup"
-        description="Configure Graph, sync data, and add the first tag mapping."
+        description="Connect the tenant, verify Graph access, sync device data, and add the first tag."
       />
 
       {/* Progress stepper */}
@@ -101,7 +107,7 @@ export function SetupPage() {
 
       <StepShell
         number={1}
-        title="Graph credentials"
+        title="Connect Entra tenant"
         description="Add tenant ID, client ID, and client secret."
         done={graphConfigured}
         active={activeStep === 1}
@@ -113,8 +119,8 @@ export function SetupPage() {
 
       <StepShell
         number={2}
-        title="Run your first sync"
-        description="Pull Microsoft Graph signals into the local cache."
+        title="Verify Graph permissions"
+        description="A successful Graph sync confirms the configured app permissions."
         done={hasSync}
         active={activeStep === 2}
       >
@@ -122,25 +128,58 @@ export function SetupPage() {
           <Database className="h-4 w-4 text-[var(--pc-accent)]" />
           <div className="flex-1 text-[12px] text-[var(--pc-text-secondary)]">
             {hasSync
-              ? `Last sync completed ${sync.data?.lastCompletedAt ? formatTimestamp(sync.data.lastCompletedAt) : "recently"}.`
-              : "No completed sync yet. The first one may take a minute."}
+              ? `Permissions verified by sync ${sync.data?.lastCompletedAt ? formatTimestamp(sync.data.lastCompletedAt) : "recently"}.`
+              : "Run the initial sync to verify Graph permissions."}
           </div>
           <Button
             onClick={() => triggerSync.mutate()}
-            disabled={triggerSync.isPending || sync.data?.inProgress}
+            disabled={!sync.data?.canTriggerManualSync || triggerSync.isPending || sync.data?.inProgress}
+            title={sync.data?.canTriggerManualSync ? undefined : "Admin sign-in required to run sync"}
           >
             <RefreshCcw className="h-3.5 w-3.5" />
-            {sync.data?.inProgress ? "Syncing…" : hasSync ? "Re-sync" : "Run sync"}
+            {sync.data?.inProgress ? "Syncing..." : hasSync ? "Re-sync" : "Run sync"}
+          </Button>
+        </div>
+        {!sync.data?.canTriggerManualSync ? (
+          <div className="mt-2 rounded-lg border border-[var(--pc-warning)]/30 bg-[var(--pc-warning-muted)] px-3 py-2 text-[11.5px] text-[var(--pc-warning)]">
+            Manual sync requires delegated admin sign-in.
+          </div>
+        ) : null}
+      </StepShell>
+
+      <StepShell
+        number={3}
+        title="Run initial sync"
+        description="Populate the local cache with at least one device row."
+        done={hasDeviceRows}
+        active={activeStep === 3}
+      >
+        <div className="flex items-center gap-3 rounded-lg border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] p-3">
+          <Database className="h-4 w-4 text-[var(--pc-accent)]" />
+          <div className="flex-1 text-[12px] text-[var(--pc-text-secondary)]">
+            {hasDeviceRows
+              ? "Device data is present in Runway."
+              : hasSync
+                ? "The last sync completed, but no device rows exist yet."
+                : "Run a successful sync to populate device data."}
+          </div>
+          <Button
+            onClick={() => triggerSync.mutate()}
+            disabled={!sync.data?.canTriggerManualSync || triggerSync.isPending || sync.data?.inProgress}
+            title={sync.data?.canTriggerManualSync ? undefined : "Admin sign-in required to run sync"}
+          >
+            <RefreshCcw className="h-3.5 w-3.5" />
+            {sync.data?.inProgress ? "Syncing..." : "Run sync"}
           </Button>
         </div>
       </StepShell>
 
       <StepShell
-        number={3}
+        number={4}
         title="Map a group tag"
         description="Set expected property, groups, and profiles for a tag."
         done={hasMappings}
-        active={activeStep === 3}
+        active={activeStep === 4}
       >
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
@@ -214,7 +253,8 @@ export function SetupPage() {
         </div>
         <div className="mt-3 flex items-center gap-3">
           <Button
-            disabled={!tagForm.groupTag || !tagForm.propertyLabel || mutations.create.isPending}
+            disabled={!isAuthed || !tagForm.groupTag || !tagForm.propertyLabel || mutations.create.isPending}
+            title={isAuthed ? undefined : "Admin sign-in required to save tag mappings"}
             onClick={() =>
               mutations.create.mutate(
                 {
@@ -289,11 +329,11 @@ export function SetupPage() {
       </StepShell>
 
       <StepShell
-        number={4}
-        title="You're set"
+        number={5}
+        title="Setup complete"
         description="Head to the dashboard to start triaging."
-        done={activeStep === 4}
-        active={activeStep === 4}
+        done={activeStep === 5}
+        active={activeStep === 5}
       >
         <div className="flex items-center gap-3">
           <Link to="/">
@@ -302,7 +342,7 @@ export function SetupPage() {
               <ArrowRight className="h-3.5 w-3.5" />
             </Button>
           </Link>
-          {activeStep !== 4 ? (
+          {activeStep !== 5 ? (
             <span className="inline-flex items-center gap-1 text-[11px] text-[var(--pc-text-muted)]">
               <CircleDashed className="h-3 w-3" />
               Finish the steps above first
@@ -314,7 +354,7 @@ export function SetupPage() {
   );
 }
 
-const STEPPER_LABELS = ["Credentials", "First sync", "Tag mapping", "Ready"];
+const STEPPER_LABELS = ["Tenant", "Permissions", "Initial sync", "First tag", "Ready"];
 
 function SetupStepper({ activeStep }: { activeStep: number }) {
   return (

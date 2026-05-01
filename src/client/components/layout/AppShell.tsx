@@ -4,8 +4,10 @@ import { Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { CommandPalette } from "../command/CommandPalette.js";
 import { KeyboardShortcuts } from "../command/KeyboardShortcuts.js";
 import { ToastProvider } from "../shared/toast.js";
+import { FirstRunBanner } from "./FirstRunBanner.js";
 import { MockModeBanner } from "./MockModeBanner.js";
 import { Sidebar } from "./Sidebar.js";
+import { SyncStatusPill } from "./SyncStatusPill.js";
 import { UnauthenticatedListener } from "./UnauthenticatedListener.js";
 import { useAppAccessLogout, useAppAccessStatus, useAuthStatus, useLogout } from "../../hooks/useAuth.js";
 import { useSettings } from "../../hooks/useSettings.js";
@@ -119,6 +121,10 @@ export function AppShell() {
             className="min-w-0 flex-1 overflow-x-hidden bg-[linear-gradient(180deg,var(--pc-tint-subtle),transparent_24rem)]"
           >
             <div className="pc-page-enter mx-auto w-full max-w-[1680px] px-3 pb-12 pt-3 sm:px-5 lg:px-6 lg:pb-16 lg:pt-5 xl:px-7">
+              <div className="mb-3 flex justify-end">
+                <SyncStatusPill />
+              </div>
+              <FirstRunBanner />
               <Outlet />
             </div>
           </main>

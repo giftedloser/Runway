@@ -19,6 +19,7 @@ import { PageHeader } from "../components/layout/PageHeader.js";
 import { AdvancedDisclosure } from "../components/shared/AdvancedDisclosure.js";
 import { ConfirmDialog } from "../components/shared/ConfirmDialog.js";
 import { ErrorState, LoadingState } from "../components/shared/ErrorState.js";
+import { EmptyState } from "../components/shared/EmptyState.js";
 import { SourceBadge } from "../components/shared/SourceBadge.js";
 import { useToast } from "../components/shared/toast.js";
 import { Button } from "../components/ui/button.js";
@@ -274,13 +275,18 @@ export function TagsPage() {
         ) : null}
 
         {(tags.data?.length ?? 0) === 0 ? (
-          <div className="px-5 py-8 text-center text-[12px] text-[var(--pc-text-muted)]">
-            No group tags found. Run a sync after Autopilot devices have tags.
-          </div>
+          <EmptyState
+            id="tags-no-devices-synced"
+            title="Run a sync to see tags."
+            description="Tags appear after Runway syncs Autopilot device data that includes group tags."
+            action={{ label: "Go to Sync", onClick: () => void navigate({ to: "/sync" }) }}
+          />
         ) : visibleTags.length === 0 ? (
-          <div className="px-5 py-8 text-center text-[12px] text-[var(--pc-text-muted)]">
-            No tags match the current filter.
-          </div>
+          <EmptyState
+            id="tags-filter-empty"
+            title="No tags match the current filter."
+            description="Clear or change the filter to return to the full tag inventory."
+          />
         ) : (
           <div>
             <div className="hidden grid-cols-[minmax(0,1.35fr)_110px_150px_150px_minmax(0,1fr)_40px] border-b border-[var(--pc-border)] bg-[var(--pc-surface)] px-4 py-2 text-[10px] font-semibold uppercase tracking-wide text-[var(--pc-text-muted)] sm:grid">

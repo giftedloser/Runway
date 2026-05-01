@@ -153,12 +153,12 @@ export function EmptyPanel({
   guidance?: string;
 }) {
   return (
-    <div className="px-5 py-8">
-      <div className="text-[12px] leading-relaxed text-[var(--pc-text-muted)]">
+    <div className="px-5 py-8 text-center">
+      <div className="text-[13px] font-semibold text-[var(--pc-text)]">
         {message}
       </div>
       {guidance ? (
-        <div className="mt-3 rounded-lg border border-dashed border-[var(--pc-border)] bg-[var(--pc-surface-raised)]/35 px-3 py-2.5 text-[11px] leading-relaxed text-[var(--pc-text-muted)]">
+        <div className="mx-auto mt-2 max-w-md text-[12px] leading-relaxed text-[var(--pc-text-muted)]">
           {guidance}
         </div>
       ) : null}

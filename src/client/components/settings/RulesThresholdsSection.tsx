@@ -30,7 +30,8 @@ export function RulesThresholdsSection({
 
       <Card className="overflow-hidden p-0">
         <div className="border-b border-[var(--pc-border)] px-5 py-4">
-          <div className="flex items-start gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex items-start gap-3">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--pc-accent-muted)]">
               <Gauge className="h-4 w-4 text-[var(--pc-accent-hover)]" />
             </div>
@@ -42,6 +43,12 @@ export function RulesThresholdsSection({
                 These values tune when existing rules flag a device. The settings table is key/value based so future rule thresholds can be added without another schema change.
               </p>
             </div>
+            </div>
+            {!adminSignedIn ? (
+              <div className="rounded-md border border-[var(--pc-warning)]/30 bg-[var(--pc-warning-muted)] px-3 py-2 text-[11.5px] text-[var(--pc-warning)]">
+                Admin sign-in required to change thresholds.
+              </div>
+            ) : null}
           </div>
         </div>
         <div className="grid gap-3 p-5 lg:grid-cols-2">

@@ -11,6 +11,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Added standard settings access tiers and server-side write enforcement for
+  public-local, bootstrap, operational, and security-sensitive settings.
+- Made local display preferences, including theme, editable without delegated
+  Microsoft admin sign-in while keeping operational and security settings gated.
+- Added first-run detection, a non-blocking setup banner, and a `/setup`
+  checklist for tenant connection, Graph permission verification, initial sync,
+  and first tag configuration.
+- Added a persistent sync status pill with freshness, failure details, and
+  clearly gated manual sync access.
+- Improved empty states across Tags, Provisioning Builder, Build Payload,
+  Devices, and Group Inspector.
+- Added a capped HelpTooltip system with local dismissal/reset for the sidebar
+  and Provisioning Builder section headers.
+- Tightened sidebar property overflow so long property lists scroll while the
+  footer, theme control, and version stay pinned.
 - Added a delegated user EntityPicker for Change Primary User so admins can
   search by display name, UPN, or mail while the existing action still receives
   the selected Graph user ID.

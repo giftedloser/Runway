@@ -42,6 +42,7 @@ function appSetting(key: string, value: string | number | boolean) {
             .replace(/([A-Z])/g, " $1")
             .replace(/^./, (char) => char.toUpperCase()),
     description: `${key} setting`,
+    accessTier: key.startsWith("display.") ? "public-local" : key.startsWith("security.") ? "secret-security" : "admin-operational",
     value,
     defaultValue: value,
     valueType: typeof value,
@@ -145,7 +146,9 @@ describe("cleanup settings flows", () => {
       if (url.includes("/api/auth/status"))
         return jsonResponse({ authenticated: true, user: "admin@example.test" });
       if (url.includes("/api/sync/status"))
-        return jsonResponse({ inProgress: false, lastError: null });
+        return jsonResponse({ inProgress: false, lastError: null, lastCompletedAt: null, canTriggerManualSync: true });
+      if (url.includes("/api/setup/status"))
+        return jsonResponse({ graphCredentialsPresent: true, successfulSyncCompleted: true, deviceRowsPresent: true, complete: true });
       return jsonResponse({ message: "Not found" }, 404);
     }) as typeof fetch;
 
@@ -186,7 +189,9 @@ describe("cleanup settings flows", () => {
       if (url.includes("/api/auth/status"))
         return jsonResponse({ authenticated: true, user: "admin@example.test" });
       if (url.includes("/api/sync/status"))
-        return jsonResponse({ inProgress: false, lastError: null });
+        return jsonResponse({ inProgress: false, lastError: null, lastCompletedAt: null, canTriggerManualSync: true });
+      if (url.includes("/api/setup/status"))
+        return jsonResponse({ graphCredentialsPresent: true, successfulSyncCompleted: true, deviceRowsPresent: true, complete: true });
       return jsonResponse({ message: "Not found" }, 404);
     }) as typeof fetch;
 
@@ -231,7 +236,9 @@ describe("cleanup settings flows", () => {
       if (url.includes("/api/auth/status"))
         return jsonResponse({ authenticated: true, user: "admin@example.test" });
       if (url.includes("/api/sync/status"))
-        return jsonResponse({ inProgress: false, lastError: null });
+        return jsonResponse({ inProgress: false, lastError: null, lastCompletedAt: null, canTriggerManualSync: true });
+      if (url.includes("/api/setup/status"))
+        return jsonResponse({ graphCredentialsPresent: true, successfulSyncCompleted: true, deviceRowsPresent: true, complete: true });
       return jsonResponse({ message: "Not found" }, 404);
     }) as typeof fetch;
 
@@ -305,7 +312,9 @@ describe("cleanup settings flows", () => {
       if (url.includes("/api/auth/status"))
         return jsonResponse({ authenticated: true, user: "admin@example.test" });
       if (url.includes("/api/sync/status"))
-        return jsonResponse({ inProgress: false, lastError: null });
+        return jsonResponse({ inProgress: false, lastError: null, lastCompletedAt: null, canTriggerManualSync: true });
+      if (url.includes("/api/setup/status"))
+        return jsonResponse({ graphCredentialsPresent: true, successfulSyncCompleted: true, deviceRowsPresent: true, complete: true });
       if (url.includes("/api/health/logs")) return jsonResponse([]);
       if (url.endsWith("/api/health"))
         return jsonResponse({
@@ -338,6 +347,77 @@ describe("cleanup settings flows", () => {
     await waitFor(() => {
       expect(screen.getAllByRole("button", { name: /current theme: oled/i })).not.toHaveLength(0);
     });
+  });
+
+  it("allows changing theme without delegated admin sign-in", async () => {
+    window.history.pushState({}, "", "/settings");
+    const settingsPayload = buildSettingsPayload();
+
+    global.fetch = vi.fn(async (input, init) => {
+      const url = String(input);
+      if (url.includes("/api/settings/display.theme") && init?.method === "PUT") {
+        const body = JSON.parse(String(init.body));
+        const setting = settingsPayload.appSettings.find(
+          (item) => item.key === "display.theme",
+        )!;
+        setting.value = body.value;
+        setting.source = "db";
+        return jsonResponse(setting);
+      }
+      if (url.includes("/api/settings/graph/env"))
+        return jsonResponse({ envPath: "C:\\Runway\\.env", configured: true, missing: [] });
+      if (url.includes("/api/settings")) return jsonResponse(settingsPayload);
+      if (url.includes("/api/auth/access-status"))
+        return jsonResponse({
+          required: false,
+          configured: false,
+          mode: "disabled",
+          authenticated: false,
+          user: null,
+          name: null,
+          expiresAt: null,
+          allowedUsersConfigured: false,
+          reason: "App access enforcement is disabled.",
+        });
+      if (url.includes("/api/auth/status"))
+        return jsonResponse({ authenticated: false, user: null, name: null, expiresAt: null });
+      if (url.includes("/api/sync/status"))
+        return jsonResponse({ inProgress: false, lastError: null, lastCompletedAt: null, canTriggerManualSync: false });
+      if (url.includes("/api/setup/status"))
+        return jsonResponse({ graphCredentialsPresent: true, successfulSyncCompleted: true, deviceRowsPresent: true, complete: true });
+      if (url.includes("/api/health/logs")) return jsonResponse([]);
+      if (url.endsWith("/api/health"))
+        return jsonResponse({
+          ok: true,
+          dbReady: true,
+          uptimeSeconds: 60,
+          graphConfigured: true,
+          graphMissing: [],
+          lastSyncCompletedAt: null,
+          syncBacklogMinutes: null,
+          retention: null,
+        });
+      if (url.includes("/api/rules")) return jsonResponse([]);
+      return jsonResponse({ message: "Not found" }, 404);
+    }) as typeof fetch;
+
+    await renderApp();
+
+    expect(await screen.findByText("Display & Behavior")).toBeInTheDocument();
+    fireEvent.change(screen.getByDisplayValue("System"), {
+      target: { value: "studio" },
+    });
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith(
+        "/api/settings/display.theme",
+        expect.objectContaining({
+          method: "PUT",
+          body: JSON.stringify({ value: "studio" }),
+        }),
+      );
+    });
+    expect(await screen.findByText("Setting saved")).toBeInTheDocument();
   });
 });
 

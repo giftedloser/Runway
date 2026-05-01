@@ -24,9 +24,11 @@ import {
 
 import { PageHeader } from "../components/layout/PageHeader.js";
 import { ErrorState, LoadingState } from "../components/shared/ErrorState.js";
+import { EmptyState } from "../components/shared/EmptyState.js";
 import { SourceBadge } from "../components/shared/SourceBadge.js";
 import { StatusBadge } from "../components/shared/StatusBadge.js";
 import { WarningWithGuidance } from "../components/shared/WarningWithGuidance.js";
+import { HelpTooltip } from "../components/shared/HelpTooltip.js";
 import { useToast } from "../components/shared/toast.js";
 import { Button } from "../components/ui/button.js";
 import { Card } from "../components/ui/card.js";
@@ -413,6 +415,17 @@ export function ProvisioningBuilderPage() {
             </Card>
           ) : null}
 
+          {!data && !discover.isFetching && !discover.isError ? (
+            <Card>
+              <EmptyState
+                id="builder-no-tag-loaded"
+                title="Pick a tag from the Tags view, or type one above."
+                description="Provisioning Builder needs one Autopilot group tag before it can show target groups, payloads, or devices."
+                action={{ label: "Open Tags", onClick: () => void navigate({ to: "/tags" }) }}
+              />
+            </Card>
+          ) : null}
+
           {data ? (
             <>
               {data.existingConfig ? (
@@ -474,6 +487,9 @@ export function ProvisioningBuilderPage() {
                           <div className="text-[13px] font-semibold text-[var(--pc-text)]">
                             Target Groups
                           </div>
+                          <HelpTooltip id="builder-target-groups" align="start">
+                            These are synced Entra groups that appear related to the loaded Autopilot group tag.
+                          </HelpTooltip>
                         </div>
                         <div className="mt-1 text-[12px] text-[var(--pc-text-secondary)]">
                           Review the group that should receive devices carrying
@@ -1072,6 +1088,9 @@ function BuildPayloadPanel({
             <div className="text-[13px] font-semibold text-[var(--pc-text)]">
               Build Payload
             </div>
+            <HelpTooltip id="builder-build-payload" align="start">
+              Build Payload shows required apps, configuration profiles, and compliance policies assigned to the selected target group.
+            </HelpTooltip>
             <CountPill value={totalPayload} label="items" />
           </div>
           <div className="mt-1 text-[12px] text-[var(--pc-text-secondary)]">
@@ -1086,15 +1105,15 @@ function BuildPayloadPanel({
 
       {!payload ? (
         <EmptyPanel
-          message="No target group selected."
-          guidance="Select a target group to preview required apps, configuration profiles, and compliance policies."
+          message="Select a target group to see its build payload."
+          guidance="Build payloads are shown after you choose the group that should receive devices carrying this tag."
         />
       ) : payloadUnavailable ? (
         <div className="px-5 py-5">
           <WarningWithGuidance
             title={
               payload.availability?.state === "not-synced"
-                ? "Assignment payload data has not been synced."
+                ? "Run a sync to populate assignment data."
                 : "Assignment payload data is unavailable."
             }
             guidance={
@@ -1110,6 +1129,14 @@ function BuildPayloadPanel({
                 : undefined
             }
           />
+          {payload.availability?.state === "not-synced" ? (
+            <Link
+              to="/sync"
+              className="mt-3 inline-flex h-8 items-center justify-center rounded-[var(--pc-radius-sm)] border border-[var(--pc-border)] bg-[var(--pc-surface)] px-3 text-[11.5px] font-medium text-[var(--pc-text-body)] transition-colors hover:border-[var(--pc-border-hover)] hover:bg-[var(--pc-surface-raised)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)]"
+            >
+              Go to Sync
+            </Link>
+          ) : null}
         </div>
       ) : (
         <div className="space-y-4 px-5 py-5">
@@ -1249,6 +1276,9 @@ function TagDevicesPanel({
             <div className="text-[13px] font-semibold text-[var(--pc-text)]">
               Devices Carrying Tag
             </div>
+            <HelpTooltip id="builder-devices" align="start">
+              This list comes from synced device rows whose Autopilot group tag matches the loaded tag.
+            </HelpTooltip>
             <CountPill value={devices.length} label="devices" />
           </div>
           <div className="mt-1 text-[12px] text-[var(--pc-text-secondary)]">
@@ -1271,8 +1301,8 @@ function TagDevicesPanel({
         </div>
       ) : devices.length === 0 ? (
         <EmptyPanel
-          message={`No devices currently carry "${groupTag}".`}
-          guidance="Run a sync after tagged devices exist."
+          message="No devices currently carry this tag."
+          guidance={`Run a sync after devices with "${groupTag}" exist in Autopilot.`}
         />
       ) : (
         <div>

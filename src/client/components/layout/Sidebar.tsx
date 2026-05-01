@@ -1,6 +1,7 @@
 import { Link, useRouterState, useSearch } from "@tanstack/react-router";
 import {
   Building2,
+  CircleAlert,
   DatabaseZap,
   GitBranch,
   History,
@@ -18,6 +19,7 @@ import {
 } from "lucide-react";
 
 import { useSetAppSetting, useSettings } from "../../hooks/useSettings.js";
+import { useFirstRunStatus } from "../../hooks/useSetup.js";
 import {
   appThemeToLocalTheme,
   THEME_LABELS,
@@ -27,6 +29,7 @@ import {
 } from "../../hooks/useTheme.js";
 import { cn } from "../../lib/utils.js";
 import { requestCommandPaletteOpen } from "../command/events.js";
+import { HelpTooltip } from "../shared/HelpTooltip.js";
 import { AuthIndicator } from "./AuthIndicator.js";
 
 declare const __APP_VERSION__: string;
@@ -50,6 +53,11 @@ interface NavItem {
   to: string;
   label: string;
   icon: typeof LayoutDashboard;
+  help?: {
+    id: string;
+    text: string;
+  };
+  firstRunIndicator?: boolean;
 }
 
 interface NavGroup {
@@ -69,17 +77,51 @@ const navGroups: NavGroup[] = [
     label: "Inspect",
     items: [
       { to: "/profiles", label: "Profiles", icon: ShieldCheck },
-      { to: "/groups", label: "Groups", icon: UsersRound },
-      { to: "/tags", label: "Tags", icon: Tags },
-      { to: "/provisioning", label: "Provisioning Builder", icon: GitBranch },
+      {
+        to: "/groups",
+        label: "Groups",
+        icon: UsersRound,
+        help: {
+          id: "sidebar-groups",
+          text: "Group Inspector shows synced Entra groups, membership, assignment rules, and targeted profiles."
+        }
+      },
+      {
+        to: "/tags",
+        label: "Tags",
+        icon: Tags,
+        help: {
+          id: "sidebar-tags",
+          text: "Tags lists Autopilot group tags discovered from synced devices and the local mappings Runway uses for property context."
+        }
+      },
+      {
+        to: "/provisioning",
+        label: "Provisioning Builder",
+        icon: GitBranch,
+        help: {
+          id: "sidebar-provisioning",
+          text: "Provisioning Builder traces one tag through target groups, profile assignment, devices, and build payload readiness."
+        }
+      },
     ],
   },
   {
     label: "System",
     items: [
       { to: "/sync", label: "Sync", icon: DatabaseZap },
+      { to: "/setup", label: "Setup", icon: CircleAlert, firstRunIndicator: true },
       { to: "/actions", label: "Action Audit", icon: History },
-      { to: "/settings", label: "Settings", icon: Settings2 },
+      {
+        to: "/settings",
+        label: "Settings",
+        icon: Settings2,
+        help: {
+          id: "sidebar-settings",
+          text: "Settings includes local display preferences, setup, sync behavior, rules, and protected security options."
+        },
+        firstRunIndicator: true
+      },
     ],
   },
 ];
@@ -89,6 +131,7 @@ export function Sidebar() {
     select: (state) => state.location.pathname,
   });
   const settings = useSettings();
+  const firstRun = useFirstRunStatus();
   const [, , , setTheme] = useTheme();
   const setAppSetting = useSetAppSetting();
   const theme = appThemeToLocalTheme(
@@ -185,26 +228,43 @@ export function Sidebar() {
             </div>
             {group.items.map((item) => {
               const Icon = item.icon;
+              const showFirstRunIndicator =
+                item.firstRunIndicator && firstRun.data && !firstRun.data.complete;
               const active =
                 pathname === item.to ||
                 (item.to !== "/" && pathname.startsWith(item.to));
               return (
-                <Link
+                <div
                   key={item.to}
-                  to={item.to}
                   className={cn(
-                    "group flex shrink-0 items-center gap-2 whitespace-nowrap rounded-[var(--pc-radius-sm)] border-l-2 px-2.5 py-1.5 text-[12px] font-medium transition-[background-color,border-color,color,transform] duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)] lg:gap-2.5 lg:whitespace-normal",
+                    "group flex shrink-0 items-center gap-1 whitespace-nowrap rounded-[var(--pc-radius-sm)] border-l-2 transition-[background-color,border-color,color,transform] duration-150 lg:whitespace-normal",
                     active
                       ? "border-[var(--pc-accent)] bg-[var(--pc-sidebar-border)] text-[var(--pc-sidebar-text-active)]"
                       : "border-transparent text-[var(--pc-sidebar-text)] hover:bg-[var(--pc-sidebar-border)] hover:text-[var(--pc-sidebar-text-active)] hover:translate-x-0.5",
                   )}
                 >
-                  <Icon
-                    aria-hidden="true"
-                    className="h-4 w-4 shrink-0 transition-transform duration-150 group-hover:scale-110"
-                  />
-                  {item.label}
-                </Link>
+                  <Link
+                    to={item.to}
+                    className="flex min-w-0 flex-1 items-center gap-2 rounded-[var(--pc-radius-sm)] px-2.5 py-1.5 text-[12px] font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)] lg:gap-2.5"
+                  >
+                    <Icon
+                      aria-hidden="true"
+                      className="h-4 w-4 shrink-0 transition-transform duration-150 group-hover:scale-110"
+                    />
+                    <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                    {showFirstRunIndicator ? (
+                      <span
+                        className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--pc-warning)]"
+                        aria-label="Setup incomplete"
+                      />
+                    ) : null}
+                  </Link>
+                  {item.help ? (
+                    <HelpTooltip id={item.help.id} align="end" className="mr-1 hidden lg:inline-flex">
+                      {item.help.text}
+                    </HelpTooltip>
+                  ) : null}
+                </div>
               );
             })}
           </div>

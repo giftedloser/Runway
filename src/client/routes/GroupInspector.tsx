@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useSearch } from "@tanstack/react-router";
+import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import {
   ArrowRight,
   ChevronRight,
@@ -12,6 +12,7 @@ import {
 
 import { PageHeader } from "../components/layout/PageHeader.js";
 import { ErrorState, LoadingState } from "../components/shared/ErrorState.js";
+import { EmptyState } from "../components/shared/EmptyState.js";
 import { SourceBadge } from "../components/shared/SourceBadge.js";
 import { StatusBadge } from "../components/shared/StatusBadge.js";
 import { Card } from "../components/ui/card.js";
@@ -23,6 +24,7 @@ type MemberHealthFilter = "all" | "unhealthy" | "critical";
 
 export function GroupInspectorPage() {
   const groups = useGroups();
+  const navigate = useNavigate({ from: "/groups" });
   const routeSearch = useSearch({ from: "/groups" });
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<string | undefined>(
@@ -61,8 +63,13 @@ export function GroupInspectorPage() {
       />
 
       {(groups.data?.length ?? 0) === 0 ? (
-        <Card className="p-5 text-[13px] text-[var(--pc-text-muted)]">
-          No groups found. Run a sync to pull group membership from Graph.
+        <Card>
+          <EmptyState
+            id="group-inspector-no-groups"
+            title="Run a sync to discover groups."
+            description="Group Inspector fills in after Runway syncs Entra groups and membership."
+            action={{ label: "Go to Sync", onClick: () => void navigate({ to: "/sync" }) }}
+          />
         </Card>
       ) : (
         <div className="grid gap-5 xl:grid-cols-[360px_minmax(0,1fr)]">

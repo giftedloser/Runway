@@ -8,6 +8,8 @@ import {
   type Theme
 } from "../../hooks/useTheme.js";
 import { Card } from "../ui/card.js";
+import { Button } from "../ui/button.js";
+import { resetHiddenHelpTips } from "../shared/HelpTooltip.js";
 import { SettingsSectionHeader } from "./SettingsShared.js";
 import {
   SelectControl,
@@ -42,8 +44,7 @@ const LANDING_OPTIONS = [
 ] as const;
 
 export function DisplayBehaviorSection({
-  appSettings,
-  adminSignedIn
+  appSettings
 }: {
   appSettings: EffectiveAppSetting[];
   adminSignedIn: boolean;
@@ -60,7 +61,7 @@ export function DisplayBehaviorSection({
       setTheme(appThemeToLocalTheme(updated.value));
     }
   });
-  const saveDisabled = !adminSignedIn || isSaving;
+  const saveDisabled = isSaving;
 
   return (
     <section id="display-behavior" className="scroll-mt-6 space-y-3">
@@ -138,9 +139,17 @@ export function DisplayBehaviorSection({
 
           <div className="flex items-start gap-2 rounded-[var(--pc-radius)] border border-[var(--pc-border)] bg-[var(--pc-surface-raised)] px-4 py-3 text-[12px] text-[var(--pc-text-muted)]">
             <LayoutPanelTop className="mt-0.5 h-4 w-4 shrink-0 text-[var(--pc-accent)]" />
-            <div>
+            <div className="min-w-0 flex-1">
               Table page size is used when a table route does not already have a page-size value in the URL.
             </div>
+            <Button
+              type="button"
+              variant="secondary"
+              className="h-8 shrink-0 px-2.5 text-[11.5px]"
+              onClick={resetHiddenHelpTips}
+            >
+              Show hidden help tips again
+            </Button>
           </div>
         </div>
       </Card>
