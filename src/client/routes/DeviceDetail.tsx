@@ -482,7 +482,7 @@ export function DeviceDetailPage() {
               {displayName}
             </h1>
             <p className="mt-1 pc-helper-text max-w-3xl">
-              Use breakpoint chips first, then inspect the active subsystem.
+              Tap a problem-area chip to jump to the failing subsystem.
             </p>
             <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-[var(--pc-text-muted)]">
               <span>

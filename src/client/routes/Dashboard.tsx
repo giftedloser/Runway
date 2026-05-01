@@ -286,10 +286,10 @@ export function DashboardPage() {
           <Card className="overflow-hidden">
             <div className="border-b border-[var(--pc-border)] px-5 py-4">
               <div className="text-[13px] font-semibold text-[var(--pc-text)]">
-                Breakpoints
+                Problem areas
               </div>
               <div className="mt-0.5 text-[12px] text-[var(--pc-text-muted)]">
-                Open the matching device queue.
+                Where devices are getting stuck. Click to open the matching queue.
               </div>
             </div>
             <div className="divide-y divide-[var(--pc-border)]">

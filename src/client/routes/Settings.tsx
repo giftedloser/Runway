@@ -153,7 +153,7 @@ export function SettingsPage() {
       <PageHeader
         eyebrow="System"
         title="Settings"
-        description="Configure ingestion, access, signals, tags, and rules."
+        description="Connect Graph, manage tag mappings, tune detection rules, and review system health."
       />
 
       <SettingsReadinessBanner
@@ -310,10 +310,10 @@ export function SettingsPage() {
               </div>
               <div className="min-w-0">
                 <div className="text-[13px] font-semibold text-[var(--pc-text)]">
-                  Bulk mapping exchange
+                  Import / export tag mappings
                 </div>
                 <p className="mt-1 max-w-3xl text-[12px] leading-relaxed text-[var(--pc-text-muted)]">
-                  Keep JSON import/export here for fleet handoff and backup. Day-to-day mapping edits now live with the tag inventory so Settings stays calm.
+                  Use JSON import/export to back up mappings or hand them off between tenants. Edit individual mappings in the Tags view.
                 </p>
               </div>
             </div>
