@@ -4,6 +4,23 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AdvancedDisclosure } from "../../src/client/components/shared/AdvancedDisclosure.js";
 
+const northTagRows = [
+  {
+    groupTag: "North",
+    deviceCount: 4,
+    lastSeenAt: "2026-04-30T12:00:00.000Z",
+    configured: true,
+    propertyLabel: "North",
+  },
+];
+
+function jsonResponse(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
 function appSetting(key: string, value: string | number | boolean) {
   return {
     key,
@@ -106,22 +123,88 @@ describe("cleanup settings flows", () => {
     expect(screen.getByText("Advanced body")).not.toBeVisible();
   });
 
+  it("disables tag mapping edits while settings tag_config is loading", async () => {
+    const tagRows = [...northTagRows];
+
+    global.fetch = vi.fn(async (input) => {
+      const url = String(input);
+      if (url.includes("/api/provisioning/tags")) return jsonResponse(tagRows);
+      if (url.includes("/api/settings")) return new Promise<Response>(() => {});
+      if (url.includes("/api/auth/access-status"))
+        return jsonResponse({
+          required: false,
+          configured: false,
+          mode: "disabled",
+          authenticated: false,
+          user: null,
+          name: null,
+          expiresAt: null,
+          allowedUsersConfigured: false,
+          reason: "App access enforcement is disabled.",
+        });
+      if (url.includes("/api/auth/status"))
+        return jsonResponse({ authenticated: true, user: "admin@example.test" });
+      if (url.includes("/api/sync/status"))
+        return jsonResponse({ inProgress: false, lastError: null });
+      return jsonResponse({ message: "Not found" }, 404);
+    }) as typeof fetch;
+
+    await renderApp();
+
+    expect(await screen.findByText("Tag Inventory")).toBeInTheDocument();
+    const editButton = screen.getByRole("button", {
+      name: /cannot edit mapping for north: tag mappings are still loading/i,
+    });
+    expect(editButton).toBeDisabled();
+    expect(editButton).toHaveAttribute(
+      "title",
+      expect.stringContaining("full tag_config data"),
+    );
+    expect(screen.queryByRole("dialog", { name: /tag mapping/i })).not.toBeInTheDocument();
+  });
+
+  it("disables tag mapping edits and shows retry when settings tag_config fails", async () => {
+    const tagRows = [...northTagRows];
+
+    global.fetch = vi.fn(async (input) => {
+      const url = String(input);
+      if (url.includes("/api/provisioning/tags")) return jsonResponse(tagRows);
+      if (url.includes("/api/settings"))
+        return jsonResponse({ message: "Settings unavailable" }, 500);
+      if (url.includes("/api/auth/access-status"))
+        return jsonResponse({
+          required: false,
+          configured: false,
+          mode: "disabled",
+          authenticated: false,
+          user: null,
+          name: null,
+          expiresAt: null,
+          allowedUsersConfigured: false,
+          reason: "App access enforcement is disabled.",
+        });
+      if (url.includes("/api/auth/status"))
+        return jsonResponse({ authenticated: true, user: "admin@example.test" });
+      if (url.includes("/api/sync/status"))
+        return jsonResponse({ inProgress: false, lastError: null });
+      return jsonResponse({ message: "Not found" }, 404);
+    }) as typeof fetch;
+
+    await renderApp();
+
+    expect(await screen.findByText("Tag mappings could not be loaded.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^retry settings$/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", {
+        name: /cannot edit mapping for north: tag mappings could not be loaded/i,
+      }),
+    ).toBeDisabled();
+    expect(screen.queryByRole("dialog", { name: /tag mapping/i })).not.toBeInTheDocument();
+  });
+
   it("edits and saves a tag mapping from the Tags drawer", async () => {
     const settingsPayload = buildSettingsPayload();
-    const tagRows = [
-      {
-        groupTag: "North",
-        deviceCount: 4,
-        lastSeenAt: "2026-04-30T12:00:00.000Z",
-        configured: true,
-        propertyLabel: "North",
-      },
-    ];
-    const jsonResponse = (body: unknown, status = 200) =>
-      new Response(JSON.stringify(body), {
-        status,
-        headers: { "Content-Type": "application/json" },
-      });
+    const tagRows = [...northTagRows];
 
     global.fetch = vi.fn(async (input, init) => {
       const url = String(input);
@@ -161,6 +244,8 @@ describe("cleanup settings flows", () => {
     expect(screen.getByLabelText(/expected groups/i)).not.toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: /advanced/i }));
     expect(screen.getByLabelText(/expected groups/i)).toBeVisible();
+    expect(screen.getByLabelText(/expected groups/i)).toHaveValue("North-Devices");
+    expect(screen.getByLabelText(/expected profiles/i)).toHaveValue("North-UD");
 
     fireEvent.change(screen.getByLabelText(/property label/i), {
       target: { value: "North Floor" },
@@ -190,11 +275,6 @@ describe("cleanup settings flows", () => {
   it("keeps sidebar and Settings theme controls in sync", async () => {
     window.history.pushState({}, "", "/settings");
     const settingsPayload = buildSettingsPayload();
-    const jsonResponse = (body: unknown, status = 200) =>
-      new Response(JSON.stringify(body), {
-        status,
-        headers: { "Content-Type": "application/json" },
-      });
 
     global.fetch = vi.fn(async (input, init) => {
       const url = String(input);
@@ -262,7 +342,13 @@ describe("cleanup settings flows", () => {
 });
 
 async function renderApp() {
-  const queryClient = new QueryClient();
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
   const { App } = await import("../../src/client/App.js");
   render(
     <QueryClientProvider client={queryClient}>

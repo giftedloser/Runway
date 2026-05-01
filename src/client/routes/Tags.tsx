@@ -1,10 +1,12 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
+  AlertTriangle,
   ArrowRight,
   CheckCircle2,
   CircleDashed,
   Edit3,
+  RefreshCcw,
   Save,
   Search,
   Tags,
@@ -63,21 +65,28 @@ export function TagsPage() {
   const settings = useSettings();
   const mutations = useTagConfigMutations();
   const isAuthed = auth.data?.authenticated === true;
+  const tagConfigReady = settings.isSuccess && Boolean(settings.data);
+  const editDisabledReason = tagConfigReady
+    ? null
+    : settings.isError
+      ? "Tag mappings could not be loaded. Retry settings before editing mappings."
+      : "Tag mappings are still loading. Editing is unavailable until full tag_config data is loaded.";
 
   const tags = useQuery({
     queryKey: ["provisioning-tags"],
     queryFn: () => apiRequest<TagInventoryItem[]>("/api/provisioning/tags"),
   });
 
+  const fullTagConfig = tagConfigReady ? settings.data?.tagConfig : null;
   const tagConfigByTag = useMemo(
     () =>
       new Map(
-        (settings.data?.tagConfig ?? []).map((record) => [
+        (fullTagConfig ?? []).map((record) => [
           record.groupTag,
           record,
         ]),
       ),
-    [settings.data?.tagConfig],
+    [fullTagConfig],
   );
 
   const normalizedSearch = search.trim().toLowerCase();
@@ -107,7 +116,22 @@ export function TagsPage() {
   }, [drawer]);
 
   const openDrawer = (tag: TagInventoryItem) => {
-    const config = tagConfigByTag.get(tag.groupTag);
+    if (!tagConfigReady || !settings.data) {
+      toast.push({
+        variant: settings.isError ? "error" : "info",
+        title: settings.isError
+          ? "Tag mappings could not be loaded"
+          : "Tag mappings are still loading",
+        description: settings.isError
+          ? "Retry settings before editing individual mappings."
+          : "Runway is still loading full tag_config data.",
+      });
+      return;
+    }
+
+    const config = settings.data.tagConfig.find(
+      (record) => record.groupTag === tag.groupTag,
+    );
     setDrawer({
       originalGroupTag: tag.groupTag,
       wasConfigured: Boolean(config),
@@ -126,6 +150,14 @@ export function TagsPage() {
 
   const saveDrawer = async () => {
     if (!drawer) return;
+    if (!tagConfigReady || !settings.data) {
+      toast.push({
+        variant: settings.isError ? "error" : "info",
+        title: "Tag mappings unavailable",
+        description: "Runway must load full tag_config data before saving mapping edits.",
+      });
+      return;
+    }
 
     const record: TagConfigRecord = {
       groupTag: drawer.draft.groupTag.trim(),
@@ -217,6 +249,30 @@ export function TagsPage() {
           </div>
         </div>
 
+        {settings.isError ? (
+          <div className="flex flex-col gap-3 border-b border-[var(--pc-border)] bg-[var(--pc-critical-muted)]/45 px-4 py-3 text-[12px] text-[var(--pc-critical)] sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+              <div>
+                <div className="font-semibold">Tag mappings could not be loaded.</div>
+                <div className="mt-0.5 text-[11.5px] leading-relaxed opacity-90">
+                  Editing is disabled until Runway can load full tag_config data. Row clicks still open Provisioning Builder.
+                </div>
+              </div>
+            </div>
+            <Button
+              type="button"
+              variant="secondary"
+              className="h-8 shrink-0 px-2.5 text-[11.5px]"
+              onClick={() => void settings.refetch()}
+              disabled={settings.isFetching}
+            >
+              <RefreshCcw className="h-3.5 w-3.5" />
+              {settings.isFetching ? "Retrying..." : "Retry settings"}
+            </Button>
+          </div>
+        ) : null}
+
         {(tags.data?.length ?? 0) === 0 ? (
           <div className="px-5 py-8 text-center text-[12px] text-[var(--pc-text-muted)]">
             No group tags found. Run a sync after Autopilot devices have tags.
@@ -279,8 +335,13 @@ export function TagsPage() {
                         variant="ghost"
                         className="h-8 w-8 px-0"
                         onClick={() => openDrawer(tag)}
-                        aria-label={`Edit mapping for ${tag.groupTag}`}
-                        title="Edit mapping"
+                        disabled={editDisabledReason !== null}
+                        aria-label={
+                          editDisabledReason
+                            ? `Cannot edit mapping for ${tag.groupTag}: ${editDisabledReason}`
+                            : `Edit mapping for ${tag.groupTag}`
+                        }
+                        title={editDisabledReason ?? "Edit mapping"}
                       >
                         <Edit3 className="h-3.5 w-3.5" />
                       </Button>
@@ -297,6 +358,7 @@ export function TagsPage() {
       <TagMappingDrawer
         drawer={drawer}
         adminSignedIn={isAuthed}
+        mappingsAvailable={tagConfigReady}
         isSaving={mutations.create.isPending || mutations.remove.isPending}
         onClose={() => setDrawer(null)}
         onChange={(draft) =>
@@ -336,6 +398,7 @@ export function TagsPage() {
 function TagMappingDrawer({
   drawer,
   adminSignedIn,
+  mappingsAvailable,
   isSaving,
   onClose,
   onChange,
@@ -344,6 +407,7 @@ function TagMappingDrawer({
 }: {
   drawer: DrawerState | null;
   adminSignedIn: boolean;
+  mappingsAvailable: boolean;
   isSaving: boolean;
   onClose: () => void;
   onChange: (draft: DrawerState["draft"]) => void;
@@ -355,9 +419,11 @@ function TagMappingDrawer({
   const { draft } = drawer;
   const canSave =
     adminSignedIn &&
+    mappingsAvailable &&
     !isSaving &&
     draft.groupTag.trim().length > 0 &&
     draft.propertyLabel.trim().length > 0;
+  const disabled = !adminSignedIn || isSaving || !mappingsAvailable;
 
   const setDraftValue =
     (key: keyof DrawerState["draft"]) =>
@@ -411,6 +477,11 @@ function TagMappingDrawer({
               Admin sign-in is required to save mapping changes.
             </div>
           ) : null}
+          {!mappingsAvailable ? (
+            <div className="rounded-[var(--pc-radius)] border border-[var(--pc-critical)]/30 bg-[var(--pc-critical-muted)] px-4 py-3 text-[12px] text-[var(--pc-critical)]">
+              Tag mappings are unavailable. Reload tag_config before saving changes.
+            </div>
+          ) : null}
 
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="space-y-1.5">
@@ -420,7 +491,7 @@ function TagMappingDrawer({
               <Input
                 value={draft.groupTag}
                 onChange={setDraftValue("groupTag")}
-                disabled={!adminSignedIn || isSaving}
+                disabled={disabled}
                 aria-invalid={!draft.groupTag.trim()}
                 autoFocus
               />
@@ -432,7 +503,7 @@ function TagMappingDrawer({
               <Input
                 value={draft.propertyLabel}
                 onChange={setDraftValue("propertyLabel")}
-                disabled={!adminSignedIn || isSaving}
+                disabled={disabled}
                 aria-invalid={!draft.propertyLabel.trim()}
               />
             </label>
@@ -449,7 +520,7 @@ function TagMappingDrawer({
                 <Input
                   value={draft.expectedGroupNames}
                   onChange={setDraftValue("expectedGroupNames")}
-                  disabled={!adminSignedIn || isSaving}
+                  disabled={disabled}
                   placeholder="Group A, Group B"
                 />
               </label>
@@ -460,7 +531,7 @@ function TagMappingDrawer({
                 <Input
                   value={draft.expectedProfileNames}
                   onChange={setDraftValue("expectedProfileNames")}
-                  disabled={!adminSignedIn || isSaving}
+                  disabled={disabled}
                   placeholder="Profile A, Profile B"
                 />
               </label>
@@ -474,7 +545,7 @@ function TagMappingDrawer({
               <Button
                 type="button"
                 variant="destructive"
-                disabled={!adminSignedIn || isSaving}
+                disabled={disabled}
                 onClick={() => onDelete(drawer.originalGroupTag)}
               >
                 <Trash2 className="h-3.5 w-3.5" />
