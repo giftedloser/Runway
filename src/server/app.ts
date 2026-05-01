@@ -25,6 +25,7 @@ import { provisioningRouter } from "./routes/provisioning.js";
 import { profilesRouter } from "./routes/profiles.js";
 import { rulesRouter } from "./routes/rules.js";
 import { settingsRouter } from "./routes/settings.js";
+import { setupRouter } from "./routes/setup.js";
 import { syncRouter } from "./routes/sync.js";
 import { userViewsRouter } from "./routes/user-views.js";
 
@@ -93,6 +94,7 @@ export function createApp(db: Database.Database) {
   app.use("/api/graph", graphRouter());
   app.use("/api/sync", syncRouter(db));
   app.use("/api/settings", settingsRouter(db));
+  app.use("/api/setup", setupRouter(db));
   app.use("/api/rules", rulesRouter(db));
   app.use("/api/user-views", userViewsRouter(db));
   app.use("/api/actions", actionsRouter(db));

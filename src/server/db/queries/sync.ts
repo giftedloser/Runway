@@ -59,17 +59,20 @@ export function getSyncStatus(
     currentSyncType: "full" | "manual" | null;
     startedAt: string | null;
     lastError: string | null;
-  }
+  },
+  options: { canTriggerManualSync?: boolean } = {}
 ): SyncStatusResponse {
   const logs = listSyncLogs(db);
   const latestComplete = logs.find((entry) => entry.completedAt);
+  const latestError = logs.find((entry) => entry.errors.length > 0)?.errors[0] ?? null;
   return {
     inProgress: syncState.inProgress,
     currentSyncType: syncState.currentSyncType,
     startedAt: syncState.startedAt,
     lastCompletedAt: latestComplete?.completedAt ?? null,
     lastSyncType: latestComplete?.syncType ?? null,
-    lastError: syncState.lastError,
+    lastError: syncState.lastError ?? latestError,
+    canTriggerManualSync: options.canTriggerManualSync ?? false,
     logs,
     graphConfigured: config.isGraphConfigured
   };

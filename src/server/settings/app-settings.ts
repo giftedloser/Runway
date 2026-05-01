@@ -5,6 +5,11 @@ import { logger } from "../logger.js";
 export type AppSettingValueType = "string" | "number" | "boolean" | "json";
 export type AppSettingSource = "db" | "env" | "default";
 export type AppSettingPrimitive = string | number | boolean;
+export type SettingAccessTier =
+  | "public-local"
+  | "local-bootstrap"
+  | "admin-operational"
+  | "secret-security";
 type AppSettingSection =
   | "sync-data"
   | "rules-thresholds"
@@ -27,6 +32,7 @@ type AppTheme = "canopy-light" | "oled" | "slate" | "studio" | "system" | "light
 interface AppSettingDefinition {
   key: string;
   section: AppSettingSection;
+  accessTier: SettingAccessTier;
   label: string;
   description: string;
   valueType: Exclude<AppSettingValueType, "json">;
@@ -42,6 +48,7 @@ export const APP_SETTING_DEFINITIONS = [
   {
     key: "sync.intervalMinutes",
     section: "sync-data",
+    accessTier: "admin-operational",
     label: "Sync interval",
     description: "How often Runway pulls fresh device and assignment data from Microsoft Graph.",
     valueType: "number",
@@ -52,6 +59,7 @@ export const APP_SETTING_DEFINITIONS = [
   {
     key: "sync.onLaunch",
     section: "sync-data",
+    accessTier: "admin-operational",
     label: "Sync on app launch",
     description: "Triggers a sync shortly after Runway starts when Graph is configured.",
     valueType: "boolean",
@@ -60,6 +68,7 @@ export const APP_SETTING_DEFINITIONS = [
   {
     key: "sync.manualOnly",
     section: "sync-data",
+    accessTier: "admin-operational",
     label: "Manual sync only",
     description: "Disables scheduled background sync while keeping manual sync available.",
     valueType: "boolean",
@@ -68,6 +77,7 @@ export const APP_SETTING_DEFINITIONS = [
   {
     key: "sync.paused",
     section: "sync-data",
+    accessTier: "admin-operational",
     label: "Pause sync",
     description: "Emergency stop for launch and scheduled background sync until re-enabled.",
     valueType: "boolean",
@@ -76,6 +86,7 @@ export const APP_SETTING_DEFINITIONS = [
   {
     key: "rules.profileAssignedNotEnrolledHours",
     section: "rules-thresholds",
+    accessTier: "admin-operational",
     label: "Profile assigned but not enrolled",
     description: "Hours after profile assignment before an Autopilot identity that has not enrolled is flagged.",
     valueType: "number",
@@ -87,6 +98,7 @@ export const APP_SETTING_DEFINITIONS = [
   {
     key: "rules.provisioningStalledHours",
     section: "rules-thresholds",
+    accessTier: "admin-operational",
     label: "Provisioning stalled",
     description: "Hours without meaningful enrollment progress before an in-flight device is flagged as stalled.",
     valueType: "number",
@@ -98,6 +110,7 @@ export const APP_SETTING_DEFINITIONS = [
   {
     key: "retention.deviceHistoryDays",
     section: "sync-data",
+    accessTier: "admin-operational",
     label: "Device history retention",
     description: "Days of device health history to keep before retention sweeps prune older rows.",
     valueType: "number",
@@ -110,6 +123,7 @@ export const APP_SETTING_DEFINITIONS = [
   {
     key: "retention.actionLogDays",
     section: "sync-data",
+    accessTier: "admin-operational",
     label: "Action log retention",
     description: "Days of remote action audit entries to retain.",
     valueType: "number",
@@ -122,6 +136,7 @@ export const APP_SETTING_DEFINITIONS = [
   {
     key: "retention.syncLogDays",
     section: "sync-data",
+    accessTier: "admin-operational",
     label: "Sync log retention",
     description: "Days of sync run history to retain.",
     valueType: "number",
@@ -134,6 +149,7 @@ export const APP_SETTING_DEFINITIONS = [
   {
     key: "retention.sweepIntervalHours",
     section: "sync-data",
+    accessTier: "admin-operational",
     label: "Retention sweep interval",
     description: "Hours between background retention sweeps.",
     valueType: "number",
@@ -145,6 +161,7 @@ export const APP_SETTING_DEFINITIONS = [
   {
     key: "display.theme",
     section: "display-behavior",
+    accessTier: "public-local",
     label: "Theme",
     description: "Controls the Runway color theme. System follows Windows and falls back to Canopy Light.",
     valueType: "string",
@@ -154,6 +171,7 @@ export const APP_SETTING_DEFINITIONS = [
   {
     key: "display.dateFormat",
     section: "display-behavior",
+    accessTier: "public-local",
     label: "Date format",
     description: "Controls whether timestamps are shown as relative time or absolute date/time.",
     valueType: "string",
@@ -163,6 +181,7 @@ export const APP_SETTING_DEFINITIONS = [
   {
     key: "display.timeFormat",
     section: "display-behavior",
+    accessTier: "public-local",
     label: "Time format",
     description: "Controls absolute timestamp rendering.",
     valueType: "string",
@@ -172,6 +191,7 @@ export const APP_SETTING_DEFINITIONS = [
   {
     key: "display.tablePageSize",
     section: "display-behavior",
+    accessTier: "public-local",
     label: "Table page size",
     description: "Default row count for paginated operational tables.",
     valueType: "number",
@@ -182,6 +202,7 @@ export const APP_SETTING_DEFINITIONS = [
   {
     key: "display.defaultLandingScreen",
     section: "display-behavior",
+    accessTier: "public-local",
     label: "Default landing screen",
     description: "Route Runway opens on app launch.",
     valueType: "string",
@@ -191,6 +212,7 @@ export const APP_SETTING_DEFINITIONS = [
   {
     key: "security.sessionTimeoutMinutes",
     section: "access-security",
+    accessTier: "secret-security",
     label: "Session timeout",
     description: "Minutes of browser inactivity before Runway signs out. Set 0 to never auto-logout.",
     valueType: "number",
@@ -202,6 +224,7 @@ export const APP_SETTING_DEFINITIONS = [
   {
     key: "developer.seedMode",
     section: "developer",
+    accessTier: "admin-operational",
     label: "Seed mode",
     description: "Controls whether mock data is seeded when Graph is not configured.",
     valueType: "string",
@@ -221,6 +244,7 @@ export interface EffectiveAppSetting {
   value: AppSettingPrimitive;
   defaultValue: AppSettingPrimitive;
   valueType: Exclude<AppSettingValueType, "json">;
+  accessTier: SettingAccessTier;
   source: AppSettingSource;
   envVar: string | null;
   updatedAt: string | null;
@@ -260,6 +284,29 @@ const definitionsByKey: Map<string, AppSettingDefinition> = new Map(
 
 export function isAppSettingKey(key: string): key is AppSettingKey {
   return definitionsByKey.has(key);
+}
+
+export function getAppSettingAccessTier(key: AppSettingKey): SettingAccessTier {
+  return getDefinition(key).accessTier;
+}
+
+export function canReadAppSetting(key: string): boolean {
+  void key;
+  // Local Runway access is enforced before settings routes. Values in this
+  // model are operational preferences rather than secrets; write access is
+  // where tiered protection matters.
+  return true;
+}
+
+export function canWriteAppSetting(
+  key: AppSettingKey,
+  context: { delegatedAdmin: boolean }
+): boolean {
+  const tier = getAppSettingAccessTier(key);
+  if (tier === "public-local" || tier === "local-bootstrap") {
+    return true;
+  }
+  return context.delegatedAdmin;
 }
 
 function getDefinition(key: AppSettingKey): AppSettingDefinition {
@@ -382,6 +429,7 @@ function resolveSetting(
         section: definition.section,
         label: definition.label,
         description: definition.description,
+        accessTier: definition.accessTier,
         value: dbValue,
         defaultValue: definition.defaultValue,
         valueType: definition.valueType,
@@ -399,6 +447,7 @@ function resolveSetting(
     section: definition.section,
     label: definition.label,
     description: definition.description,
+    accessTier: definition.accessTier,
     value: envValue ?? definition.defaultValue,
     defaultValue: definition.defaultValue,
     valueType: definition.valueType,

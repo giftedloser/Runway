@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import type Database from "better-sqlite3";
 
-import { requireDelegatedAuth } from "../auth/auth-middleware.js";
+import { hasValidDelegatedSession, requireDelegatedAuth } from "../auth/auth-middleware.js";
 import { config } from "../config.js";
 import { resolveEnvPath, writeEnvUpdates } from "../config/env-writer.js";
 import {
@@ -18,7 +18,10 @@ import { scheduleRecompute } from "../engine/recompute-scheduler.js";
 import { previewTagConfig } from "../engine/preview-tag-config.js";
 import { logger } from "../logger.js";
 import {
+  canReadAppSetting,
   isAppSettingKey,
+  canWriteAppSetting,
+  getAppSettingAccessTier,
   resetAppSettings,
   setAppSetting
 } from "../settings/app-settings.js";
@@ -110,7 +113,11 @@ export function settingsRouter(db: Database.Database) {
   });
 
   router.get("/", (_request, response) => {
-    response.json(getSettings(db));
+    const settings = getSettings(db);
+    response.json({
+      ...settings,
+      appSettings: settings.appSettings.filter((setting) => canReadAppSetting(setting.key))
+    });
   });
 
   // PUT /api/settings/feature-flags/:key — toggles a named server-side
@@ -153,10 +160,25 @@ export function settingsRouter(db: Database.Database) {
   });
 
   const appSettingBodySchema = z.object({ value: z.unknown() });
-  router.put("/:key", requireDelegatedAuth, (request, response) => {
+  router.put("/:key", (request, response) => {
     const key = String(request.params.key);
     if (!isAppSettingKey(key)) {
       response.status(400).json({ message: `Unknown app setting "${key}".` });
+      return;
+    }
+    const accessTier = getAppSettingAccessTier(key);
+    const delegatedAdmin = hasValidDelegatedSession(request);
+    if (!canWriteAppSetting(key, { delegatedAdmin })) {
+      logger.warn(
+        { key, accessTier, delegatedAdmin },
+        "[v1.6][settings-access] Blocked app setting write without required access"
+      );
+      response.status(401).json({
+        message:
+          accessTier === "secret-security"
+            ? "Security setting changes require admin sign-in."
+            : "Admin sign-in required for this setting."
+      });
       return;
     }
     const body = appSettingBodySchema.safeParse(request.body);
@@ -168,7 +190,12 @@ export function settingsRouter(db: Database.Database) {
       return;
     }
     try {
-      response.json(setAppSetting(db, key, body.data.value));
+      const updated = setAppSetting(db, key, body.data.value);
+      logger.info(
+        { key, accessTier, source: updated.source },
+        "[v1.6][settings-access] App setting saved"
+      );
+      response.json(updated);
     } catch (error) {
       response.status(400).json({
         message: error instanceof Error ? error.message : "Invalid app setting value."

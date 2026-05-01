@@ -269,8 +269,16 @@ export interface SyncStatusResponse {
   lastCompletedAt: string | null;
   lastSyncType: "full" | "incremental" | "manual" | null;
   lastError: string | null;
+  canTriggerManualSync: boolean;
   logs: SyncLogEntry[];
   graphConfigured: boolean;
+}
+
+export interface FirstRunStatus {
+  graphCredentialsPresent: boolean;
+  successfulSyncCompleted: boolean;
+  deviceRowsPresent: boolean;
+  complete: boolean;
 }
 
 export interface TagConfigRecord {
@@ -340,12 +348,18 @@ export interface FeatureFlagMap {
 export type AppSettingValueType = "string" | "number" | "boolean" | "json";
 export type AppSettingSource = "db" | "env" | "default";
 export type AppSettingValue = string | number | boolean | Record<string, unknown> | null;
+export type SettingAccessTier =
+  | "public-local"
+  | "local-bootstrap"
+  | "admin-operational"
+  | "secret-security";
 
 export interface EffectiveAppSetting {
   key: string;
   section: string;
   label: string;
   description: string;
+  accessTier: SettingAccessTier;
   value: AppSettingValue;
   defaultValue: AppSettingValue;
   valueType: AppSettingValueType;
