@@ -330,8 +330,12 @@ export function SetupPage() {
 
       <StepShell
         number={5}
-        title="Setup complete"
-        description="Head to the dashboard to start triaging."
+        title={activeStep === 5 ? "Setup complete" : "Finish setup"}
+        description={
+          activeStep === 5
+            ? "Head to the dashboard to start triaging."
+            : "Complete the required setup steps before triaging live data."
+        }
         done={activeStep === 5}
         active={activeStep === 5}
       >

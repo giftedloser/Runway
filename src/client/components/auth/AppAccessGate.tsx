@@ -66,12 +66,11 @@ export function AppAccessGate({ children }: { children: ReactNode }) {
                 </div>
               </div>
               <h1 className="mt-5 max-w-3xl font-display text-[32px] font-semibold uppercase leading-[0.95] tracking-[0.04em] text-[var(--pc-text)] sm:text-[45px]">
-                Sign in before touching the fleet picture.
+                Sign in to open the workspace.
               </h1>
               <p className="mt-3 max-w-2xl text-[13px] leading-6 text-[var(--pc-text-secondary)]">
-                Use your Entra account to open Runway. Elevated admin consent is
-                still separate and only requested when you run privileged
-                actions.
+                Use your Entra account to open Runway. Privileged admin consent
+                stays separate and is only requested for protected actions.
               </p>
             </div>
           </div>

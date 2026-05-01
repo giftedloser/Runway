@@ -260,7 +260,12 @@ export function Sidebar() {
                     ) : null}
                   </Link>
                   {item.help ? (
-                    <HelpTooltip id={item.help.id} align="end" className="mr-1 hidden lg:inline-flex">
+                    <HelpTooltip
+                      id={item.help.id}
+                      align="end"
+                      tone="sidebar"
+                      className="mr-1 hidden lg:inline-flex"
+                    >
                       {item.help.text}
                     </HelpTooltip>
                   ) : null}

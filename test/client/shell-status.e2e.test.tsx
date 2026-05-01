@@ -26,9 +26,17 @@ function appSetting(key: string, value: string | number | boolean) {
   };
 }
 
-function settingsPayload(propertyCount = 0) {
+function settingsPayload({
+  propertyCount = 0,
+  graphConfigured = true,
+  seedMode = "mock",
+}: {
+  propertyCount?: number;
+  graphConfigured?: boolean;
+  seedMode?: "mock" | "none";
+} = {}) {
   return {
-    graph: { configured: true, missing: [] },
+    graph: { configured: graphConfigured, missing: graphConfigured ? [] : ["AZURE_TENANT_ID"] },
     appAccess: {
       mode: "disabled",
       required: false,
@@ -42,6 +50,7 @@ function settingsPayload(propertyCount = 0) {
       appSetting("display.tablePageSize", 50),
       appSetting("display.defaultLandingScreen", "devices"),
       appSetting("security.sessionTimeoutMinutes", 60),
+      appSetting("developer.seedMode", seedMode),
     ],
     about: {
       appVersion: "1.5.1",
@@ -82,6 +91,63 @@ describe("app shell setup and sync status", () => {
       await screen.findByText("Welcome to Runway. Connect your tenant and run an initial sync to get started."),
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /go to setup/i })).toBeInTheDocument();
+  });
+
+  it("only shows the demo data banner when mock seed mode is active", async () => {
+    mockShellFetch({
+      graphConfigured: false,
+      seedMode: "mock",
+      syncStatus: syncStatus({ lastCompletedAt: null, graphConfigured: false }),
+      firstRun: {
+        graphCredentialsPresent: false,
+        successfulSyncCompleted: false,
+        deviceRowsPresent: false,
+        complete: false,
+      },
+    });
+
+    await renderApp();
+
+    expect(await screen.findByText("Demo data")).toBeInTheDocument();
+  });
+
+  it("does not show the demo data banner when seeding is disabled", async () => {
+    mockShellFetch({
+      graphConfigured: false,
+      seedMode: "none",
+      syncStatus: syncStatus({ lastCompletedAt: null, graphConfigured: false }),
+      firstRun: {
+        graphCredentialsPresent: false,
+        successfulSyncCompleted: false,
+        deviceRowsPresent: false,
+        complete: false,
+      },
+    });
+
+    await renderApp();
+
+    expect(await screen.findByText("Data Ingestion")).toBeInTheDocument();
+    expect(screen.queryByText("Demo data")).not.toBeInTheDocument();
+  });
+
+  it("does not label setup complete while setup is incomplete", async () => {
+    window.history.pushState({}, "", "/setup");
+    mockShellFetch({
+      graphConfigured: false,
+      syncStatus: syncStatus({ lastCompletedAt: null, graphConfigured: false }),
+      firstRun: {
+        graphCredentialsPresent: false,
+        successfulSyncCompleted: false,
+        deviceRowsPresent: false,
+        complete: false,
+      },
+    });
+
+    await renderApp();
+
+    expect(await screen.findByText("First-run Setup")).toBeInTheDocument();
+    expect(screen.getByText("Finish setup")).toBeInTheDocument();
+    expect(screen.queryByText("Setup complete")).not.toBeInTheDocument();
   });
 
   it("hides the first-run banner once setup is complete", async () => {
@@ -155,14 +221,25 @@ function mockShellFetch({
   syncStatus,
   firstRun,
   propertyCount = 0,
+  graphConfigured = true,
+  seedMode = "mock",
 }: {
   syncStatus: Record<string, unknown>;
   firstRun: Record<string, unknown>;
   propertyCount?: number;
+  graphConfigured?: boolean;
+  seedMode?: "mock" | "none";
 }) {
   global.fetch = vi.fn(async (input) => {
     const url = String(input);
-    if (url.includes("/api/settings")) return jsonResponse(settingsPayload(propertyCount));
+    if (url.includes("/api/settings/graph/env"))
+      return jsonResponse({
+        envPath: "C:\\Runway\\.env",
+        configured: graphConfigured,
+        missing: graphConfigured ? [] : ["AZURE_TENANT_ID"],
+      });
+    if (url.includes("/api/settings"))
+      return jsonResponse(settingsPayload({ propertyCount, graphConfigured, seedMode }));
     if (url.includes("/api/sync/status")) return jsonResponse(syncStatus);
     if (url.includes("/api/setup/status")) return jsonResponse(firstRun);
     if (url.includes("/api/auth/access-status"))
