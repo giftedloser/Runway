@@ -76,6 +76,7 @@ export function EntityPicker({
   placeholder = "Search users by name, UPN, or mail",
   value,
   onSelect,
+  onClear,
   autoFocus
 }: {
   id?: string;
@@ -83,6 +84,7 @@ export function EntityPicker({
   placeholder?: string;
   value: EntityPickerSelection | null;
   onSelect: (user: EntityPickerSelection) => void;
+  onClear?: () => void;
   autoFocus?: boolean;
 }) {
   const [query, setQuery] = useState(value?.label ?? "");
@@ -95,8 +97,8 @@ export function EntityPicker({
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    setQuery(value?.label ?? "");
-  }, [value?.label]);
+    if (value) setQuery(value.label);
+  }, [value?.id, value?.label]);
 
   useEffect(() => {
     if (!open) return;
@@ -198,7 +200,11 @@ export function EntityPicker({
           id={id}
           value={query}
           onChange={(event) => {
-            setQuery(event.target.value);
+            const nextQuery = event.target.value;
+            setQuery(nextQuery);
+            if (value && nextQuery !== value.label) {
+              onClear?.();
+            }
             setOpen(true);
           }}
           onFocus={() => setOpen(true)}

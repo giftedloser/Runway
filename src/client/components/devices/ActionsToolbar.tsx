@@ -319,6 +319,7 @@ export function ActionsToolbar({ device }: { device: DeviceDetailResponse }) {
                   label="Primary user"
                   value={selectedPrimaryUser}
                   onSelect={setSelectedPrimaryUser}
+                  onClear={() => setSelectedPrimaryUser(null)}
                   autoFocus
                 />
                 {selectedPrimaryUser ? (

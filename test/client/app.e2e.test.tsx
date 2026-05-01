@@ -601,6 +601,11 @@ describe("client drilldown", () => {
     fireEvent.click(await screen.findByText("Alex Rivera"));
     const dialog = screen.getByRole("dialog");
     expect(within(dialog).getByText(/Confirm assignment to/)).toBeInTheDocument();
+    fireEvent.change(picker, { target: { value: "alicia" } });
+    expect(within(dialog).getByRole("button", { name: "Change Primary User" })).toBeDisabled();
+    expect(within(dialog).queryByText(/Confirm assignment to/)).not.toBeInTheDocument();
+    fireEvent.change(picker, { target: { value: "alex" } });
+    fireEvent.click(await screen.findByText("Alex Rivera"));
     fireEvent.click(within(dialog).getByRole("button", { name: "Change Primary User" }));
 
     await waitFor(() => {

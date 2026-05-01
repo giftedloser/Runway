@@ -55,6 +55,26 @@ afterEach(() => {
 });
 
 describe("EntityPicker", () => {
+  it("clears the selected user when the search text changes", () => {
+    const onClear = vi.fn();
+    render(
+      <EntityPicker
+        label="Primary user"
+        value={{ ...users[0], label: "Alex Rivera" }}
+        onSelect={vi.fn()}
+        onClear={onClear}
+      />
+    );
+
+    const input = screen.getByRole("combobox");
+    expect(input).toHaveValue("Alex Rivera");
+
+    fireEvent.change(input, { target: { value: "Alicia" } });
+
+    expect(onClear).toHaveBeenCalledTimes(1);
+    expect(input).toHaveValue("Alicia");
+  });
+
   it("debounces user search by 300ms", async () => {
     renderPicker();
 
