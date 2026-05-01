@@ -68,6 +68,27 @@ pnpm-debug.log*
 .tauri-runtime/
 .tmp-npm-tree.json
 demo/
+output/
+CLAUDE.md
+CLAUDE.local.md
+AGENTS.md
+AGENTS.local.md
+GEMINI.md
+GEMINI.local.md
+AI.md
+AI.local.md
+ai.md
+ai.local.md
+AI_NOTES.md
+AI_NOTES.local.md
+ai-notes.md
+ai-notes.local.md
+agent.md
+agent.local.md
+agent-notes.md
+agent-notes.local.md
+*.ai.md
+*.agent.md
 
 # Editor / IDE
 .idea/
