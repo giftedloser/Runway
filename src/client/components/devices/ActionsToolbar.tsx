@@ -156,7 +156,29 @@ export function ActionsToolbar({ device }: { device: DeviceDetailResponse }) {
   const isAuthed = auth.data?.authenticated === true;
   const deviceName = device.summary.deviceName ?? device.summary.serialNumber ?? "this device";
 
+  // Build the typed-confirmation token from the strongest available
+  // identifier. If a record is so thin that none of these are present
+  // (rare — usually an orphaned Autopilot or Entra-only ghost), fall
+  // back to null and refuse to render the destructive flow rather than
+  // accepting a generic "CONFIRM" string that wouldn't tie the typed
+  // text to *this* device.
+  const confirmationToken =
+    device.summary.serialNumber ??
+    device.summary.deviceName ??
+    device.identity.intuneId ??
+    device.identity.autopilotId ??
+    null;
+
   const handleRequest = (spec: ActionSpec) => {
+    if (spec.requireTyped && !confirmationToken) {
+      toast.push({
+        variant: "error",
+        title: `${spec.label} unavailable`,
+        description:
+          "This device is missing a serial number, device name, Intune ID, and Autopilot ID. Cannot confirm a destructive action against an unidentifiable record."
+      });
+      return;
+    }
     setTypedConfirm("");
     setNewName(device.summary.deviceName ?? "");
     setSelectedPrimaryUser(null);
@@ -259,15 +281,22 @@ export function ActionsToolbar({ device }: { device: DeviceDetailResponse }) {
                 onClick={() => handleRequest(spec)}
                 disabled={availability.disabled}
                 title={availability.reason}
-                className={`group flex items-center gap-2.5 rounded-lg border px-3 py-2.5 text-left text-[12.5px] font-medium transition-colors ${
+                className={`group flex items-center gap-2.5 rounded-lg border px-3 py-2.5 text-left text-[12.5px] font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${
                   availability.disabled
-                    ? "cursor-not-allowed border-[var(--pc-border)] bg-[var(--pc-surface-raised)] text-[var(--pc-text-muted)] opacity-60"
+                    ? "cursor-not-allowed border-[var(--pc-border)] bg-[var(--pc-surface-raised)] text-[var(--pc-text-muted)] opacity-60 focus-visible:outline-[var(--pc-accent)]"
                     : spec.destructive
-                    ? "border-[var(--pc-border)] bg-[var(--pc-surface-raised)] text-[var(--pc-text)] hover:border-[var(--pc-critical)]/40 hover:bg-[var(--pc-critical-muted)] hover:text-[var(--pc-critical)]"
-                    : "border-[var(--pc-border)] bg-[var(--pc-surface-raised)] text-[var(--pc-text)] hover:border-[var(--pc-accent)]/40 hover:bg-[var(--pc-accent-muted)] hover:text-[var(--pc-accent-hover)]"
+                    ? "border-[var(--pc-border)] border-l-2 border-l-[var(--pc-critical)]/40 bg-[var(--pc-surface-raised)] text-[var(--pc-text)] hover:border-[var(--pc-critical)]/40 hover:border-l-[var(--pc-critical)] hover:bg-[var(--pc-critical-muted)] hover:text-[var(--pc-critical)] focus-visible:outline-[var(--pc-critical)]"
+                    : "border-[var(--pc-border)] bg-[var(--pc-surface-raised)] text-[var(--pc-text)] hover:border-[var(--pc-accent)]/40 hover:bg-[var(--pc-accent-muted)] hover:text-[var(--pc-accent-hover)] focus-visible:outline-[var(--pc-accent)]"
                 }`}
+                aria-label={spec.destructive ? `${spec.label} — destructive` : spec.label}
               >
-                <Icon className="h-3.5 w-3.5 shrink-0" />
+                <Icon
+                  className={`h-3.5 w-3.5 shrink-0 ${
+                    spec.destructive && !availability.disabled
+                      ? "text-[var(--pc-critical)]/60 group-hover:text-[var(--pc-critical)]"
+                      : ""
+                  }`}
+                />
                 <span>{spec.label}</span>
               </button>
             );
@@ -280,7 +309,7 @@ export function ActionsToolbar({ device }: { device: DeviceDetailResponse }) {
         title={pending ? `${pending.label} — ${deviceName}` : ""}
         description={pending?.description ?? ""}
         destructive={pending?.destructive}
-        requireTyped={pending?.requireTyped ? device.summary.serialNumber ?? "CONFIRM" : undefined}
+        requireTyped={pending?.requireTyped ? confirmationToken ?? undefined : undefined}
         typedValue={typedConfirm}
         onTypedChange={setTypedConfirm}
         confirmLabel={pending?.label ?? "Confirm"}
