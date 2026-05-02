@@ -39,6 +39,7 @@
     "start": "node dist/server/index.js",
     "db:migrate": "tsx src/server/db/cli.ts migrate",
     "db:seed:mock": "tsx src/server/db/cli.ts seed",
+    "db:seed:scale": "tsx src/server/db/seed-scale.ts",
     "test": "vitest run --project unit --project api",
     "test:e2e": "vitest run --project e2e --fileParallelism=false",
     "lint": "eslint .",
