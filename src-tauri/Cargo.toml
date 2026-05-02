@@ -1,6 +1,6 @@
 [package]
 name = "pilotcheck"
-version = "1.0.1"
+version = "1.6.0"
 description = "Runway desktop shell"
 authors = ["giftedloser"]
 license = "MIT"
