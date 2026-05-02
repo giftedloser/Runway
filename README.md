@@ -1,14 +1,12 @@
 # Runway
 
-Runway is the local-first Windows endpoint triage console in this repository.
+> A local-first triage console for **Windows** Autopilot, Intune, Entra ID,
+> and Graph-derived ConfigMgr / SCCM client presence. Windows-only by design.
 
 ![CI](https://github.com/giftedloser/Runway/actions/workflows/ci.yml/badge.svg)
 ![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Platform: Windows](https://img.shields.io/badge/platform-Windows-0078d4.svg)
-
-> A local-first triage console for **Windows** Autopilot, Intune, Entra ID,
-> and Graph-derived ConfigMgr / SCCM client presence.
-> Windows-only by design.
+![Local-first](https://img.shields.io/badge/data-local--first-2ea44f.svg)
 
 Runway correlates Windows device identities across Microsoft Autopilot,
 Intune, Entra ID, and the ConfigMgr/SCCM signal exposed by Intune, computes
@@ -20,12 +18,32 @@ do about it_.
 It's built for the small-but-real internal IT team running a fleet of a few
 hundred to a few thousand Windows endpoints — the band where SCCM console
 hopping is too heavy for quick triage, the Intune admin centre is too slow to
-work from all day, and PowerShell scripts are how everyone is currently getting
-by.
+work from all day, and PowerShell scripts are how everyone is currently
+getting by.
+
+### At a glance
+
+|                  |                                                                            |
+| ---------------- | -------------------------------------------------------------------------- |
+| Platform         | Windows 11 / 10 (Tauri desktop shell)                                      |
+| Data sources     | Autopilot · Intune · Entra ID · Graph-derived ConfigMgr presence           |
+| Data residency   | Local SQLite on the operator's machine                                     |
+| Auth             | Bring-your-own Entra app registration (app-only sync, delegated actions)   |
+| Network egress   | `login.microsoftonline.com` and `graph.microsoft.com` only                 |
+| Targeting        | Single tenant, single device per destructive action                        |
+| Out of scope     | iOS / Android / macOS, multi-tenant, policy authoring, ConfigMgr connector |
+
+### Jump to
+
+[Quick start](#quick-start) ·
+[What it does](#what-it-does) ·
+[What it intentionally does not do](#what-it-intentionally-does-not-do) ·
+[Configuration](#configuration) ·
+[Tenant testing](#tenant-testing-warning) ·
+[Documentation](#documentation)
 
 Runway is laser-focused on the Windows triage loop and stays honest about
-that scope. See [What it intentionally does not do](#what-it-intentionally-does-not-do)
-below for the full non-goal list.
+that scope.
 
 ## Tenant testing warning
 
@@ -190,11 +208,14 @@ credentials in their per-user app data folder. See
 [`docs/graph-auth.md`](docs/graph-auth.md) for the full design and the
 planned migration to a PKCE public-client model.
 
-For local development, copy `.env.example` to `.env` at the repo root and fill in:
-
-For the installed desktop app, place the same `.env` file in the app data folder:
+For local development, copy `.env.example` to `.env` at the repo root and
+fill in the values. For the installed desktop app, place the same `.env`
+file in the per-user app data folder:
 
 - Windows: `%LOCALAPPDATA%\com.giftedloser.pilotcheck\.env`
+
+<details>
+<summary><strong>Full <code>.env</code> reference</strong></summary>
 
 ```ini
 # Microsoft Graph (read-only ingestion)
@@ -230,6 +251,8 @@ APP_ACCESS_ALLOWED_USERS=
 # credentials or SCCM actions are configured in Runway.
 ```
 
+</details>
+
 ### Mock mode vs live data
 
 Runway ships with mock mode because it makes local development and demos safe.
@@ -248,40 +271,41 @@ when producing screenshots or reports for leadership.
 ### SCCM / ConfigMgr visibility
 
 Runway does **not** connect to a Configuration Manager site server, does
-**not** store SCCM credentials, and does **not** run SCCM actions.
-
-For v1.0, the SCCM check answers exactly one question:
+**not** store SCCM credentials, and does **not** run SCCM actions. The
+SCCM check answers exactly one question:
 
 > Does Microsoft Graph / Intune report this Windows device as having a
 > Configuration Manager client?
 
-This is a **presence-only** signal. It does not confirm site assignment,
-policy retrieval, last-policy-request time, inventory freshness, MP/DP
-reachability, software update group membership, or which authority
-(ConfigMgr vs Windows Update for Business) is driving updates on the device.
+This is a **presence-only** signal derived from `managedDevice.managementAgent`.
+It does not confirm site assignment, policy retrieval, inventory
+freshness, MP/DP reachability, software update group membership, or which
+authority is driving updates on the device.
 
-Runway reads `managedDevice.managementAgent` from Microsoft Graph. If the
-value contains `configurationManager`, Runway shows the ConfigMgr client as
-reported.
+<details>
+<summary><strong>ConfigMgr signal states</strong></summary>
 
-| Runway status                   | Meaning                                                                          |
-| ------------------------------- | -------------------------------------------------------------------------------- |
-| `ConfigMgr client reported`     | Intune's `managementAgent` contains `configurationManager`.                      |
+| Runway status                   | Meaning                                                                            |
+| ------------------------------- | ---------------------------------------------------------------------------------- |
+| `ConfigMgr client reported`     | Intune's `managementAgent` contains `configurationManager`.                        |
 | `ConfigMgr client not reported` | Intune reports a management agent, but it does not contain `configurationManager`. |
-| `Not reported by Intune`        | The Intune record exists, but Graph did not return `managementAgent`.            |
-| `Cannot determine`              | No Intune managed-device record exists for the correlated device.                |
-| `Signal disabled`               | The optional ConfigMgr presence flag is off in Settings.                         |
+| `Not reported by Intune`        | The Intune record exists, but Graph did not return `managementAgent`.              |
+| `Cannot determine`              | No Intune managed-device record exists for the correlated device.                  |
+| `Signal disabled`               | The optional ConfigMgr presence flag is off in Settings.                           |
 
-If you need true ConfigMgr client health — site assignment, policy retrieval,
-inventory freshness, MP/DP reachability, software update deployment status,
-or console record status — that requires a direct ConfigMgr connector via
-AdminService, read-only SQL, or a trusted ConfigMgr PowerShell host. That
-work is **not in v1.0** and is on the roadmap as an optional, opt-in
-connector.
+If you need true ConfigMgr client health — site assignment, policy
+retrieval, inventory freshness, MP/DP reachability, software update
+deployment status, or console record status — that requires a direct
+ConfigMgr connector via AdminService, read-only SQL, or a trusted
+ConfigMgr PowerShell host. That is on the roadmap as an optional, opt-in
+connector and is explicitly out of scope today.
+
+</details>
 
 ### Required Graph permissions
 
-**Application (read-only sync)**
+<details>
+<summary><strong>Application permissions (read-only sync)</strong></summary>
 
 - `DeviceManagementServiceConfig.Read.All`
 - `DeviceManagementManagedDevices.Read.All`
@@ -289,7 +313,10 @@ connector.
 - `Device.Read.All`
 - `Group.Read.All`
 
-**Delegated (remote actions + LAPS / BitLocker / group checks)**
+</details>
+
+<details>
+<summary><strong>Delegated permissions (remote actions, LAPS, BitLocker)</strong></summary>
 
 - `DeviceManagementManagedDevices.ReadWrite.All`
 - `DeviceManagementManagedDevices.PrivilegedOperations.All`
@@ -299,11 +326,26 @@ connector.
 - `DeviceManagementServiceConfig.ReadWrite.All`
 - `User.Read`
 
+</details>
+
 Grant admin consent in the tenant after assigning these.
 
 ---
 
-## Scripts
+## Development
+
+The most-used commands:
+
+| Script                 | What it does                                   |
+| ---------------------- | ---------------------------------------------- |
+| `npm run dev`          | Vite client + tsx server, hot reload           |
+| `npm run check`        | Lint + typecheck + unit/API + e2e tests        |
+| `npm run build`        | Build client and server bundles into `dist/`   |
+| `npm run tauri:dev`    | Run as a Tauri desktop app                     |
+| `npm run tauri:build`  | Build the Windows installers                   |
+
+<details>
+<summary><strong>All npm scripts</strong></summary>
 
 | Script                 | What it does                                      |
 | ---------------------- | ------------------------------------------------- |
@@ -315,13 +357,15 @@ Grant admin consent in the tenant after assigning these.
 | `npm run test`         | Vitest unit + api projects                        |
 | `npm run test:e2e`     | Vitest e2e project                                |
 | `npm run lint`         | ESLint                                            |
-| `npm run check`        | Lint + unit/API + e2e tests                       |
+| `npm run typecheck`    | `tsc --noEmit`                                    |
+| `npm run check`        | Lint + typecheck + unit/API + e2e tests           |
 | `npm run tauri:dev`    | Run as a Tauri desktop app                        |
 | `npm run tauri:build`  | Build the Tauri executable and Windows installers |
 
----
+</details>
 
-## Project layout
+<details>
+<summary><strong>Project layout</strong></summary>
 
 ```
 src/
@@ -340,6 +384,8 @@ src/
 ├── shared/           # Types shared across client and server
 └── test/             # Vitest unit / api / e2e suites
 ```
+
+</details>
 
 ---
 
