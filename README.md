@@ -306,30 +306,37 @@ connector and is explicitly out of scope today.
 ### Required Graph permissions
 
 <details>
-<summary><strong>Application permissions (read-only sync)</strong></summary>
+<summary><strong>Application permissions (always required for read-only sync)</strong></summary>
 
-- `DeviceManagementServiceConfig.Read.All`
-- `DeviceManagementManagedDevices.Read.All`
-- `DeviceManagementConfiguration.Read.All`
-- `Device.Read.All`
-- `Group.Read.All`
+| Permission | Why Runway needs it |
+| --- | --- |
+| `DeviceManagementServiceConfig.Read.All` | Read Autopilot deployment profiles and assignments. |
+| `DeviceManagementManagedDevices.Read.All` | Read Intune managed devices (compliance, primary user, `managementAgent`). |
+| `DeviceManagementConfiguration.Read.All` | Read configuration profiles and assignments for Build Payload. |
+| `Device.Read.All` | Read Entra device objects for cross-system identity correlation. |
+| `Group.Read.All` | Read Entra groups and memberships for targeting. |
 
 </details>
 
 <details>
-<summary><strong>Delegated permissions (remote actions, LAPS, BitLocker)</strong></summary>
+<summary><strong>Delegated permissions (only grant the ones for features you'll use)</strong></summary>
 
-- `DeviceManagementManagedDevices.ReadWrite.All`
-- `DeviceManagementManagedDevices.PrivilegedOperations.All`
-- `DeviceLocalCredential.Read.All`
-- `BitLockerKey.Read.All`
-- `Group.ReadWrite.All`
-- `DeviceManagementServiceConfig.ReadWrite.All`
-- `User.Read`
+| Permission | Powers | Optional? |
+| --- | --- | --- |
+| `User.Read` | Identifies the signed-in admin and stamps Action Audit `triggeredBy`. | **Required** for any delegated flow. |
+| `DeviceManagementManagedDevices.ReadWrite.All` | Sync, reboot, rename, rotate LAPS, change primary user. | **Required** if you'll run any remote action. |
+| `DeviceManagementManagedDevices.PrivilegedOperations.All` | Retire, wipe, Autopilot reset. | Optional — skip if the pilot won't run destructive actions. |
+| `User.ReadBasic.All` | Change Primary User EntityPicker (search Entra users by display name / UPN / mail). | Optional — skip if Change Primary User won't be used. |
+| `DeviceLocalCredential.Read.All` | LAPS password retrieval. | Optional — skip if LAPS retrieval won't be used. |
+| `BitLockerKey.Read.All` | BitLocker recovery key retrieval. | Optional — skip if BitLocker retrieval won't be used. |
+| `Group.ReadWrite.All` | Add / remove device from an Entra group during remediation. | Optional — skip if group remediation won't be used. |
+| `DeviceManagementServiceConfig.ReadWrite.All` | Autopilot hardware-hash import. | Optional — skip if you won't import hardware hashes through Runway. |
+
+Grant admin consent in the tenant after assigning these. Optional scopes
+can be omitted up front and added later — Runway surfaces a clear
+operator-facing error when an action lacks its scope.
 
 </details>
-
-Grant admin consent in the tenant after assigning these.
 
 ---
 
