@@ -328,11 +328,33 @@ function fmt(ms: number): string {
 }
 
 async function main() {
+  // Defensive: refuse to wipe whatever the default DATABASE_PATH
+  // points at. The script wipes tag_config plus every device-shaped
+  // table, so accidentally pointing it at the user's primary DB
+  // would clobber their hand-typed mappings. Force callers to opt in
+  // by setting DATABASE_PATH explicitly to something other than the
+  // default. The snapshot system can still recover, but better not to
+  // need it.
+  const requested = process.env.DATABASE_PATH;
+  const isDefaultPath =
+    !requested ||
+    requested === "./data/pilotcheck.sqlite" ||
+    requested.endsWith("/pilotcheck.sqlite") ||
+    requested.endsWith("\\pilotcheck.sqlite");
+  if (isDefaultPath) {
+    console.error(
+      "Refusing to run scale seed against the default DATABASE_PATH.\n" +
+        "Set DATABASE_PATH to a dedicated path before running, e.g.:\n" +
+        "  DATABASE_PATH=./data/scale-smoke.sqlite npm run db:seed:scale"
+    );
+    process.exit(1);
+  }
+
   const db = getDb();
   runMigrations(db);
 
   // Wipe before reseeding so successive runs aren't cumulative.
-  console.log("Wiping device tables…");
+  console.log(`Wiping device tables in ${requested}…`);
   for (const table of [
     "device_state_history",
     "device_state",

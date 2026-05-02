@@ -333,8 +333,10 @@ connector and is explicitly out of scope today.
 | `DeviceManagementServiceConfig.ReadWrite.All` | Autopilot hardware-hash import. | Optional — skip if you won't import hardware hashes through Runway. |
 
 Grant admin consent in the tenant after assigning these. Optional scopes
-can be omitted up front and added later — Runway surfaces a clear
-operator-facing error when an action lacks its scope.
+can be omitted up front and added later — when an action lacks its
+scope, Graph returns 403 and the failure is recorded in **Action
+Audit** with the HTTP status (use that to confirm whether to add a
+scope vs grant the admin a different Entra/Intune role).
 
 </details>
 

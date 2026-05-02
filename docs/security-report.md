@@ -83,8 +83,10 @@ required for the sync to populate the local database:
 
 Delegated permissions gate the privileged operator flows. Grant only the
 scopes you'll actually use during the pilot — optional scopes can be
-added later and Runway surfaces a clear permission error when an action
-lacks its scope:
+added later. When an action lacks its scope, Graph returns 403 and the
+failure is recorded in Action Audit with the HTTP status; use that to
+distinguish "missing Graph scope" from "signed-in admin lacks the
+Entra/Intune role for this action":
 
 | Permission | Powers | Required? |
 | --- | --- | --- |

@@ -32,7 +32,6 @@ const REDACT_PATHS = [
   'req.headers["cookie"]',
   'req.headers["set-cookie"]',
   'req.headers["x-runway-desktop-token"]',
-  'req.headers["idempotency-key"]',
   'res.headers["set-cookie"]',
   "req.body.clientSecret",
   "req.body.azureClientSecret",

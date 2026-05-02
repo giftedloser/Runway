@@ -23,10 +23,9 @@ function isLoopbackRemote(remote: string | undefined) {
  * Constant-time desktop-token comparison. The token is loopback-only and
  * minted fresh per app launch, so the timing-attack window is narrow, but
  * timingSafeEqual is one line and removes the question entirely. Returns
- * false for missing tokens, length mismatches, or invalid UTF-8 — never
- * throws.
+ * false for missing tokens or length mismatches; never throws.
  */
-export function hasDesktopToken(request: Request) {
+function hasDesktopToken(request: Request) {
   const expected = config.RUNWAY_DESKTOP_TOKEN;
   if (!expected) return false;
   const presented = request.get(DESKTOP_TOKEN_HEADER);
