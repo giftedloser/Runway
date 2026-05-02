@@ -1,3 +1,6 @@
+import { Buffer } from "node:buffer";
+import { timingSafeEqual } from "node:crypto";
+
 import type { Request, Response, NextFunction } from "express";
 
 import { config } from "../config.js";
@@ -16,9 +19,23 @@ function isLoopbackRemote(remote: string | undefined) {
   );
 }
 
-function hasDesktopToken(request: Request) {
-  if (!config.RUNWAY_DESKTOP_TOKEN) return false;
-  return request.get(DESKTOP_TOKEN_HEADER) === config.RUNWAY_DESKTOP_TOKEN;
+/**
+ * Constant-time desktop-token comparison. The token is loopback-only and
+ * minted fresh per app launch, so the timing-attack window is narrow, but
+ * timingSafeEqual is one line and removes the question entirely. Returns
+ * false for missing tokens, length mismatches, or invalid UTF-8 — never
+ * throws.
+ */
+export function hasDesktopToken(request: Request) {
+  const expected = config.RUNWAY_DESKTOP_TOKEN;
+  if (!expected) return false;
+  const presented = request.get(DESKTOP_TOKEN_HEADER);
+  if (typeof presented !== "string" || presented.length === 0) return false;
+
+  const expectedBuffer = Buffer.from(expected, "utf8");
+  const presentedBuffer = Buffer.from(presented, "utf8");
+  if (presentedBuffer.length !== expectedBuffer.length) return false;
+  return timingSafeEqual(presentedBuffer, expectedBuffer);
 }
 
 function isAllowedOrigin(origin: string | undefined): boolean {

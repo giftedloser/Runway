@@ -74,10 +74,10 @@ export function rulesRouter(db: Database.Database) {
   });
 
   // Dry-run: evaluate a predicate against the current device_state snapshot
-  // and return (count, sample). Does not persist anything. Unauthenticated
-  // on purpose — it operates on already-synced data and helps rule authors
-  // validate a predicate before saving.
-  router.post("/preview", (request, response) => {
+  // and return (count, sample). Does not persist anything. Gated on
+  // delegated admin auth like the rest of rule CRUD so a same-host process
+  // cannot fan out arbitrary predicates against synced tenant data.
+  router.post("/preview", requireDelegatedAuth, (request, response) => {
     const schema = z.object({
       predicate: predicateSchema,
       scope: z.enum(["global", "property", "profile"]).optional(),

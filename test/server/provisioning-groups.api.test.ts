@@ -418,9 +418,9 @@ describe("Settings tag-config auth guard", () => {
     await request(app).delete("/api/settings/tag-config/North").expect(401);
   });
 
-  it("GET /api/settings/tag-config remains accessible without auth (read-only)", async () => {
+  it("GET /api/settings/tag-config requires delegated auth (matches mutation siblings)", async () => {
     const app = createApp(db);
-    await request(app).get("/api/settings/tag-config").expect(200);
+    await request(app).get("/api/settings/tag-config").expect(401);
   });
 });
 

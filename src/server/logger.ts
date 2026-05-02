@@ -21,12 +21,31 @@ const LEVEL_NAMES: Record<number, LogEntry["level"]> = {
 
 const RING_CAPACITY = 500;
 const ring: LogEntry[] = [];
+// Redact request/response headers that carry session, desktop, or
+// delegated tokens, plus likely-sensitive request body fields. Bodies
+// aren't logged today, but a future change might log a `req.body`
+// snapshot — pre-redact the credential fields the Graph setup wizard
+// and other auth flows submit, so secrets never reach disk or the
+// in-memory log ring even by accident.
 const REDACT_PATHS = [
   'req.headers["authorization"]',
   'req.headers["cookie"]',
   'req.headers["set-cookie"]',
   'req.headers["x-runway-desktop-token"]',
-  'res.headers["set-cookie"]'
+  'req.headers["idempotency-key"]',
+  'res.headers["set-cookie"]',
+  "req.body.clientSecret",
+  "req.body.azureClientSecret",
+  "req.body.AZURE_CLIENT_SECRET",
+  "req.body.password",
+  "req.body.token",
+  "req.body.accessToken",
+  "req.body.idToken",
+  "req.body.refreshToken",
+  "req.body.sessionSecret",
+  "req.body.SESSION_SECRET",
+  "req.body.thumbprint",
+  "req.body.AZURE_CLIENT_CERT_THUMBPRINT"
 ];
 
 function pushEntry(entry: LogEntry) {
