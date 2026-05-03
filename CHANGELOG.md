@@ -9,8 +9,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- Gated `POST /api/rules/preview` behind `requireDelegatedAuth` so a
+  same-host process can no longer fan out arbitrary predicates against
+  synced tenant data.
+- Gated `GET /api/settings/tag-config` behind `requireDelegatedAuth` for
+  consistency with the mutation siblings; the Tags view continues to
+  read mappings via the parent `/api/settings` endpoint.
+- Switched the desktop-token comparison in
+  `requireLocalAccess` to `crypto.timingSafeEqual` with explicit
+  length-mismatch and missing-header guards, removing the timing-attack
+  surface even on a single-user workstation.
+- Extended pino redact paths to cover request body credential fields
+  (`clientSecret`, `azureClientSecret`, `password`, `token`,
+  `accessToken`, `idToken`, `refreshToken`, session secrets,
+  certificate thumbprints) and the `idempotency-key` request header.
+  Defence in depth — bodies aren't logged today.
+- Destructive action confirmation now uses
+  `serial ?? deviceName ?? intuneId ?? autopilotId` for the typed
+  confirmation token. Devices missing all four refuse to render the
+  destructive flow; the previous behaviour silently fell back to the
+  literal "CONFIRM" string.
+
+### Performance
+
+- Added migration `015-action-log-time-index.sql` (`idx_action_log_triggered_at`)
+  so the audit-log CSV / NDJSON export at `GET /api/actions/logs/export`
+  no longer falls back to a sequential scan.
+
+### Changed
+
+- Destructive actions in the device-detail toolbar now carry a subtle
+  critical-color left border at rest, a critical-tinted icon, and an
+  explicit `focus-visible` outline that matches severity. Hover and
+  confirmation behaviour unchanged.
+
+### Added
+
+- `npm run db:seed:scale` — dev-only smoke seed that generates ~4,500
+  devices across ~30 properties with realistic problem distribution
+  and prints rough query timings (build / persist / compute /
+  dashboard / device list / tags inventory / provisioning lookup /
+  device detail / second-pass recompute). Never invoked by the test
+  suite or CI.
+
 ### Documentation
 
+- Added `docs/live-tenant-dry-run.md`, a step-by-step runbook for the
+  first time Runway is pointed at a real tenant. Read-and-look-only;
+  destructive actions are explicitly deferred to a later soak.
+- Added an "Optional?" column to the delegated permission tables in
+  README and `docs/security-report.md` so a security owner can grant
+  only the scopes for the features they intend to use.
 - Refreshed README to describe the v1.6 app shape: first-run setup,
   sync status pill, Tags view, Provisioning Builder, Build Payload
   guidance, EntityPicker for Change Primary User, single-device

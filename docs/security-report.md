@@ -70,25 +70,37 @@ Recommended controls:
 
 ## Permission Review
 
-Application permissions are used for read-only ingestion:
+Application permissions are used for read-only ingestion. All five are
+required for the sync to populate the local database:
 
-- `DeviceManagementServiceConfig.Read.All`
-- `DeviceManagementManagedDevices.Read.All`
-- `DeviceManagementConfiguration.Read.All`
-- `Device.Read.All`
-- `Group.Read.All`
+| Permission | Why Runway needs it |
+| --- | --- |
+| `DeviceManagementServiceConfig.Read.All` | Autopilot deployment profiles + assignments. |
+| `DeviceManagementManagedDevices.Read.All` | Intune managed devices, including `managementAgent` for ConfigMgr presence. |
+| `DeviceManagementConfiguration.Read.All` | Configuration profile + compliance + app assignments backing Build Payload. |
+| `Device.Read.All` | Entra device objects for cross-system identity correlation. |
+| `Group.Read.All` | Entra groups + memberships for targeting. |
 
-Delegated permissions are used for privileged operator flows:
+Delegated permissions gate the privileged operator flows. Grant only the
+scopes you'll actually use during the pilot — optional scopes can be
+added later. When an action lacks its scope, Graph returns 403 and the
+failure is recorded in Action Audit with the HTTP status; use that to
+distinguish "missing Graph scope" from "signed-in admin lacks the
+Entra/Intune role for this action":
 
-- `DeviceManagementManagedDevices.ReadWrite.All`
-- `DeviceManagementManagedDevices.PrivilegedOperations.All`
-- `DeviceLocalCredential.Read.All`
-- `BitLockerKey.Read.All`
-- `Group.ReadWrite.All`
-- `DeviceManagementServiceConfig.ReadWrite.All`
-- `User.Read`
+| Permission | Powers | Required? |
+| --- | --- | --- |
+| `User.Read` | Stamps Action Audit `triggeredBy`. | Required for any delegated flow. |
+| `DeviceManagementManagedDevices.ReadWrite.All` | Sync, reboot, rename, rotate LAPS, change primary user. | Required if any remote action will run. |
+| `DeviceManagementManagedDevices.PrivilegedOperations.All` | Retire, wipe, Autopilot reset. | Optional — skip if destructive actions are deferred. |
+| `User.ReadBasic.All` | Change Primary User EntityPicker (search by display name / UPN / mail). | Optional. |
+| `DeviceLocalCredential.Read.All` | Windows LAPS password retrieval. | Optional. |
+| `BitLockerKey.Read.All` | BitLocker recovery key retrieval. | Optional. |
+| `Group.ReadWrite.All` | Add / remove device from Entra group during remediation. | Optional. |
+| `DeviceManagementServiceConfig.ReadWrite.All` | Autopilot hardware-hash import. | Optional. |
 
-Only grant delegated permissions if those flows are approved for the pilot.
+The first soak should run with the required scopes only; layer optional
+scopes in once the read paths are clean.
 
 ## Known Risks And Mitigations
 

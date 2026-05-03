@@ -68,7 +68,14 @@ function hasDesktopSetupToken(request: Request) {
 export function settingsRouter(db: Database.Database) {
   const router = Router();
 
-  router.get("/tag-config", (_request, response) => {
+  // Tag mappings are tenant-shaped operational data; the mutation
+  // siblings (POST/PUT/DELETE/preview) all require delegated admin
+  // auth, and the client reads the same data via the parent
+  // /api/settings endpoint, so this GET is gated to match. Closes a
+  // same-host process from enumerating mappings with just the desktop
+  // token; documented external scripts that hold a delegated session
+  // continue to work.
+  router.get("/tag-config", requireDelegatedAuth, (_request, response) => {
     response.json(getSettings(db).tagConfig);
   });
 

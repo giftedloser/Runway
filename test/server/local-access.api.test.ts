@@ -87,4 +87,37 @@ describe("requireLocalAccess gate", () => {
     // assertion that matters is that the origin guard didn't 403 it.
     expect(res.status).not.toBe(403);
   });
+
+  // ── Desktop token compare (timing-safe) ──────────────────────────
+  it("rejects an empty desktop token header", async () => {
+    const { createApp } = await import("../../src/server/app.js");
+    const app = createApp(db);
+    const res = await request(app)
+      .get("/api/devices")
+      .set("X-Runway-Desktop-Token", "");
+    expect(res.status).toBe(401);
+  });
+
+  it("rejects a desktop token with a length mismatch", async () => {
+    const { createApp } = await import("../../src/server/app.js");
+    const app = createApp(db);
+    const expected = process.env.RUNWAY_DESKTOP_TOKEN!;
+    const res = await request(app)
+      .get("/api/devices")
+      .set("X-Runway-Desktop-Token", expected.slice(0, expected.length - 1));
+    expect(res.status).toBe(401);
+  });
+
+  it("rejects a desktop token of the same length but different content", async () => {
+    const { createApp } = await import("../../src/server/app.js");
+    const app = createApp(db);
+    const expected = process.env.RUNWAY_DESKTOP_TOKEN!;
+    const wrong = "y".repeat(expected.length);
+    expect(wrong).not.toEqual(expected);
+    expect(wrong.length).toEqual(expected.length);
+    const res = await request(app)
+      .get("/api/devices")
+      .set("X-Runway-Desktop-Token", wrong);
+    expect(res.status).toBe(401);
+  });
 });
