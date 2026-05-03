@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { CheckCircle2, KeyRound, RefreshCcw, ShieldAlert } from "lucide-react";
+import { CheckCircle2, FolderOpen, KeyRound, RefreshCcw, ShieldAlert } from "lucide-react";
 
 import { Button } from "../ui/button.js";
 import { Input } from "../ui/input.js";
 import { useAuthStatus } from "../../hooks/useAuth.js";
+import { isTauriRuntime, revealPathInExplorer } from "../../lib/desktop.js";
+import { useToast } from "../shared/toast.js";
 import {
   useGraphEnvInfo,
   useSaveGraphCredentials,
@@ -60,6 +62,7 @@ export function GraphCredentialsWizard({ onDismissRestart }: Props) {
   const envInfo = useGraphEnvInfo();
   const auth = useAuthStatus();
   const save = useSaveGraphCredentials();
+  const toast = useToast();
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [touched, setTouched] = useState<Record<keyof FormState, boolean>>({
     tenantId: false,
@@ -68,6 +71,37 @@ export function GraphCredentialsWizard({ onDismissRestart }: Props) {
     redirectUri: false
   });
   const [savedTo, setSavedTo] = useState<string | null>(null);
+
+  async function handleRevealEnv(envPath: string) {
+    if (isTauriRuntime()) {
+      const ok = await revealPathInExplorer(envPath);
+      if (!ok) {
+        toast.push({
+          variant: "warning",
+          title: "Could not open folder",
+          description: "Open this path manually in File Explorer."
+        });
+      }
+      return;
+    }
+    // Browser fallback: copy the path so the operator can paste it.
+    if (navigator.clipboard?.writeText) {
+      void navigator.clipboard.writeText(envPath).then(
+        () =>
+          toast.push({
+            variant: "info",
+            title: "Path copied",
+            description: "The .env path is on your clipboard."
+          }),
+        () =>
+          toast.push({
+            variant: "warning",
+            title: "Could not copy path",
+            description: envPath
+          })
+      );
+    }
+  }
 
   const errors = validate(form);
   const isValid = Object.keys(errors).length === 0;
@@ -121,13 +155,33 @@ export function GraphCredentialsWizard({ onDismissRestart }: Props) {
                 : envInfo.data
                   ? `Missing: ${envInfo.data.missing.join(", ") || "—"}. Saving below will write to the server's .env and prompt for a restart.`
                   : "Credential status unavailable."}
-          {envInfo.data?.envPath && (
-            <div className="mt-1 truncate font-mono text-[11px] text-[var(--pc-text-muted)]">
-              .env target: {envInfo.data.envPath}
-            </div>
-          )}
         </div>
       </div>
+
+      {/* Active .env path — promoted to its own row so an operator who
+          edits .env directly can never miss WHICH file Runway reads.
+          Editing a stranger .env (e.g. the dev project root) was a real
+          confusion mode before this row existed. */}
+      {envInfo.data?.envPath && (
+        <div className="flex items-center gap-3 rounded-lg border border-[var(--pc-border)] bg-[var(--pc-surface)] px-3 py-2">
+          <div className="min-w-0 flex-1">
+            <div className="text-[11px] font-medium uppercase tracking-wide text-[var(--pc-text-muted)]">
+              Runway is reading from
+            </div>
+            <div className="mt-0.5 truncate font-mono text-[12px] text-[var(--pc-text)]" title={envInfo.data.envPath}>
+              {envInfo.data.envPath}
+            </div>
+          </div>
+          <Button
+            variant="ghost"
+            onClick={() => handleRevealEnv(envInfo.data!.envPath)}
+            title={isTauriRuntime() ? "Reveal in File Explorer" : "Copy path to clipboard"}
+          >
+            <FolderOpen className="h-3.5 w-3.5" />
+            {isTauriRuntime() ? "Open folder" : "Copy path"}
+          </Button>
+        </div>
+      )}
 
       {/* Restart banner — only after a successful save */}
       {savedTo && (

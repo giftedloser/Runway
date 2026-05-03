@@ -118,16 +118,32 @@ function sendCallbackPage(
       <p>${description}</p>
     </main>
     <script>
+      // Two completion shapes are possible here:
+      //   - Browser popup: window.opener is the calling Runway window.
+      //     postMessage signals completion immediately; the close call is
+      //     a fallback for the polling watchdog.
+      //   - Tauri webview window: opened from Rust, no window.opener.
+      //     The main webview shares the localhost:3001 session cookie via
+      //     the shared WebView2 user data dir, so it just polls
+      //     /api/auth/status. We still want this auth window to close
+      //     itself so the operator is dropped back into the main app.
       const message = { type: ${JSON.stringify(messageType)} };
       const openerOrigins = [${getCallbackMessageOrigins()}];
       if (window.opener) {
         for (const origin of openerOrigins) {
           window.opener.postMessage(message, origin);
         }
-        window.setTimeout(() => window.close(), 150);
-      } else {
-        window.setTimeout(() => window.location.assign("/"), 900);
       }
+      window.setTimeout(() => {
+        try {
+          window.close();
+        } catch {
+          /* fall through to redirect below */
+        }
+        // If close was vetoed (some shells refuse to close non-opener
+        // windows), fall back to a return-to-app redirect.
+        window.setTimeout(() => window.location.assign("/"), 400);
+      }, 150);
     </script>
   </body>
 </html>`);

@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "../components/shared/toast.js";
 import type { AppAccessStatus, AuthStatus } from "../lib/types.js";
 import { apiRequest } from "../lib/api.js";
+import { isTauriRuntime, openAuthWindow } from "../lib/desktop.js";
 import { useSettings } from "./useSettings.js";
 
 const AUTH_WINDOW_POLL_INTERVAL_MS = 1_000;
@@ -62,7 +63,7 @@ function primeAuthPopup({
 }
 
 async function waitForDesktopAuth<T extends { authenticated: boolean }>(
-  popup: Window,
+  popup: Window | null,
   {
     statusPath,
     messageType
@@ -71,12 +72,16 @@ async function waitForDesktopAuth<T extends { authenticated: boolean }>(
     messageType: string;
   }
 ) {
+  // popup is null in Tauri mode (the auth window is a separate Tauri
+  // WebviewWindow with no JS handle). In that case we drop the
+  // closed/postMessage signals and rely purely on polling
+  // /api/auth/status until the deadline.
   const deadline = Date.now() + AUTH_WINDOW_TIMEOUT_MS;
   let completedByCallback = false;
   let callbackDeadline: number | null = null;
 
   const onMessage = (event: MessageEvent) => {
-    if (event.source !== popup) return;
+    if (!popup || event.source !== popup) return;
     const payload = event.data as { type?: string } | null;
     if (payload?.type === messageType) {
       completedByCallback = true;
@@ -93,7 +98,7 @@ async function waitForDesktopAuth<T extends { authenticated: boolean }>(
         return status;
       }
 
-      if (popup.closed && !completedByCallback) {
+      if (popup && popup.closed && !completedByCallback) {
         break;
       }
 
@@ -104,6 +109,83 @@ async function waitForDesktopAuth<T extends { authenticated: boolean }>(
   } finally {
     window.removeEventListener("message", onMessage);
   }
+}
+
+/**
+ * Result handle for an in-flight sign-in attempt. In browser mode this
+ * wraps a Window we own (so we can close it on error and detect when
+ * the user closes it manually). In Tauri mode the auth window is a
+ * separate WebviewWindow with no JS handle — we just poll status.
+ */
+type AuthHandle =
+  | { kind: "popup"; window: Window }
+  | { kind: "tauri" };
+
+function closeAuthHandle(handle: AuthHandle | null) {
+  if (!handle) return;
+  if (handle.kind === "popup") {
+    try {
+      handle.window.close();
+    } catch {
+      /* ignore */
+    }
+  }
+  // Tauri auth windows close themselves from the callback HTML; if the
+  // user aborts before completion we leave that to them.
+}
+
+async function startAuthFlow({
+  loginPath,
+  windowName,
+  primeTitle,
+  primeDescription
+}: {
+  loginPath: string;
+  windowName: string;
+  primeTitle: string;
+  primeDescription: string;
+}): Promise<AuthHandle> {
+  // In Tauri, window.open is not allowed by the WebView2 host, so we
+  // request the URL and open it in a dedicated Tauri WebviewWindow that
+  // shares cookies with the main window. The login URL is fetched
+  // *before* the window opens (no synchronous-click constraint here).
+  if (isTauriRuntime()) {
+    const { loginUrl } = await apiRequest<{ loginUrl: string }>(loginPath);
+    const result = await openAuthWindow(loginUrl);
+    if (!result.ok) {
+      throw new Error(
+        result.error && result.error !== "not-tauri"
+          ? `Could not open Microsoft sign-in window: ${result.error}`
+          : "Runway could not open the Microsoft sign-in window."
+      );
+    }
+    return { kind: "tauri" };
+  }
+
+  // Browser fallback: open the popup synchronously inside the user
+  // gesture so it isn't classified as a non-user-initiated popup, then
+  // navigate it to the login URL once we have it.
+  const popup = primeAuthPopup({
+    windowName,
+    title: primeTitle,
+    description: primeDescription
+  });
+  if (!popup) {
+    throw new Error(
+      "Runway could not open the Microsoft sign-in window. Allow popups for this app and try again."
+    );
+  }
+
+  try {
+    const { loginUrl } = await apiRequest<{ loginUrl: string }>(loginPath);
+    popup.location.href = loginUrl;
+  } catch (error) {
+    popup.close();
+    throw error;
+  }
+
+  popup.focus();
+  return { kind: "popup", window: popup };
 }
 
 export function useAuthStatus() {
@@ -129,34 +211,31 @@ export function useAppAccessLogin() {
 
   return useMutation({
     mutationFn: async () => {
-      const popup = primeAuthPopup({
+      const handle = await startAuthFlow({
+        loginPath: "/api/auth/access-login",
         windowName: "runway-app-signin",
-        title: "Preparing Runway sign-in",
-        description: "Runway is opening Microsoft Entra ID for app access."
+        primeTitle: "Preparing Runway sign-in",
+        primeDescription: "Runway is opening Microsoft Entra ID for app access."
       });
-      if (!popup) {
-        throw new Error("Runway could not open the Microsoft sign-in window. Allow popups for this app and try again.");
-      }
 
       try {
-        const { loginUrl } = await apiRequest<{ loginUrl: string }>("/api/auth/access-login");
-        popup.location.href = loginUrl;
+        const status = await waitForDesktopAuth<AppAccessStatus>(
+          handle.kind === "popup" ? handle.window : null,
+          {
+            statusPath: "/api/auth/access-status",
+            messageType: APP_ACCESS_COMPLETE_MESSAGE
+          }
+        );
+        if (!status?.authenticated) {
+          throw new Error("Runway did not receive a completed app sign-in.");
+        }
+        await queryClient.invalidateQueries({ queryKey: ["auth", "access-status"] });
+        await queryClient.invalidateQueries({ queryKey: ["settings"] });
+        return status;
       } catch (error) {
-        popup.close();
+        closeAuthHandle(handle);
         throw error;
       }
-
-      popup.focus();
-      const status = await waitForDesktopAuth<AppAccessStatus>(popup, {
-        statusPath: "/api/auth/access-status",
-        messageType: APP_ACCESS_COMPLETE_MESSAGE
-      });
-      if (!status?.authenticated) {
-        throw new Error("Runway did not receive a completed app sign-in.");
-      }
-      await queryClient.invalidateQueries({ queryKey: ["auth", "access-status"] });
-      await queryClient.invalidateQueries({ queryKey: ["settings"] });
-      return status;
     }
   });
 }
@@ -178,30 +257,14 @@ export function useLogin() {
         throw new Error(blockedReason);
       }
 
-      // Open synchronously from the button click before the async API request.
-      // Otherwise browsers can classify the eventual sign-in window as a
-      // non-user-initiated popup and silently block it.
-      const popup = primeAuthPopup({
+      return startAuthFlow({
+        loginPath: "/api/auth/login",
         windowName: "runway-admin-signin",
-        title: "Preparing Microsoft sign-in",
-        description: "Runway is opening the delegated admin session."
+        primeTitle: "Preparing Microsoft sign-in",
+        primeDescription: "Runway is opening the delegated admin session."
       });
-      if (!popup) {
-        throw new Error("Runway could not open the Microsoft sign-in window. Allow popups for this app and try again.");
-      }
-
-      try {
-        const { loginUrl } = await apiRequest<{ loginUrl: string }>("/api/auth/login");
-        popup.location.href = loginUrl;
-      } catch (error) {
-        popup.close();
-        throw error;
-      }
-
-      popup.focus();
-      return popup;
     },
-    onSuccess: (popup) => {
+    onSuccess: (handle) => {
       toast.push({
         variant: "info",
         title: "Continue in Microsoft sign-in",
@@ -209,10 +272,13 @@ export function useLogin() {
       });
 
       void (async () => {
-        const status = await waitForDesktopAuth<AuthStatus>(popup, {
-          statusPath: "/api/auth/status",
-          messageType: AUTH_COMPLETE_MESSAGE
-        });
+        const status = await waitForDesktopAuth<AuthStatus>(
+          handle.kind === "popup" ? handle.window : null,
+          {
+            statusPath: "/api/auth/status",
+            messageType: AUTH_COMPLETE_MESSAGE
+          }
+        );
         if (status?.authenticated) {
           await queryClient.invalidateQueries({ queryKey: ["auth", "status"] });
           toast.push({
@@ -223,7 +289,8 @@ export function useLogin() {
           return;
         }
 
-        if (!popup.closed) {
+        const popupAborted = handle.kind === "popup" && handle.window.closed;
+        if (!popupAborted) {
           toast.push({
             variant: "warning",
             title: "Sign-in still pending",

@@ -1,5 +1,6 @@
 import { createApp } from "./app.js";
 import { config } from "./config.js";
+import { resolveEnvPath } from "./config/env-writer.js";
 import { getDb } from "./db/database.js";
 import { runMigrations } from "./db/migrate.js";
 import { logger } from "./logger.js";
@@ -10,6 +11,20 @@ import { fullSync, getSyncState, startBackgroundSync } from "./sync/sync-service
 const SHUTDOWN_TIMEOUT_MS = 10_000;
 
 async function bootstrap() {
+  // Surface the active .env path on every boot so that "credentials in
+  // the wrong file" is debuggable from backend-launch.log alone. Without
+  // this, an operator who edits a stranger .env (e.g., the dev project
+  // root) has no signal that the running server reads from somewhere
+  // else entirely.
+  logger.info(
+    {
+      envPath: resolveEnvPath(),
+      graphConfigured: config.isGraphConfigured,
+      graphMissing: config.graphMissing
+    },
+    "[startup] Runway env loaded"
+  );
+
   const db = getDb();
   runMigrations(db);
 
