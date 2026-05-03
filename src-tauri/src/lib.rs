@@ -6,7 +6,7 @@ use std::sync::Mutex;
 
 use rand::RngCore;
 use tauri::path::BaseDirectory;
-use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
+use tauri::Manager;
 
 #[cfg(target_os = "windows")]
 use std::os::windows::process::CommandExt;
@@ -61,45 +61,6 @@ fn open_external_url(url: String) -> Result<(), String> {
         .map_err(|error| format!("Could not open external URL: {error}"))
 }
 
-// Open the Microsoft sign-in URL inside a *new Tauri webview window* so
-// that the resulting localhost:3001 session cookie lives in the same
-// WebView2 user-data dir as the main window. Opening sign-in via the
-// system browser would set the cookie there instead, leaving the main
-// app's session untouched.
-//
-// We only allow https URLs from login.microsoftonline.com so this
-// command cannot be repurposed by a compromised renderer to open a new
-// app-privileged window pointed at arbitrary content.
-#[tauri::command]
-fn open_auth_window(app: tauri::AppHandle, url: String) -> Result<(), String> {
-    let parsed = url::Url::parse(&url).map_err(|error| format!("Invalid URL: {error}"))?;
-    if parsed.scheme() != "https" {
-        return Err("Sign-in URLs must use https.".to_string());
-    }
-    let host = parsed.host_str().unwrap_or("");
-    let host_allowed =
-        host == "login.microsoftonline.com" || host.ends_with(".login.microsoftonline.com");
-    if !host_allowed {
-        return Err(format!(
-            "Only login.microsoftonline.com is allowed for sign-in windows (got {host})."
-        ));
-    }
-
-    let label = "runway-auth";
-    if let Some(existing) = app.get_webview_window(label) {
-        let _ = existing.close();
-    }
-
-    WebviewWindowBuilder::new(&app, label, WebviewUrl::External(parsed))
-        .title("Microsoft sign-in")
-        .inner_size(640.0, 760.0)
-        .resizable(true)
-        .center()
-        .focused(true)
-        .build()
-        .map(|_| ())
-        .map_err(|error| format!("Could not open sign-in window: {error}"))
-}
 
 // Reveal a directory in the OS file explorer so an operator can see the
 // .env Runway is actually reading. The .env path comes from the server
@@ -261,7 +222,6 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             get_desktop_api_token,
             open_external_url,
-            open_auth_window,
             reveal_path_in_explorer
         ])
         .setup(|app| {

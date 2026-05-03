@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "../components/shared/toast.js";
 import type { AppAccessStatus, AuthStatus } from "../lib/types.js";
 import { apiRequest } from "../lib/api.js";
-import { isTauriRuntime, openAuthWindow } from "../lib/desktop.js";
+import { isTauriRuntime, openUrlInSystemBrowser } from "../lib/desktop.js";
 import { useSettings } from "./useSettings.js";
 
 const AUTH_WINDOW_POLL_INTERVAL_MS = 1_000;
@@ -119,7 +119,7 @@ async function waitForDesktopAuth<T extends { authenticated: boolean }>(
  */
 type AuthHandle =
   | { kind: "popup"; window: Window }
-  | { kind: "tauri" };
+  | { kind: "browser" };
 
 function closeAuthHandle(handle: AuthHandle | null) {
   if (!handle) return;
@@ -130,8 +130,8 @@ function closeAuthHandle(handle: AuthHandle | null) {
       /* ignore */
     }
   }
-  // Tauri auth windows close themselves from the callback HTML; if the
-  // user aborts before completion we leave that to them.
+  // System-browser auth windows close themselves from the callback HTML;
+  // if the user aborts before completion we leave that to them.
 }
 
 async function startAuthFlow({
@@ -145,21 +145,22 @@ async function startAuthFlow({
   primeTitle: string;
   primeDescription: string;
 }): Promise<AuthHandle> {
-  // In Tauri, window.open is not allowed by the WebView2 host, so we
-  // request the URL and open it in a dedicated Tauri WebviewWindow that
-  // shares cookies with the main window. The login URL is fetched
-  // *before* the window opens (no synchronous-click constraint here).
+  // In Tauri, window.open is not allowed by the WebView2 host. Instead
+  // of opening a separate WebView2 window (which is unreliable with
+  // Microsoft login due to UA sniffing / blank windows), we open the
+  // login URL in the system's default browser. The browser completes
+  // the OAuth flow and hits the localhost callback endpoint directly,
+  // which creates the session server-side. The frontend polls
+  // /api/auth/status to detect the completed login.
   if (isTauriRuntime()) {
     const { loginUrl } = await apiRequest<{ loginUrl: string }>(loginPath);
-    const result = await openAuthWindow(loginUrl);
-    if (!result.ok) {
+    const opened = await openUrlInSystemBrowser(loginUrl);
+    if (!opened) {
       throw new Error(
-        result.error && result.error !== "not-tauri"
-          ? `Could not open Microsoft sign-in window: ${result.error}`
-          : "Runway could not open the Microsoft sign-in window."
+        "Runway could not open the system browser for Microsoft sign-in."
       );
     }
-    return { kind: "tauri" };
+    return { kind: "browser" };
   }
 
   // Browser fallback: open the popup synchronously inside the user
@@ -220,7 +221,7 @@ export function useAppAccessLogin() {
 
       try {
         const status = await waitForDesktopAuth<AppAccessStatus>(
-          handle.kind === "popup" ? handle.window : null,
+          handle.kind === "popup" ? handle.window : null,  /* browser mode: no popup ref */
           {
             statusPath: "/api/auth/access-status",
             messageType: APP_ACCESS_COMPLETE_MESSAGE
@@ -273,7 +274,7 @@ export function useLogin() {
 
       void (async () => {
         const status = await waitForDesktopAuth<AuthStatus>(
-          handle.kind === "popup" ? handle.window : null,
+          handle.kind === "popup" ? handle.window : null,  /* browser mode: no popup ref */
           {
             statusPath: "/api/auth/status",
             messageType: AUTH_COMPLETE_MESSAGE
@@ -290,6 +291,8 @@ export function useLogin() {
         }
 
         const popupAborted = handle.kind === "popup" && handle.window.closed;
+        // In system-browser mode we can't detect if the user closed
+        // the tab, so we always rely on the polling timeout.
         if (!popupAborted) {
           toast.push({
             variant: "warning",

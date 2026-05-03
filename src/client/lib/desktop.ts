@@ -25,21 +25,16 @@ export async function openExternalUrl(url: string) {
 }
 
 /**
- * Opens the Microsoft sign-in URL in a new Tauri webview window so the
- * resulting localhost session cookie lives in the same WebView2 user-
- * data dir as the main window. Returns true on success, false if the
- * runtime is not Tauri or the command rejected the URL.
+ * Opens a URL in the system's default browser. In Tauri mode this uses
+ * the existing `open_external_url` command. Returns true on success.
  */
-export async function openAuthWindow(url: string): Promise<{ ok: boolean; error?: string }> {
-  if (!isTauriRuntime()) return { ok: false, error: "not-tauri" };
+export async function openUrlInSystemBrowser(url: string): Promise<boolean> {
+  if (!isTauriRuntime()) return false;
   try {
-    await tauriInvoke("open_auth_window", { url });
-    return { ok: true };
-  } catch (error) {
-    return {
-      ok: false,
-      error: error instanceof Error ? error.message : String(error)
-    };
+    await tauriInvoke("open_external_url", { url });
+    return true;
+  } catch {
+    return false;
   }
 }
 
