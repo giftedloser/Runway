@@ -69,6 +69,7 @@ pnpm-debug.log*
 .tmp-npm-tree.json
 demo/
 output/
+docs/internal/
 CLAUDE.md
 CLAUDE.local.md
 AGENTS.md
