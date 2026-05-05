@@ -6,10 +6,10 @@ import { Card } from "../ui/card.js";
 const order: HealthLevel[] = ["critical", "warning", "info", "healthy"];
 
 const config: Record<HealthLevel, { color: string; label: string }> = {
-  critical: { color: "bg-[var(--pc-critical)]", label: "Blocking failures" },
+  critical: { color: "bg-[var(--pc-critical)]", label: "Likely blocked" },
   warning: { color: "bg-[var(--pc-warning)]", label: "Needs review" },
-  info: { color: "bg-[var(--pc-info)]", label: "Drift detected" },
-  healthy: { color: "bg-[var(--pc-healthy)]", label: "Stable" },
+  info: { color: "bg-[var(--pc-info)]", label: "Coverage or context" },
+  healthy: { color: "bg-[var(--pc-healthy)]", label: "No action" },
   unknown: { color: "bg-[var(--pc-text-muted)]", label: "No signal" }
 };
 
@@ -39,11 +39,11 @@ export function HealthSummary({ counts }: { counts: DashboardResponse["counts"] 
   return (
     <Card className="p-5">
       <div className="mb-1 flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
-        <div className="text-[13px] font-semibold text-[var(--pc-text)]">Health Distribution</div>
+        <div className="text-[13px] font-semibold text-[var(--pc-text)]">Health distribution</div>
         <div className="text-[11px] text-[var(--pc-text-muted)]">Click a tile to filter the queue</div>
       </div>
       <div className="mb-4 text-[11.5px] text-[var(--pc-text-muted)]">
-        Aggregated state across correlated Autopilot / Intune / Entra records and ConfigMgr signals
+        Actual health is separated from Autopilot coverage and other informational gaps.
       </div>
 
       {/* Progress bar */}

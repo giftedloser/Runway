@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import {
   AlertTriangle,
   ArrowRight,
+  CheckCircle2,
   Fingerprint,
   Radio,
   ShieldAlert,
@@ -82,19 +83,24 @@ export function TriageCommandCenter({ dashboard }: { dashboard: DashboardRespons
     "profile_assignment_failed",
     "deployment_mode_mismatch"
   ]);
-  const enrollmentCount = countForFlags(dashboard.failurePatterns, [
+  const provisioningCount = countForFlags(dashboard.failurePatterns, [
     "profile_assigned_not_enrolled",
     "provisioning_stalled",
+    "profile_assignment_failed",
+    "hybrid_join_risk"
+  ]);
+  const coverageCount = countForFlags(dashboard.failurePatterns, [
     "no_autopilot_record",
-    "orphaned_autopilot"
+    "orphaned_autopilot",
+    "missing_ztdid"
   ]);
 
   const queues: QueueCard[] = [
     {
-      title: "Critical now",
+      title: "Needs attention",
       count: dashboard.counts.critical,
-      description: "Machines most likely to block provisioning or support work.",
-      operatorHint: "Open first when a tech asks where to start.",
+      description: "Health issues that probably need an operator decision.",
+      operatorHint: "Start here when someone asks what to fix next.",
       search: { ...DEVICE_QUEUE_SEARCH, health: "critical" },
       icon: ShieldAlert,
       tone: "critical"
@@ -109,22 +115,31 @@ export function TriageCommandCenter({ dashboard }: { dashboard: DashboardRespons
       tone: identityCount > 0 ? "warning" : "neutral"
     },
     {
-      title: "Targeting breaks",
+      title: "Targeting review",
       count: targetingCount,
       description: "Group tag, membership, or Autopilot profile intent is off.",
-      operatorHint: "Fix tag mappings, dynamic groups, or profile assignment drift.",
+      operatorHint: "Check tag mappings, dynamic groups, and profile targeting.",
       search: { ...DEVICE_QUEUE_SEARCH, flag: "not_in_target_group" },
       icon: Target,
       tone: targetingCount > 0 ? "warning" : "neutral"
     },
     {
-      title: "Enrollment stalls",
-      count: enrollmentCount,
-      description: "Autopilot and Intune disagree about where the device landed.",
-      operatorHint: "Check OOBE timing, check-in age, and whether Intune has a record.",
+      title: "Provisioning issues",
+      count: provisioningCount,
+      description: "Enrollment, OOBE, profile assignment, or join path is blocked.",
+      operatorHint: "Use when a device is actively stuck during build.",
       search: { ...DEVICE_QUEUE_SEARCH, flag: "provisioning_stalled" },
       icon: Radio,
-      tone: enrollmentCount > 0 ? "info" : "neutral"
+      tone: provisioningCount > 0 ? "critical" : "neutral"
+    },
+    {
+      title: "Autopilot coverage",
+      count: coverageCount,
+      description: "Managed devices that are not fully represented in Autopilot.",
+      operatorHint: "Usually adoption coverage, not device failure.",
+      search: { ...DEVICE_QUEUE_SEARCH, flag: "no_autopilot_record" },
+      icon: CheckCircle2,
+      tone: coverageCount > 0 ? "info" : "neutral"
     }
   ];
 
@@ -133,15 +148,15 @@ export function TriageCommandCenter({ dashboard }: { dashboard: DashboardRespons
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <div className="text-[13px] font-semibold text-[var(--pc-text)]">
-            Next Queues
+            Start here
           </div>
+          <p className="mt-0.5 text-[12px] text-[var(--pc-text-muted)]">
+            Queues are ordered by operator intent: fix, verify, review, then coverage.
+          </p>
         </div>
-        <p className="max-w-xl overflow-hidden text-ellipsis whitespace-nowrap text-[12px] text-[var(--pc-text-muted)]">
-          Start with the highest-risk device queue.
-        </p>
       </div>
 
-      <div className="mt-3 grid gap-3 md:grid-cols-2 2xl:grid-cols-4">
+      <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
         {queues.map((queue) => {
           const tone = toneClasses(queue.tone);
           const Icon = queue.icon;

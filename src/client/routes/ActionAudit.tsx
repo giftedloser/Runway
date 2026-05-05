@@ -100,7 +100,7 @@ export function ActionAuditPage() {
       <div className="space-y-5">
         <PageHeader
           eyebrow="System"
-          title="Action Audit"
+          title="Action History"
           description="Cross-device timeline of every remote action dispatched from Runway."
         />
         <Card className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
@@ -111,7 +111,7 @@ export function ActionAuditPage() {
                 Admin sign-in required
               </div>
               <div className="mt-0.5 text-[11.5px] text-[var(--pc-text-muted)]">
-                Action Audit shows recent remote actions, target devices,
+                Action History shows recent remote actions, target devices,
                 operator identity, result status, and Graph errors. Sign in
                 to view operational history.
               </div>
@@ -134,7 +134,7 @@ export function ActionAuditPage() {
     );
   }
 
-  if (logs.isLoading) return <LoadingState label="Loading action audit log…" />;
+  if (logs.isLoading) return <LoadingState label="Loading action history…" />;
   if (logs.isError) {
     return (
       <ErrorState
@@ -149,7 +149,7 @@ export function ActionAuditPage() {
     <div className="space-y-5">
       <PageHeader
         eyebrow="System"
-        title="Action Audit"
+        title="Action History"
         description="Review remote action results and operator identity."
         actions={
           <a

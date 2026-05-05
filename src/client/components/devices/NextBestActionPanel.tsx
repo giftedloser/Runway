@@ -33,11 +33,11 @@ const recommendations: Partial<Record<FlagCode, Recommendation>> = {
     icon: Fingerprint
   },
   no_autopilot_record: {
-    title: "Import or repair the Autopilot hardware record",
-    action: "Confirm the hardware hash exists in Autopilot. If missing, import the hash or verify OEM registration.",
-    verify: "The Join Picture should show Autopilot record found after sync.",
+    title: "Confirm whether Autopilot is expected",
+    action: "This device is managed in Intune but is not registered in Autopilot. No repair is needed unless this device should follow an Autopilot provisioning path.",
+    verify: "If Autopilot is expected, import or repair the hardware record and confirm it appears after sync.",
     wait: "Allow 15-30 minutes for Graph and Autopilot propagation.",
-    tone: "critical",
+    tone: "info",
     icon: Fingerprint
   },
   no_profile_assigned: {
@@ -113,19 +113,19 @@ const recommendations: Partial<Record<FlagCode, Recommendation>> = {
     icon: AlertTriangle
   },
   orphaned_autopilot: {
-    title: "Decide whether this is staged or stale",
-    action: "If the device should be active, finish enrollment. If it was retired/reimaged, clean up the stale Autopilot record.",
+    title: "Decide whether this record is staged or stale",
+    action: "An Autopilot record exists without a matching Intune enrollment. That can be normal for staged hardware; clean it up only if the device was retired or reimaged.",
     verify: "Either an Intune record appears or the orphaned Autopilot record is removed.",
     wait: "Immediate after cleanup, or after enrollment completes.",
-    tone: "warning",
+    tone: "info",
     icon: Fingerprint
   },
   missing_ztdid: {
-    title: "Repair the Autopilot-to-Entra link",
-    action: "Confirm the device was imported through Autopilot and reset through OOBE if needed.",
+    title: "Check Autopilot coverage only if expected",
+    action: "Missing ZTDID is an Autopilot coverage signal, not a device health failure by itself. Investigate when this machine is supposed to provision through Autopilot.",
     verify: "The Entra physical IDs should include a ZTDID marker.",
     wait: "Usually requires re-import/reset if the device bypassed Autopilot.",
-    tone: "warning",
+    tone: "info",
     icon: Fingerprint
   },
   deployment_mode_mismatch: {
@@ -162,7 +162,7 @@ function buildRecommendation(device: DeviceDetailResponse): Recommendation {
   return {
     title: "Start with the first critical diagnostic",
     action: "Open the diagnostics below and work from the highest severity item first.",
-    verify: "Run a sync after each fix and watch the Join Picture update.",
+    verify: "Run a sync after each fix and watch the Device path update.",
     wait: "Depends on the Microsoft service propagation path involved.",
     tone: "info",
     icon: ArrowRight

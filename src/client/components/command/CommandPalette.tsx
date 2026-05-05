@@ -132,15 +132,15 @@ export function CommandPalette() {
       {
         type: "page",
         id: "page-overview",
-        title: "Overview",
-        hint: "Windows fleet overview",
+        title: "Start",
+        hint: "Operator command center",
         icon: LayoutDashboard,
         action: () => go("/")
       },
       {
         type: "page",
         id: "page-devices",
-        title: "Devices",
+        title: "Device Queue",
         hint: "Triage queue",
         icon: TabletSmartphone,
         action: () => go("/devices", DEVICE_DEFAULT_SEARCH)
@@ -148,8 +148,8 @@ export function CommandPalette() {
       {
         type: "page",
         id: "page-critical",
-        title: "Critical Devices",
-        hint: "Devices in critical health",
+        title: "Needs Attention",
+        hint: "Devices most likely to need action",
         icon: TabletSmartphone,
         action: () => go("/devices", { ...DEVICE_DEFAULT_SEARCH, health: "critical" })
       },
@@ -180,7 +180,7 @@ export function CommandPalette() {
       {
         type: "page",
         id: "page-actions",
-        title: "Action Audit",
+        title: "Action History",
         hint: "Cross-device action timeline",
         icon: History,
         action: () => go("/actions")

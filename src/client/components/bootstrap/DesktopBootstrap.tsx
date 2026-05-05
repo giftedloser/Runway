@@ -75,7 +75,7 @@ export function DesktopBootstrap({ children }: { children: ReactNode }) {
         <p className="mt-2 text-sm leading-6 text-[var(--pc-text-secondary)]">
           {timedOut
             ? "The installed app could not reach its local runtime. Close Runway and reopen it. If this keeps happening, rebuild the installer so the packaged runtime is refreshed."
-            : "Launching the local Runway runtime and loading your existing mock-data workspace."}
+            : "Launching the local Runway runtime and loading your existing workspace."}
         </p>
         <div className="mt-5 flex items-center gap-3">
           <button

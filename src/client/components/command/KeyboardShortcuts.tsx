@@ -156,13 +156,13 @@ export function KeyboardShortcuts() {
     {
       label: "Go to",
       items: [
-        { keys: ["g", "d"], label: "Overview" },
-        { keys: ["g", "v"], label: "Devices" },
-        { keys: ["g", "c"], label: "Critical devices" },
+        { keys: ["g", "d"], label: "Start" },
+        { keys: ["g", "v"], label: "Device Queue" },
+        { keys: ["g", "c"], label: "Needs attention" },
         { keys: ["g", "p"], label: "Profiles" },
         { keys: ["g", "g"], label: "Groups" },
         { keys: ["g", "s"], label: "Sync status" },
-        { keys: ["g", "a"], label: "Action audit" },
+        { keys: ["g", "a"], label: "Action history" },
         { keys: ["g", ","], label: "Settings" }
       ]
     }

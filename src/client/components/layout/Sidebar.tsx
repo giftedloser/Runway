@@ -30,7 +30,7 @@ import {
 } from "../../hooks/useTheme.js";
 import { cn } from "../../lib/utils.js";
 import { apiRequest } from "../../lib/api.js";
-import type { TagInventoryItem } from "../provisioning/types.js";
+import { normalizeTagInventory } from "../../lib/provisioning-tags.js";
 import { requestCommandPaletteOpen } from "../command/events.js";
 import { HelpTooltip } from "../shared/HelpTooltip.js";
 import { AuthIndicator } from "./AuthIndicator.js";
@@ -72,15 +72,15 @@ const navGroups: NavGroup[] = [
   {
     label: "Triage",
     items: [
-      { to: "/", label: "Overview", icon: LayoutDashboard },
-      { to: "/devices", label: "Devices", icon: TabletSmartphone },
+      { to: "/", label: "Start", icon: LayoutDashboard },
+      { to: "/devices", label: "Device Queue", icon: TabletSmartphone },
       {
         to: "/provisioning",
-        label: "Provisioning Builder",
+        label: "Provisioning Path",
         icon: GitBranch,
         help: {
           id: "sidebar-provisioning",
-          text: "Provisioning Builder traces one tag through target groups, profile assignment, devices, and build payload readiness."
+          text: "Provisioning Path traces one tag through target groups, profile assignment, devices, and build payload readiness."
         }
       },
     ],
@@ -112,7 +112,7 @@ const navGroups: NavGroup[] = [
   {
     label: "Operations",
     items: [
-      { to: "/actions", label: "Action Audit", icon: History },
+      { to: "/actions", label: "Action History", icon: History },
       { to: "/sync", label: "Sync", icon: DatabaseZap },
     ],
   },
@@ -141,7 +141,7 @@ export function Sidebar() {
   const settings = useSettings();
   const tagInventory = useQuery({
     queryKey: ["provisioning-tags"],
-    queryFn: () => apiRequest<TagInventoryItem[]>("/api/provisioning/tags")
+    queryFn: async () => normalizeTagInventory(await apiRequest<unknown>("/api/provisioning/tags"))
   });
   const firstRun = useFirstRunStatus();
   const [, , , setTheme] = useTheme();

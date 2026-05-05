@@ -208,8 +208,8 @@ export function ActionsToolbar({ device }: { device: DeviceDetailResponse }) {
         description:
           result.message ??
           (result.success
-            ? "Action sent to Intune. Check Action Audit for the timeline."
-            : "Action failed. Check Action Audit for details.")
+            ? "Action sent to Intune. Check Action History for the timeline."
+            : "Action failed. Check Action History for details.")
       });
       setPending(null);
     } catch (error) {
@@ -218,8 +218,8 @@ export function ActionsToolbar({ device }: { device: DeviceDetailResponse }) {
         title: `${spec.label} failed`,
         description:
           error instanceof Error
-            ? `${error.message} Check Action Audit for details.`
-            : "Action failed. Check Action Audit for details."
+            ? `${error.message} Check Action History for details.`
+            : "Action failed. Check Action History for details."
       });
       setPending(null);
     }
@@ -231,6 +231,29 @@ export function ActionsToolbar({ device }: { device: DeviceDetailResponse }) {
       : pending?.needsInput === "primaryUser"
       ? !selectedPrimaryUser
       : false;
+
+  const actionGroups: Array<{ title: string; description: string; actions: ActionSpec[] }> = [
+    {
+      title: "Recommended action",
+      description: "Low-risk refresh for the current device record.",
+      actions: ACTIONS.filter((spec) => spec.type === "sync")
+    },
+    {
+      title: "Common safe actions",
+      description: "Operational actions that do not remove enrollment.",
+      actions: ACTIONS.filter((spec) => ["reboot", "rename", "rotate-laps"].includes(spec.type))
+    },
+    {
+      title: "Account and user",
+      description: "Ownership changes tied to the Intune user relationship.",
+      actions: ACTIONS.filter((spec) => spec.type === "change-primary-user")
+    },
+    {
+      title: "Advanced destructive actions",
+      description: "Reset, retire, wipe, or delete records. Typed confirmation required.",
+      actions: ACTIONS.filter((spec) => spec.destructive)
+    }
+  ];
 
   return (
     <>
@@ -270,37 +293,51 @@ export function ActionsToolbar({ device }: { device: DeviceDetailResponse }) {
           </div>
         ) : null}
 
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-          {ACTIONS.map((spec) => {
-            const Icon = spec.icon;
-            const availability = actionAvailability(spec, device, isAuthed);
-            return (
-              <button
-                key={spec.type}
-                type="button"
-                onClick={() => handleRequest(spec)}
-                disabled={availability.disabled}
-                title={availability.reason}
-                className={`group flex items-center gap-2.5 rounded-lg border px-3 py-2.5 text-left text-[12.5px] font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${
-                  availability.disabled
-                    ? "cursor-not-allowed border-[var(--pc-border)] bg-[var(--pc-surface-raised)] text-[var(--pc-text-muted)] opacity-60 focus-visible:outline-[var(--pc-accent)]"
-                    : spec.destructive
-                    ? "border-[var(--pc-border)] border-l-2 border-l-[var(--pc-critical)]/40 bg-[var(--pc-surface-raised)] text-[var(--pc-text)] hover:border-[var(--pc-critical)]/40 hover:border-l-[var(--pc-critical)] hover:bg-[var(--pc-critical-muted)] hover:text-[var(--pc-critical)] focus-visible:outline-[var(--pc-critical)]"
-                    : "border-[var(--pc-border)] bg-[var(--pc-surface-raised)] text-[var(--pc-text)] hover:border-[var(--pc-accent)]/40 hover:bg-[var(--pc-accent-muted)] hover:text-[var(--pc-accent-hover)] focus-visible:outline-[var(--pc-accent)]"
-                }`}
-                aria-label={spec.destructive ? `${spec.label} — destructive` : spec.label}
-              >
-                <Icon
-                  className={`h-3.5 w-3.5 shrink-0 ${
-                    spec.destructive && !availability.disabled
-                      ? "text-[var(--pc-critical)]/60 group-hover:text-[var(--pc-critical)]"
-                      : ""
-                  }`}
-                />
-                <span>{spec.label}</span>
-              </button>
-            );
-          })}
+        <div className="space-y-4">
+          {actionGroups.map((group) => (
+            <section key={group.title}>
+              <div className="mb-2 flex flex-col gap-0.5 sm:flex-row sm:items-baseline sm:justify-between">
+                <div className="text-[12px] font-semibold text-[var(--pc-text-secondary)]">
+                  {group.title}
+                </div>
+                <div className="text-[11px] text-[var(--pc-text-muted)]">
+                  {group.description}
+                </div>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                {group.actions.map((spec) => {
+                  const Icon = spec.icon;
+                  const availability = actionAvailability(spec, device, isAuthed);
+                  return (
+                    <button
+                      key={spec.type}
+                      type="button"
+                      onClick={() => handleRequest(spec)}
+                      disabled={availability.disabled}
+                      title={availability.reason}
+                      className={`group flex items-center gap-2.5 rounded-lg border px-3 py-2.5 text-left text-[12.5px] font-medium transition-[border-color,background-color,color,transform] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${
+                        availability.disabled
+                          ? "cursor-not-allowed border-[var(--pc-border)] bg-[var(--pc-surface-raised)] text-[var(--pc-text-muted)] opacity-60 focus-visible:outline-[var(--pc-accent)]"
+                          : spec.destructive
+                          ? "border-[var(--pc-border)] border-l-2 border-l-[var(--pc-critical)]/40 bg-[var(--pc-surface-raised)] text-[var(--pc-text)] hover:border-[var(--pc-critical)]/40 hover:border-l-[var(--pc-critical)] hover:bg-[var(--pc-critical-muted)] hover:text-[var(--pc-critical)] focus-visible:outline-[var(--pc-critical)] active:translate-y-px"
+                          : "border-[var(--pc-border)] bg-[var(--pc-surface-raised)] text-[var(--pc-text)] hover:border-[var(--pc-accent)]/40 hover:bg-[var(--pc-accent-muted)] hover:text-[var(--pc-accent-hover)] focus-visible:outline-[var(--pc-accent)] active:translate-y-px"
+                      }`}
+                      aria-label={spec.destructive ? `${spec.label} — destructive` : spec.label}
+                    >
+                      <Icon
+                        className={`h-3.5 w-3.5 shrink-0 ${
+                          spec.destructive && !availability.disabled
+                            ? "text-[var(--pc-critical)]/60 group-hover:text-[var(--pc-critical)]"
+                            : ""
+                        }`}
+                      />
+                      <span>{spec.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          ))}
         </div>
       </Card>
 

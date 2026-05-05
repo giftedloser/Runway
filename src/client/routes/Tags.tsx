@@ -30,6 +30,7 @@ import { useAuthStatus } from "../hooks/useAuth.js";
 import { useSettings, useTagConfigMutations } from "../hooks/useSettings.js";
 import { useTimestampFormatter } from "../hooks/useTimestampFormatter.js";
 import { apiRequest } from "../lib/api.js";
+import { normalizeTagInventory, safeTagCount } from "../lib/provisioning-tags.js";
 import type { TagConfigRecord } from "../lib/types.js";
 import { cn } from "../lib/utils.js";
 
@@ -75,7 +76,7 @@ export function TagsPage() {
 
   const tags = useQuery({
     queryKey: ["provisioning-tags"],
-    queryFn: () => apiRequest<TagInventoryItem[]>("/api/provisioning/tags"),
+    queryFn: async () => normalizeTagInventory(await apiRequest<unknown>("/api/provisioning/tags")),
   });
 
   const fullTagConfig = tagConfigReady ? settings.data?.tagConfig : null;
@@ -90,18 +91,19 @@ export function TagsPage() {
     [fullTagConfig],
   );
 
+  const tagRows = tags.data ?? [];
   const normalizedSearch = search.trim().toLowerCase();
-  const visibleTags = (tags.data ?? []).filter((tag) => {
+  const visibleTags = tagRows.filter((tag) => {
     if (!normalizedSearch) return true;
     const config = tagConfigByTag.get(tag.groupTag);
     return `${tag.groupTag} ${config?.propertyLabel ?? tag.propertyLabel ?? ""}`
       .toLowerCase()
       .includes(normalizedSearch);
   });
-  const configuredCount = (tags.data ?? []).filter((tag) => tag.configured).length;
-  const discoveredOnlyCount = Math.max(0, (tags.data?.length ?? 0) - configuredCount);
-  const deviceCount = (tags.data ?? []).reduce(
-    (total, tag) => total + tag.deviceCount,
+  const configuredCount = tagRows.filter((tag) => tag.configured).length;
+  const discoveredOnlyCount = Math.max(0, tagRows.length - configuredCount);
+  const deviceCount = tagRows.reduce(
+    (total, tag) => total + safeTagCount(tag.deviceCount),
     0,
   );
 
@@ -216,7 +218,7 @@ export function TagsPage() {
       />
 
       <div className="grid gap-4 md:grid-cols-3">
-        <TagMetric label="Tags" value={tags.data?.length ?? 0} />
+        <TagMetric label="Tags" value={tagRows.length} />
         <TagMetric label="Devices" value={deviceCount} />
         <TagMetric
           label="Discovered-only"
@@ -257,7 +259,7 @@ export function TagsPage() {
               <div>
                 <div className="font-semibold">Tag mappings could not be loaded.</div>
                 <div className="mt-0.5 text-[11.5px] leading-relaxed opacity-90">
-                  Editing is disabled until Runway can load full tag_config data. Row clicks still open Provisioning Builder.
+                  Editing is disabled until Runway can load full tag_config data. Row clicks still open Provisioning Path.
                 </div>
               </div>
             </div>
@@ -274,7 +276,7 @@ export function TagsPage() {
           </div>
         ) : null}
 
-        {(tags.data?.length ?? 0) === 0 ? (
+        {tagRows.length === 0 ? (
           <EmptyState
             id="tags-no-devices-synced"
             title="Run a sync to see tags."
@@ -301,6 +303,7 @@ export function TagsPage() {
               {visibleTags.map((tag) => {
                 const config = tagConfigByTag.get(tag.groupTag);
                 const propertyLabel = config?.propertyLabel ?? tag.propertyLabel;
+                const rowDeviceCount = safeTagCount(tag.deviceCount);
                 return (
                   <div
                     key={tag.groupTag}
@@ -310,18 +313,18 @@ export function TagsPage() {
                       type="button"
                       className="grid min-w-0 cursor-pointer gap-2 rounded-[var(--pc-radius-sm)] text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)] sm:col-span-5 sm:grid-cols-[minmax(0,1.35fr)_110px_150px_150px_minmax(0,1fr)] sm:items-center"
                       onClick={() => navigateToBuilder(tag.groupTag)}
-                      aria-label={`Open Provisioning Builder for ${tag.groupTag}`}
+                      aria-label={`Open Provisioning Path for ${tag.groupTag}`}
                     >
                       <div className="min-w-0">
                         <div className="truncate text-[13px] font-semibold text-[var(--pc-text)]">
                           {tag.groupTag}
                         </div>
                         <div className="mt-0.5 text-[11px] text-[var(--pc-text-muted)] sm:hidden">
-                          {tag.deviceCount.toLocaleString()} devices
+                          {rowDeviceCount.toLocaleString()} devices
                         </div>
                       </div>
                       <div className="hidden text-[12px] font-medium text-[var(--pc-text-secondary)] sm:block">
-                        {tag.deviceCount.toLocaleString()}
+                        {rowDeviceCount.toLocaleString()}
                       </div>
                       <div className="text-[11.5px] text-[var(--pc-text-muted)]">
                         {tag.lastSeenAt

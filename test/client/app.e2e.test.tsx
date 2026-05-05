@@ -429,38 +429,36 @@ describe("client drilldown", () => {
   }
 
   function findDashboardTitle() {
-    return screen.findByText("Fleet Health", {}, { timeout: 5000 });
+    return screen.findByText("Operator view", {}, { timeout: 5000 });
   }
 
-  async function openOverview() {
+  async function openStart() {
     if (window.location.pathname !== "/") {
-      fireEvent.click(await screen.findByRole("link", { name: "Overview" }));
+      fireEvent.click(await screen.findByRole("link", { name: "Start" }));
     }
     return findDashboardTitle();
   }
 
-  it("navigates from overview to devices to a device detail", async () => {
+  it("navigates from Start to devices to a device detail", async () => {
     await renderApp();
 
-    // Default landing opens Overview.
-    expect(await openOverview()).toBeInTheDocument();
+    // Default landing opens Start.
+    expect(await openStart()).toBeInTheDocument();
 
-    // Drill into the Critical Devices quick-action link → device queue
-    fireEvent.click((await screen.findAllByText("Critical Devices"))[0]);
+    // Drill into the Needs attention quick-action link → device queue
+    fireEvent.click((await screen.findAllByText("Needs attention"))[0]);
     expect(await screen.findByText("Device Queue")).toBeInTheDocument();
 
     // Click into the seeded device row → device detail
     fireEvent.click(await screen.findByText("DESKTOP-North-001"));
 
     // Device detail renders; the default tab is severity-driven (targeting),
-    // so the device name is shown in the hero header. Switch to the enrollment
+    // so the device name is shown in the hero header. Switch to the provisioning
     // tab where the diagnostic panel renders each flag title.
-    await screen.findAllByText("Device Diagnostics", {}, { timeout: 3000 });
+    await screen.findAllByText("Device record", {}, { timeout: 3000 });
     expect(screen.getByRole("button", { name: /open in intune/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /open in entra/i })).toBeInTheDocument();
-    // Two "Enrollment" buttons exist: the breakpoint chip in the hero and the
-    // tab nav button. Either one activates the enrollment tab; grab the tab.
-    const enrollmentButtons = screen.getAllByRole("button", { name: /enrollment/i });
+    const enrollmentButtons = screen.getAllByRole("button", { name: /provisioning/i });
     fireEvent.click(enrollmentButtons[enrollmentButtons.length - 1]);
     expect(
       await screen.findByText("No Profile Assigned", {}, { timeout: 3000 })
@@ -469,7 +467,7 @@ describe("client drilldown", () => {
 
   it("saves sync interval from Settings", async () => {
     await renderApp();
-    expect(await screen.findByText("Fleet Health")).toBeInTheDocument();
+    expect(await screen.findByText("Operator view")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("link", { name: "Settings" }));
     expect(await screen.findByText("Sync & Data")).toBeInTheDocument();
@@ -490,10 +488,10 @@ describe("client drilldown", () => {
     expect(await screen.findByText("Setting saved")).toBeInTheDocument();
   });
 
-  it("surfaces overview master search results and opens a device", async () => {
+  it("surfaces Start master search results and opens a device", async () => {
     await renderApp();
 
-    expect(await openOverview()).toBeInTheDocument();
+    expect(await openStart()).toBeInTheDocument();
 
     fireEvent.change(screen.getAllByPlaceholderText(/search devices by name/i)[0], {
       target: { value: "North" }
@@ -502,7 +500,7 @@ describe("client drilldown", () => {
     fireEvent.click(await screen.findByRole("button", { name: /DESKTOP-North-001/i }));
 
     expect(
-      await screen.findByText("Device Diagnostics", {}, { timeout: 3000 })
+      await screen.findByText("Device record", {}, { timeout: 3000 })
     ).toBeInTheDocument();
   });
 
@@ -516,10 +514,10 @@ describe("client drilldown", () => {
 
     await renderApp();
 
-    fireEvent.click((await screen.findAllByText("Critical Devices"))[0]);
+    fireEvent.click((await screen.findAllByText("Needs attention"))[0]);
     fireEvent.click(await screen.findByText("DESKTOP-North-001"));
-    await screen.findAllByText("Device Diagnostics", {}, { timeout: 3000 });
-    const enrollmentButtons = screen.getAllByRole("button", { name: /enrollment/i });
+    await screen.findAllByText("Device record", {}, { timeout: 3000 });
+    const enrollmentButtons = screen.getAllByRole("button", { name: /provisioning/i });
     fireEvent.click(enrollmentButtons[enrollmentButtons.length - 1]);
 
     const openButtons = await screen.findAllByRole("button", { name: "Open" });
@@ -573,9 +571,9 @@ describe("client drilldown", () => {
 
     await renderApp();
 
-    fireEvent.click((await screen.findAllByText("Critical Devices"))[0]);
+    fireEvent.click((await screen.findAllByText("Needs attention"))[0]);
     fireEvent.click(await screen.findByText("DESKTOP-North-001"));
-    await screen.findAllByText("Device Diagnostics", {}, { timeout: 3000 });
+    await screen.findAllByText("Device record", {}, { timeout: 3000 });
     fireEvent.click(screen.getByRole("button", { name: /^actions$/i }));
 
     expect(await screen.findByText("Admin sign-in required")).toBeInTheDocument();
@@ -588,9 +586,9 @@ describe("client drilldown", () => {
   it("changes primary user through the picker flow against mocked Graph", async () => {
     await renderApp();
 
-    fireEvent.click((await screen.findAllByText("Critical Devices"))[0]);
+    fireEvent.click((await screen.findAllByText("Needs attention"))[0]);
     fireEvent.click(await screen.findByText("DESKTOP-North-001"));
-    await screen.findAllByText("Device Diagnostics", {}, { timeout: 3000 });
+    await screen.findAllByText("Device record", {}, { timeout: 3000 });
     const actionTabs = screen.getAllByRole("button", { name: /^actions$/i });
     fireEvent.click(actionTabs[actionTabs.length - 1]);
     expect(await screen.findByText("Remote Actions")).toBeInTheDocument();
@@ -718,3 +716,4 @@ describe("client drilldown", () => {
     expect(screen.getByRole("button", { name: /sign in with microsoft/i })).toBeInTheDocument();
   });
 });
+
