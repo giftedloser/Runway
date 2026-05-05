@@ -72,15 +72,15 @@ const navGroups: NavGroup[] = [
   {
     label: "Triage",
     items: [
-      { to: "/", label: "Overview", icon: LayoutDashboard },
-      { to: "/devices", label: "Devices", icon: TabletSmartphone },
+      { to: "/", label: "Start", icon: LayoutDashboard },
+      { to: "/devices", label: "Device Queue", icon: TabletSmartphone },
       {
         to: "/provisioning",
-        label: "Provisioning Builder",
+        label: "Provisioning Path",
         icon: GitBranch,
         help: {
           id: "sidebar-provisioning",
-          text: "Provisioning Builder traces one tag through target groups, profile assignment, devices, and build payload readiness."
+          text: "Provisioning Path traces one tag through target groups, profile assignment, devices, and build payload readiness."
         }
       },
     ],
@@ -112,7 +112,7 @@ const navGroups: NavGroup[] = [
   {
     label: "Operations",
     items: [
-      { to: "/actions", label: "Action Audit", icon: History },
+      { to: "/actions", label: "Action History", icon: History },
       { to: "/sync", label: "Sync", icon: DatabaseZap },
     ],
   },

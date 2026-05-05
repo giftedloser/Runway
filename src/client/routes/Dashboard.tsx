@@ -1,12 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import {
-  AlertTriangle,
-  ArrowRight,
   ChevronRight,
-  Fingerprint,
   RefreshCcw,
   ShieldCheck,
-  TrendingDown,
 } from "lucide-react";
 
 import { FailurePatterns } from "../components/dashboard/FailurePatterns.js";
@@ -20,14 +16,11 @@ import { ErrorState, LoadingState } from "../components/shared/ErrorState.js";
 import { SyncIndicator } from "../components/shared/SyncIndicator.js";
 import { Button } from "../components/ui/button.js";
 import { Card } from "../components/ui/card.js";
-import { humanizeFlag } from "../lib/flags.js";
 import { useDashboard } from "../hooks/useDashboard.js";
-import { useSettings } from "../hooks/useSettings.js";
 import { useSyncStatus, useTriggerSync } from "../hooks/useSync.js";
 
 export function DashboardPage() {
   const dashboard = useDashboard();
-  const settings = useSettings();
   const syncStatus = useSyncStatus();
   const sync = useTriggerSync();
 
@@ -48,78 +41,53 @@ export function DashboardPage() {
   );
   const impactedDevices =
     dashboard.data.counts.critical +
-    dashboard.data.counts.warning +
-    dashboard.data.counts.info;
+    dashboard.data.counts.warning;
+  const coverageDevices = countForFlags([
+    "no_autopilot_record",
+    "orphaned_autopilot",
+    "missing_ztdid",
+  ]);
   const stabilityRate =
     totalDevices > 0
       ? Math.round((dashboard.data.counts.healthy / totalDevices) * 100)
       : 0;
-  const topPattern = dashboard.data.failurePatterns[0];
-
-  const countForFlags = (flags: string[]) =>
-    dashboard.data.failurePatterns
+  function countForFlags(flags: string[]) {
+    return dashboard.data.failurePatterns
       .filter((pattern) => flags.includes(pattern.flag))
       .reduce((sum, pattern) => sum + pattern.count, 0);
+  }
 
-  const breakpointBuckets = [
+  const setupIncomplete = dashboard.data.lastSync === null;
+
+  const attentionMetrics = [
     {
-      label: "Identity records",
-      description: "Duplicate, missing, or weakly joined records",
-      search: { flag: "identity_conflict" },
-      count: countForFlags([
-        "identity_conflict",
-        "no_autopilot_record",
-        "missing_ztdid",
-      ]),
-      icon: ShieldCheck,
-      color: "text-[var(--pc-info)]",
-      bgColor: "bg-[var(--pc-info-muted)]",
+      label: "Needs attention",
+      value: impactedDevices,
+      detail: "Critical or warning",
     },
     {
-      label: "Targeting and profile",
-      description:
-        "Group tag, group membership, or profile assignment failures",
-      search: { flag: "not_in_target_group" },
-      count: countForFlags([
-        "no_profile_assigned",
-        "profile_assignment_failed",
-        "not_in_target_group",
-        "tag_mismatch",
-      ]),
-      icon: AlertTriangle,
-      color: "text-[var(--pc-warning)]",
-      bgColor: "bg-[var(--pc-warning-muted)]",
+      label: "Healthy",
+      value: `${stabilityRate}%`,
+      detail: `${dashboard.data.counts.healthy} devices clear`,
     },
     {
-      label: "Enrollment and join",
-      description: "OOBE, Intune enrollment, hybrid join, or stale check-in",
-      search: { flag: "provisioning_stalled" },
-      count: countForFlags([
-        "hybrid_join_risk",
-        "profile_assigned_not_enrolled",
-        "provisioning_stalled",
-        "deployment_mode_mismatch",
-      ]),
-      icon: AlertTriangle,
-      color: "text-[var(--pc-critical)]",
-      bgColor: "bg-[var(--pc-critical-muted)]",
+      label: "Autopilot coverage",
+      value: coverageDevices,
+      detail: "Info-only adoption gaps",
     },
     {
-      label: "Ownership and drift",
-      description: "Primary user mismatch or compliance changed",
-      search: { flag: "user_mismatch" },
-      count: countForFlags([
-        "user_mismatch",
-        "compliance_drift",
-        "orphaned_autopilot",
-      ]),
-      icon: TrendingDown,
-      color: "text-[var(--pc-warning)]",
-      bgColor: "bg-[var(--pc-warning-muted)]",
+      label: "Identity review",
+      value:
+        dashboard.data.correlationQuality.identityConflictCount +
+        dashboard.data.correlationQuality.lowConfidenceCount,
+      detail: "Verify before action",
     },
   ];
 
-  const setupIncomplete = dashboard.data.lastSync === null;
+  const topReasons =
+    dashboard.data.failurePatterns
+      .filter((pattern) => pattern.severity !== "info")
+      .slice(0, 5);
 
   return (
     <div className="space-y-5">
@@ -142,9 +110,9 @@ export function DashboardPage() {
       ) : null}
 
       <PageHeader
-        eyebrow="Overview"
-        title="Fleet Health"
-        description="Find devices outside the expected provisioning path."
+        eyebrow="Start"
+        title="Operator view"
+        description="Find what needs attention, why it matters, and where to go next."
         actions={
           <>
             <SyncIndicator
@@ -154,7 +122,7 @@ export function DashboardPage() {
             />
             <Button onClick={() => sync.mutate()} disabled={sync.isPending}>
               <RefreshCcw className="h-3.5 w-3.5" />
-              Sync Now
+              Sync now
             </Button>
           </>
         }
@@ -164,255 +132,71 @@ export function DashboardPage() {
 
       <TriageCommandCenter dashboard={dashboard.data} />
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-        <Card className="min-h-[112px] px-3 py-3 sm:px-4">
-          <div className="text-[12px] font-medium text-[var(--pc-text-muted)]">
-            Devices
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <Card className="overflow-hidden">
+          <div className="border-b border-[var(--pc-border)] px-5 py-4">
+            <div className="text-[13px] font-semibold text-[var(--pc-text)]">
+              Fleet summary
+            </div>
+            <div className="mt-0.5 text-[12px] text-[var(--pc-text-muted)]">
+              Health and coverage are separated so adoption gaps do not read as failures.
+            </div>
           </div>
-          <div className="mt-1 text-3xl font-semibold tabular-nums text-[var(--pc-text)]">
-            {totalDevices}
-          </div>
-          <div className="mt-1 text-[11px] text-[var(--pc-text-muted)]">
-            Current cache
-          </div>
-        </Card>
-        <Card className="min-h-[112px] px-3 py-3 sm:px-4">
-          <div className="text-[12px] font-medium text-[var(--pc-text-muted)]">
-            New failures
-          </div>
-          <div className="mt-1 text-3xl font-semibold tabular-nums text-[var(--pc-text)]">
-            {dashboard.data.newlyUnhealthy24h}
-          </div>
-          <div className="mt-1 text-[11px] text-[var(--pc-text-muted)]">
-            Last 24h
-          </div>
-        </Card>
-        <Card className="min-h-[112px] px-3 py-3 sm:px-4">
-          <div className="text-[12px] font-medium text-[var(--pc-text-muted)]">
-            Need attention
-          </div>
-          <div className="mt-1 text-3xl font-semibold tabular-nums text-[var(--pc-text)]">
-            {impactedDevices}
-          </div>
-          <div className="mt-1 text-[11px] text-[var(--pc-text-muted)]">
-            Critical, warning, or info
-          </div>
-        </Card>
-        <Card className="min-h-[112px] px-3 py-3 sm:px-4">
-          <div className="text-[12px] font-medium text-[var(--pc-text-muted)]">
-            Healthy
-          </div>
-          <div className="mt-1 flex items-end gap-1.5">
-            <span className="text-3xl font-semibold tabular-nums text-[var(--pc-text)]">
-              {stabilityRate}
-            </span>
-            <span className="mb-1 text-[15px] font-medium text-[var(--pc-text-muted)]">
-              %
-            </span>
-          </div>
-          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--pc-tint-hover)]">
-            <div
-              className="h-full rounded-full bg-[var(--pc-healthy)] transition-[width] duration-300"
-              style={{ width: `${Math.max(stabilityRate, 3)}%` }}
-            />
-          </div>
-        </Card>
-        <Card className="min-h-[112px] px-3 py-3 sm:px-4">
-          <div className="text-[12px] font-medium text-[var(--pc-text-muted)]">
-            Top failure
-          </div>
-          <div className="mt-1 truncate text-[15px] font-semibold text-[var(--pc-text)]">
-            {topPattern ? humanizeFlag(topPattern.flag) : "No Issues"}
-          </div>
-          <div className="mt-1 text-[11px] text-[var(--pc-text-muted)]">
-            {topPattern
-              ? `${topPattern.count} devices affected`
-              : "Fleet looks healthy"}
-          </div>
-        </Card>
-        <Card className="min-h-[112px] px-3 py-3 sm:px-4">
-          <div className="flex items-center gap-1.5 text-[12px] font-medium text-[var(--pc-text-muted)]">
-            <Fingerprint className="h-3 w-3" />
-            Identity joins
-          </div>
-          {(() => {
-            const cq = dashboard.data.correlationQuality;
-            const issues = cq.nameJoinedCount + cq.identityConflictCount;
-            return (
-              <>
+          <div className="grid grid-cols-2 divide-x divide-y divide-[var(--pc-border)] md:grid-cols-4 md:divide-y-0">
+            {attentionMetrics.map((metric) => (
+              <div key={metric.label} className="px-5 py-4">
+                <div className="text-[11.5px] font-medium text-[var(--pc-text-muted)]">
+                  {metric.label}
+                </div>
                 <div className="mt-1 text-3xl font-semibold tabular-nums text-[var(--pc-text)]">
-                  {issues}
+                  {metric.value}
                 </div>
                 <div className="mt-1 text-[11px] text-[var(--pc-text-muted)]">
-                  {issues === 0 ? (
-                    "All joins verified"
-                  ) : (
-                    <>
-                      {cq.nameJoinedCount > 0
-                        ? `${cq.nameJoinedCount} name-only`
-                        : null}
-                      {cq.nameJoinedCount > 0 && cq.identityConflictCount > 0
-                        ? " · "
-                        : null}
-                      {cq.identityConflictCount > 0
-                        ? `${cq.identityConflictCount} conflicts`
-                        : null}
-                    </>
-                  )}
+                  {metric.detail}
                 </div>
-              </>
-            );
-          })()}
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        <Card className="overflow-hidden">
+          <div className="border-b border-[var(--pc-border)] px-5 py-4">
+            <div className="text-[13px] font-semibold text-[var(--pc-text)]">
+              Sync freshness
+            </div>
+            <div className="mt-2">
+              <SyncIndicator
+                lastSync={dashboard.data.lastSync}
+                inProgress={syncStatus.data?.inProgress}
+                lastError={syncStatus.data?.lastError}
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 divide-x divide-[var(--pc-border)]">
+            <div className="px-5 py-3">
+              <div className="text-[11px] text-[var(--pc-text-muted)]">Current cache</div>
+              <div className="mt-1 text-[18px] font-semibold tabular-nums text-[var(--pc-text)]">
+                {totalDevices}
+              </div>
+            </div>
+            <div className="px-5 py-3">
+              <div className="text-[11px] text-[var(--pc-text-muted)]">New in 24h</div>
+              <div className="mt-1 text-[18px] font-semibold tabular-nums text-[var(--pc-text)]">
+                {dashboard.data.newlyUnhealthy24h}
+              </div>
+            </div>
+          </div>
         </Card>
       </div>
 
-      {/* Health distribution + trend */}
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+      <div className="grid gap-4 2xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+        <FailurePatterns patterns={topReasons} />
         <HealthSummary counts={dashboard.data.counts} />
-        <HealthTrendChart data={dashboard.data.healthTrend} />
       </div>
 
-      {/* What changed in the last 24h */}
-      <RecentChanges transitions={dashboard.data.recentTransitions} />
-
-      {/* Main content: Failures + Breakpoints */}
-      <div className="grid gap-6 2xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
-        <FailurePatterns patterns={dashboard.data.failurePatterns} />
-
-        <div className="space-y-4">
-          {/* Breakpoint buckets */}
-          <Card className="overflow-hidden">
-            <div className="border-b border-[var(--pc-border)] px-5 py-4">
-              <div className="text-[13px] font-semibold text-[var(--pc-text)]">
-                Problem areas
-              </div>
-              <div className="mt-0.5 text-[12px] text-[var(--pc-text-muted)]">
-                Where devices are getting stuck. Click to open the matching queue.
-              </div>
-            </div>
-            <div className="divide-y divide-[var(--pc-border)]">
-              {breakpointBuckets.map((bucket) => (
-                <Link
-                  key={bucket.label}
-                  to="/devices"
-                  search={{
-                    search: undefined,
-                    health: undefined,
-                    flag: bucket.search.flag,
-                    property: undefined,
-                    profile: undefined,
-                    page: 1,
-                    pageSize: 25,
-                  }}
-                  className="flex cursor-pointer items-center gap-3 px-5 py-3.5 transition-colors hover:bg-[var(--pc-tint-subtle)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--pc-accent)]"
-                  title={`Open devices with ${bucket.label.toLowerCase()} issues`}
-                >
-                  <div
-                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${bucket.bgColor}`}
-                  >
-                    <bucket.icon className={`h-4 w-4 ${bucket.color}`} />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="text-[13px] font-medium text-[var(--pc-text)]">
-                      {bucket.label}
-                    </div>
-                    <div className="mt-0.5 text-[11px] text-[var(--pc-text-muted)]">
-                      {bucket.description}
-                    </div>
-                  </div>
-                  <div className="text-[17px] font-semibold tabular-nums text-[var(--pc-text)]">
-                    {bucket.count}
-                  </div>
-                  <ChevronRight className="h-3.5 w-3.5 text-[var(--pc-text-muted)]" />
-                </Link>
-              ))}
-            </div>
-          </Card>
-
-          {/* Quick links */}
-          <Card className="overflow-hidden">
-            <div className="border-b border-[var(--pc-border)] px-5 py-4">
-              <div className="text-[13px] font-semibold text-[var(--pc-text)]">
-                Queues
-              </div>
-              <div className="mt-0.5 text-[12px] text-[var(--pc-text-muted)]">
-                Common triage entry points.
-              </div>
-            </div>
-            <div className="divide-y divide-[var(--pc-border)]">
-              <Link
-                to="/devices"
-                search={{
-                  search: undefined,
-                  health: "critical",
-                  flag: undefined,
-                  property: undefined,
-                  profile: undefined,
-                  page: 1,
-                  pageSize: 25,
-                }}
-                className="flex items-center justify-between px-5 py-3 transition-colors hover:bg-[var(--pc-tint-subtle)]"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[var(--pc-critical-muted)]">
-                    <AlertTriangle className="h-3.5 w-3.5 text-[var(--pc-critical)]" />
-                  </div>
-                  <span className="text-[13px] font-medium text-[var(--pc-text)]">
-                    Critical Devices
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[13px] font-semibold tabular-nums text-[var(--pc-text-secondary)]">
-                    {dashboard.data.counts.critical}
-                  </span>
-                  <ChevronRight className="h-3.5 w-3.5 text-[var(--pc-text-muted)]" />
-                </div>
-              </Link>
-              <Link
-                to="/profiles"
-                className="flex items-center justify-between px-5 py-3 transition-colors hover:bg-[var(--pc-tint-subtle)]"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[var(--pc-accent-muted)]">
-                    <ShieldCheck className="h-3.5 w-3.5 text-[var(--pc-accent)]" />
-                  </div>
-                  <span className="text-[13px] font-medium text-[var(--pc-text)]">
-                    Profile Audit
-                  </span>
-                </div>
-                <ChevronRight className="h-3.5 w-3.5 text-[var(--pc-text-muted)]" />
-              </Link>
-              <Link
-                to="/devices"
-                search={{
-                  search: undefined,
-                  health: undefined,
-                  flag: undefined,
-                  property: undefined,
-                  profile: undefined,
-                  page: 1,
-                  pageSize: 25,
-                }}
-                className="flex items-center justify-between px-5 py-3 transition-colors hover:bg-[var(--pc-tint-subtle)]"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[var(--pc-tint-hover)]">
-                    <ArrowRight className="h-3.5 w-3.5 text-[var(--pc-text-secondary)]" />
-                  </div>
-                  <span className="text-[13px] font-medium text-[var(--pc-text)]">
-                    All Devices
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[13px] font-semibold tabular-nums text-[var(--pc-text-secondary)]">
-                    {totalDevices}
-                  </span>
-                  <ChevronRight className="h-3.5 w-3.5 text-[var(--pc-text-muted)]" />
-                </div>
-              </Link>
-            </div>
-          </Card>
-        </div>
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <RecentChanges transitions={dashboard.data.recentTransitions} />
+        <HealthTrendChart data={dashboard.data.healthTrend} />
       </div>
     </div>
   );

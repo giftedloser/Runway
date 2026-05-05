@@ -15,7 +15,7 @@ export const FLAG_INFO: Record<FlagCode, FlagInfo> = {
   no_autopilot_record: {
     label: "No Autopilot record",
     description:
-      "Device has no matching Autopilot registration. It cannot provision via Autopilot until it is hardware-registered.",
+      "Device is managed but has no matching Autopilot registration. This is a coverage gap unless the device is expected to use Autopilot.",
     severity: "info"
   },
   no_profile_assigned: {
@@ -40,7 +40,7 @@ export const FLAG_INFO: Record<FlagCode, FlagInfo> = {
     label: "Not in target group",
     description:
       "Device is not a member of the Entra group that targets its expected profile. Dynamic-membership rule may not match.",
-    severity: "critical"
+    severity: "warning"
   },
   deployment_mode_mismatch: {
     label: "Deployment mode mismatch",
@@ -75,19 +75,19 @@ export const FLAG_INFO: Record<FlagCode, FlagInfo> = {
   orphaned_autopilot: {
     label: "Orphaned Autopilot",
     description:
-      "Autopilot record exists but the corresponding Intune enrollment is missing. The device may need to be reset or re-imported.",
-    severity: "warning"
+      "Autopilot record exists but the corresponding Intune enrollment is missing. This may be staged, retired, or waiting for enrollment.",
+    severity: "info"
   },
   missing_ztdid: {
     label: "Missing ZTDID",
     description:
-      "Device lacks the ZTDID attribute that ties it back to Autopilot. Breaks zero-touch matching downstream.",
-    severity: "warning"
+      "Device lacks the ZTDID attribute that ties it back to Autopilot. Treat as informational unless Autopilot is expected.",
+    severity: "info"
   },
   identity_conflict: {
-    label: "Identity conflict",
+    label: "Verify identity",
     description:
-      "Two or more systems reference this device with conflicting identifiers. Match confidence should not be treated as high.",
+      "Two or more systems reference this device with conflicting identifiers. Verify identity before trusting other diagnostics.",
     severity: "critical"
   },
   tag_mismatch: {

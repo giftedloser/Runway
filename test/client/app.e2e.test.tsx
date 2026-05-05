@@ -429,12 +429,12 @@ describe("client drilldown", () => {
   }
 
   function findDashboardTitle() {
-    return screen.findByText("Fleet Health", {}, { timeout: 5000 });
+    return screen.findByText("Operator view", {}, { timeout: 5000 });
   }
 
-  async function openOverview() {
+  async function openStart() {
     if (window.location.pathname !== "/") {
-      fireEvent.click(await screen.findByRole("link", { name: "Overview" }));
+      fireEvent.click(await screen.findByRole("link", { name: "Start" }));
     }
     return findDashboardTitle();
   }
@@ -442,11 +442,11 @@ describe("client drilldown", () => {
   it("navigates from overview to devices to a device detail", async () => {
     await renderApp();
 
-    // Default landing opens Overview.
-    expect(await openOverview()).toBeInTheDocument();
+    // Default landing opens Start.
+    expect(await openStart()).toBeInTheDocument();
 
-    // Drill into the Critical Devices quick-action link → device queue
-    fireEvent.click((await screen.findAllByText("Critical Devices"))[0]);
+    // Drill into the Needs attention quick-action link → device queue
+    fireEvent.click((await screen.findAllByText("Needs attention"))[0]);
     expect(await screen.findByText("Device Queue")).toBeInTheDocument();
 
     // Click into the seeded device row → device detail
@@ -469,7 +469,7 @@ describe("client drilldown", () => {
 
   it("saves sync interval from Settings", async () => {
     await renderApp();
-    expect(await screen.findByText("Fleet Health")).toBeInTheDocument();
+    expect(await screen.findByText("Operator view")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("link", { name: "Settings" }));
     expect(await screen.findByText("Sync & Data")).toBeInTheDocument();
@@ -493,7 +493,7 @@ describe("client drilldown", () => {
   it("surfaces overview master search results and opens a device", async () => {
     await renderApp();
 
-    expect(await openOverview()).toBeInTheDocument();
+    expect(await openStart()).toBeInTheDocument();
 
     fireEvent.change(screen.getAllByPlaceholderText(/search devices by name/i)[0], {
       target: { value: "North" }
@@ -516,7 +516,7 @@ describe("client drilldown", () => {
 
     await renderApp();
 
-    fireEvent.click((await screen.findAllByText("Critical Devices"))[0]);
+    fireEvent.click((await screen.findAllByText("Needs attention"))[0]);
     fireEvent.click(await screen.findByText("DESKTOP-North-001"));
     await screen.findAllByText("Device Diagnostics", {}, { timeout: 3000 });
     const enrollmentButtons = screen.getAllByRole("button", { name: /enrollment/i });
@@ -573,7 +573,7 @@ describe("client drilldown", () => {
 
     await renderApp();
 
-    fireEvent.click((await screen.findAllByText("Critical Devices"))[0]);
+    fireEvent.click((await screen.findAllByText("Needs attention"))[0]);
     fireEvent.click(await screen.findByText("DESKTOP-North-001"));
     await screen.findAllByText("Device Diagnostics", {}, { timeout: 3000 });
     fireEvent.click(screen.getByRole("button", { name: /^actions$/i }));
@@ -588,7 +588,7 @@ describe("client drilldown", () => {
   it("changes primary user through the picker flow against mocked Graph", async () => {
     await renderApp();
 
-    fireEvent.click((await screen.findAllByText("Critical Devices"))[0]);
+    fireEvent.click((await screen.findAllByText("Needs attention"))[0]);
     fireEvent.click(await screen.findByText("DESKTOP-North-001"));
     await screen.findAllByText("Device Diagnostics", {}, { timeout: 3000 });
     const actionTabs = screen.getAllByRole("button", { name: /^actions$/i });
@@ -718,3 +718,4 @@ describe("client drilldown", () => {
     expect(screen.getByRole("button", { name: /sign in with microsoft/i })).toBeInTheDocument();
   });
 });
+

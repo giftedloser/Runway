@@ -295,6 +295,20 @@ function mockShellFetch({
       });
     if (url.includes("/api/settings"))
       return jsonResponse(settingsPayload({ propertyCount, graphConfigured, seedMode }));
+    if (url.includes("/api/provisioning/tags"))
+      return jsonResponse(
+        Array.from({ length: propertyCount }, (_item, index) => ({
+          groupTag: `TAG-${index + 1}`,
+          propertyLabel: `Property ${index + 1}`,
+          deviceCount: 1,
+          healthyCount: 1,
+          warningCount: 0,
+          criticalCount: 0,
+          profileNames: [],
+          groupNames: [],
+          configured: true,
+        })),
+      );
     if (url.includes("/api/sync/status")) return jsonResponse(syncStatus);
     if (url.includes("/api/setup/status")) return jsonResponse(firstRun);
     if (url.includes("/api/auth/access-status"))
