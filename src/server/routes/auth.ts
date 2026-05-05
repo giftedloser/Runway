@@ -2,15 +2,14 @@ import { Router, type Request, type Response } from "express";
 
 import { config } from "../config.js";
 import {
-  acquireAppAccessToken,
   acquireDelegatedToken,
   createAuthState,
-  getAppAccessAuthUrl,
   getAuthUrl
 } from "../auth/delegated-auth.js";
 import {
   clearAppAccessSession,
-  hasValidAppAccessSession
+  hasValidAppAccessSession,
+  hasValidDelegatedSession
 } from "../auth/auth-middleware.js";
 
 const ADMIN_AUTH_COMPLETE_MESSAGE = "pilotcheck-auth-complete";
@@ -69,18 +68,46 @@ function isAllowedAppAccessUser(user: string) {
   return config.appAccessAllowedUsers.includes(user.trim().toLowerCase());
 }
 
+function clearDelegatedSession(session: Express.Request["session"]) {
+  session.delegatedToken = undefined;
+  session.delegatedUser = undefined;
+  session.delegatedName = undefined;
+  session.delegatedExpiresAt = undefined;
+}
+
+function applyDelegatedResultToSession(
+  session: Express.Request["session"],
+  result: NonNullable<PendingAuthFlow["result"]>
+) {
+  session.delegatedToken = result.accessToken;
+  session.delegatedUser = result.user;
+  session.delegatedName = result.name;
+  session.delegatedExpiresAt = result.expiresAt;
+  session.appAccessUser = result.user;
+  session.appAccessName = result.name;
+  session.appAccessExpiresAt = result.expiresAt;
+}
+
 function getAppAccessStatus(request: Request) {
+  const appAccessAuthenticated = hasValidAppAccessSession(request);
+  const delegatedAuthenticated = hasValidDelegatedSession(request);
   const authenticated = config.isAppAccessRequired
-    ? hasValidAppAccessSession(request)
+    ? appAccessAuthenticated || delegatedAuthenticated
     : false;
   return {
     required: config.isAppAccessRequired,
     configured: config.APP_ACCESS_MODE === "entra",
     mode: config.APP_ACCESS_MODE,
     authenticated,
-    user: authenticated ? request.session.appAccessUser ?? null : null,
-    name: authenticated ? request.session.appAccessName ?? null : null,
-    expiresAt: authenticated ? request.session.appAccessExpiresAt ?? null : null,
+    user: authenticated
+      ? request.session.appAccessUser ?? request.session.delegatedUser ?? null
+      : null,
+    name: authenticated
+      ? request.session.appAccessName ?? request.session.delegatedName ?? null
+      : null,
+    expiresAt: authenticated
+      ? request.session.appAccessExpiresAt ?? request.session.delegatedExpiresAt ?? null
+      : null,
     allowedUsersConfigured: config.appAccessAllowedUsers.length > 0,
     reason: config.isAppAccessRequired
       ? null
@@ -187,13 +214,11 @@ export function authRouter() {
     // Promote a completed pending flow from system-browser sign-in.
     if (!session.delegatedToken && session.oauthState) {
       const pending = pendingAuthFlows.get(session.oauthState);
-      if (pending?.kind === "admin" && pending.result) {
-        session.delegatedToken = pending.result.accessToken;
-        session.delegatedUser = pending.result.user;
-        session.delegatedName = pending.result.name;
-        session.delegatedExpiresAt = pending.result.expiresAt;
+      if (pending?.result?.accessToken) {
+        applyDelegatedResultToSession(session, pending.result);
         pendingAuthFlows.delete(session.oauthState);
         session.oauthState = undefined;
+        session.appAccessOAuthState = undefined;
         await saveSession(session);
       }
     }
@@ -216,12 +241,11 @@ export function authRouter() {
     const session = request.session;
     if (!session.appAccessUser && session.appAccessOAuthState) {
       const pending = pendingAuthFlows.get(session.appAccessOAuthState);
-      if (pending?.kind === "app-access" && pending.result) {
-        session.appAccessUser = pending.result.user;
-        session.appAccessName = pending.result.name;
-        session.appAccessExpiresAt = pending.result.expiresAt;
+      if (pending?.result) {
+        applyDelegatedResultToSession(session, pending.result);
         pendingAuthFlows.delete(session.appAccessOAuthState);
         session.appAccessOAuthState = undefined;
+        session.oauthState = undefined;
         await saveSession(session);
       }
     }
@@ -247,7 +271,7 @@ export function authRouter() {
       request.session.appAccessOAuthState = state;
       pendingAuthFlows.set(state, { kind: "app-access", createdAt: Date.now() });
       await saveSession(request.session);
-      const url = await getAppAccessAuthUrl(state);
+      const url = await getAuthUrl(state);
       response.json({ loginUrl: url });
     } catch (error) {
       response.status(500).json({
@@ -326,69 +350,43 @@ export function authRouter() {
     }
 
     try {
-      if (callbackKind === "app-access") {
-        const result = await acquireAppAccessToken(code);
-        if (!isAllowedAppAccessUser(result.account.username)) {
-          if (isPendingFlow) {
-            pendingAuthFlows.delete(returnedState);
-          } else {
-            clearAppAccessSession(request.session);
-            await saveSession(request.session);
-          }
-          response
-            .status(403)
-            .send("Runway app access denied. This Entra user is not in APP_ACCESS_ALLOWED_USERS.");
-          return;
-        }
-
+      const result = await acquireDelegatedToken(code);
+      if (config.isAppAccessRequired && !isAllowedAppAccessUser(result.account.username)) {
         if (isPendingFlow) {
-          const pending = pendingAuthFlows.get(returnedState)!;
-          pending.result = {
-            user: result.account.username,
-            name: result.account.name,
-            expiresAt: result.expiresOn.toISOString()
-          };
+          pendingAuthFlows.delete(returnedState);
         } else {
-          request.session.appAccessUser = result.account.username;
-          request.session.appAccessName = result.account.name;
-          request.session.appAccessExpiresAt = result.expiresOn.toISOString();
+          clearAppAccessSession(request.session);
+          clearDelegatedSession(request.session);
           await saveSession(request.session);
         }
-
-        sendCallbackPage(response, {
-          title: "Runway sign-in complete",
-          description: isPendingFlow
-            ? "Sign-in complete. You can close this tab and return to Runway."
-            : "You can return to Runway now. This window should close automatically.",
-          messageType: APP_ACCESS_COMPLETE_MESSAGE
-        });
+        response
+          .status(403)
+          .send("Runway app access denied. This Entra user is not in APP_ACCESS_ALLOWED_USERS.");
         return;
       }
 
-      const result = await acquireDelegatedToken(code);
+      const sessionResult = {
+        accessToken: result.accessToken,
+        user: result.account.username,
+        name: result.account.name,
+        expiresAt: result.expiresOn.toISOString()
+      };
 
       if (isPendingFlow) {
         const pending = pendingAuthFlows.get(returnedState)!;
-        pending.result = {
-          accessToken: result.accessToken,
-          user: result.account.username,
-          name: result.account.name,
-          expiresAt: result.expiresOn.toISOString()
-        };
+        pending.result = sessionResult;
       } else {
-        request.session.delegatedToken = result.accessToken;
-        request.session.delegatedUser = result.account.username;
-        request.session.delegatedName = result.account.name;
-        request.session.delegatedExpiresAt = result.expiresOn.toISOString();
+        applyDelegatedResultToSession(request.session, sessionResult);
         await saveSession(request.session);
       }
 
       sendCallbackPage(response, {
-        title: "Microsoft sign-in complete",
+        title: callbackKind === "app-access" ? "Runway sign-in complete" : "Microsoft sign-in complete",
         description: isPendingFlow
           ? "Sign-in complete. You can close this tab and return to Runway."
           : "You can return to Runway now. This window should close automatically.",
-        messageType: ADMIN_AUTH_COMPLETE_MESSAGE
+        messageType:
+          callbackKind === "app-access" ? APP_ACCESS_COMPLETE_MESSAGE : ADMIN_AUTH_COMPLETE_MESSAGE
       });
     } catch (error) {
       if (isPendingFlow) pendingAuthFlows.delete(returnedState);

@@ -7,7 +7,6 @@ function placeholders(columns: string[]) {
 }
 
 export function persistSnapshot(db: Database.Database, payload: SnapshotPayload) {
-  const shouldRefreshConditionalAccess = payload.conditionalAccessPolicies !== undefined;
   const existingAutopilot = new Map(
     (
       db
@@ -39,11 +38,11 @@ export function persistSnapshot(db: Database.Database, payload: SnapshotPayload)
   ];
 
   const insertAutopilot = db.prepare(`
-    INSERT INTO autopilot_devices (${insertAutopilotColumns.join(", ")})
+    INSERT OR REPLACE INTO autopilot_devices (${insertAutopilotColumns.join(", ")})
     VALUES (${placeholders(insertAutopilotColumns)})
   `);
   const insertIntune = db.prepare(`
-    INSERT INTO intune_devices (
+    INSERT OR REPLACE INTO intune_devices (
       id, device_name, serial_number, entra_device_id, os_version, compliance_state,
       enrollment_type, managed_device_owner_type, last_sync_datetime, primary_user_upn,
       enrollment_profile_name, autopilot_enrolled, management_agent, last_synced_at, raw_json
@@ -54,7 +53,7 @@ export function persistSnapshot(db: Database.Database, payload: SnapshotPayload)
     )
   `);
   const insertEntra = db.prepare(`
-    INSERT INTO entra_devices (
+    INSERT OR REPLACE INTO entra_devices (
       id, device_id, display_name, serial_number, trust_type, is_managed, mdm_app_id,
       registration_datetime, device_physical_ids, last_synced_at, raw_json
     ) VALUES (
@@ -63,7 +62,7 @@ export function persistSnapshot(db: Database.Database, payload: SnapshotPayload)
     )
   `);
   const insertGroup = db.prepare(`
-    INSERT INTO groups (
+    INSERT OR REPLACE INTO groups (
       id, display_name, membership_rule, membership_rule_processing_state, membership_type,
       last_synced_at, raw_json
     ) VALUES (
@@ -72,11 +71,11 @@ export function persistSnapshot(db: Database.Database, payload: SnapshotPayload)
     )
   `);
   const insertMembership = db.prepare(`
-    INSERT INTO group_memberships (group_id, member_device_id, last_synced_at)
+    INSERT OR REPLACE INTO group_memberships (group_id, member_device_id, last_synced_at)
     VALUES (@group_id, @member_device_id, @last_synced_at)
   `);
   const insertProfile = db.prepare(`
-    INSERT INTO autopilot_profiles (
+    INSERT OR REPLACE INTO autopilot_profiles (
       id, display_name, deployment_mode, out_of_box_experience, hybrid_join_config,
       assigned_group_ids, last_synced_at, raw_json
     ) VALUES (
@@ -85,42 +84,42 @@ export function persistSnapshot(db: Database.Database, payload: SnapshotPayload)
     )
   `);
   const insertProfileAssignment = db.prepare(`
-    INSERT INTO autopilot_profile_assignments (profile_id, group_id, last_synced_at)
+    INSERT OR REPLACE INTO autopilot_profile_assignments (profile_id, group_id, last_synced_at)
     VALUES (@profile_id, @group_id, @last_synced_at)
   `);
   const insertCompliancePolicy = db.prepare(`
-    INSERT INTO compliance_policies (id, display_name, description, platform, last_synced_at, raw_json)
+    INSERT OR REPLACE INTO compliance_policies (id, display_name, description, platform, last_synced_at, raw_json)
     VALUES (@id, @display_name, @description, @platform, @last_synced_at, @raw_json)
   `);
   const insertDeviceComplianceState = db.prepare(`
-    INSERT INTO device_compliance_states (id, device_id, policy_id, policy_name, state, last_reported_at, last_synced_at)
+    INSERT OR REPLACE INTO device_compliance_states (id, device_id, policy_id, policy_name, state, last_reported_at, last_synced_at)
     VALUES (@id, @device_id, @policy_id, @policy_name, @state, @last_reported_at, @last_synced_at)
   `);
   const insertConfigProfile = db.prepare(`
-    INSERT INTO config_profiles (id, display_name, description, platform, profile_type, last_synced_at, raw_json)
+    INSERT OR REPLACE INTO config_profiles (id, display_name, description, platform, profile_type, last_synced_at, raw_json)
     VALUES (@id, @display_name, @description, @platform, @profile_type, @last_synced_at, @raw_json)
   `);
   const insertDeviceConfigState = db.prepare(`
-    INSERT INTO device_config_states (id, device_id, profile_id, profile_name, state, last_reported_at, last_synced_at)
+    INSERT OR REPLACE INTO device_config_states (id, device_id, profile_id, profile_name, state, last_reported_at, last_synced_at)
     VALUES (@id, @device_id, @profile_id, @profile_name, @state, @last_reported_at, @last_synced_at)
   `);
   const insertMobileApp = db.prepare(`
-    INSERT INTO mobile_apps (id, display_name, description, app_type, publisher, last_synced_at, raw_json)
+    INSERT OR REPLACE INTO mobile_apps (id, display_name, description, app_type, publisher, last_synced_at, raw_json)
     VALUES (@id, @display_name, @description, @app_type, @publisher, @last_synced_at, @raw_json)
   `);
   const insertDeviceAppInstallState = db.prepare(`
-    INSERT INTO device_app_install_states (id, device_id, app_id, app_name, install_state, error_code, last_synced_at)
+    INSERT OR REPLACE INTO device_app_install_states (id, device_id, app_id, app_name, install_state, error_code, last_synced_at)
     VALUES (@id, @device_id, @app_id, @app_name, @install_state, @error_code, @last_synced_at)
   `);
   const insertGraphAssignment = db.prepare(`
-    INSERT INTO graph_assignments (
+    INSERT OR REPLACE INTO graph_assignments (
       payload_kind, payload_id, payload_name, group_id, intent, target_type, raw_json, synced_at
     ) VALUES (
       @payload_kind, @payload_id, @payload_name, @group_id, @intent, @target_type, @raw_json, @synced_at
     )
   `);
   const insertConditionalAccessPolicy = db.prepare(`
-    INSERT INTO conditional_access_policies (id, display_name, state, conditions_json, grant_controls_json, session_controls_json, last_synced_at, raw_json)
+    INSERT OR REPLACE INTO conditional_access_policies (id, display_name, state, conditions_json, grant_controls_json, session_controls_json, last_synced_at, raw_json)
     VALUES (@id, @display_name, @state, @conditions_json, @grant_controls_json, @session_controls_json, @last_synced_at, @raw_json)
   `);
   const upsertTagConfig = db.prepare(`
@@ -133,25 +132,31 @@ export function persistSnapshot(db: Database.Database, payload: SnapshotPayload)
   `);
 
   const transaction = db.transaction(() => {
-    db.prepare("DELETE FROM autopilot_devices").run();
-    db.prepare("DELETE FROM intune_devices").run();
-    db.prepare("DELETE FROM entra_devices").run();
-    db.prepare("DELETE FROM groups").run();
-    db.prepare("DELETE FROM group_memberships").run();
-    db.prepare("DELETE FROM autopilot_profiles").run();
-    db.prepare("DELETE FROM autopilot_profile_assignments").run();
-    db.prepare("DELETE FROM compliance_policies").run();
-    db.prepare("DELETE FROM device_compliance_states").run();
-    db.prepare("DELETE FROM config_profiles").run();
-    db.prepare("DELETE FROM device_config_states").run();
-    db.prepare("DELETE FROM mobile_apps").run();
-    db.prepare("DELETE FROM device_app_install_states").run();
-    db.prepare("DELETE FROM graph_assignments").run();
-    if (shouldRefreshConditionalAccess) {
+    if (payload.autopilotRows !== undefined) db.prepare("DELETE FROM autopilot_devices").run();
+    if (payload.intuneRows !== undefined) db.prepare("DELETE FROM intune_devices").run();
+    if (payload.entraRows !== undefined) db.prepare("DELETE FROM entra_devices").run();
+    if (payload.groupRows !== undefined) db.prepare("DELETE FROM groups").run();
+    if (payload.membershipRows !== undefined) db.prepare("DELETE FROM group_memberships").run();
+    if (payload.profileRows !== undefined) db.prepare("DELETE FROM autopilot_profiles").run();
+    if (payload.profileAssignmentRows !== undefined) {
+      db.prepare("DELETE FROM autopilot_profile_assignments").run();
+    }
+    if (payload.compliancePolicies !== undefined) db.prepare("DELETE FROM compliance_policies").run();
+    if (payload.deviceComplianceStates !== undefined) db.prepare("DELETE FROM device_compliance_states").run();
+    if (payload.configProfiles !== undefined) db.prepare("DELETE FROM config_profiles").run();
+    if (payload.deviceConfigStates !== undefined) db.prepare("DELETE FROM device_config_states").run();
+    if (payload.mobileApps !== undefined) db.prepare("DELETE FROM mobile_apps").run();
+    if (payload.deviceAppInstallStates !== undefined) db.prepare("DELETE FROM device_app_install_states").run();
+    if (payload.graphAssignments !== undefined) db.prepare("DELETE FROM graph_assignments").run();
+    db.prepare("DELETE FROM device_state").run();
+    // Only clear conditional_access_policies if we have fresh data
+    // to insert. If CA sync failed, we must preserve the previous
+    // snapshot so operators don't lose their policy view.
+    if (payload.conditionalAccessPolicies !== undefined) {
       db.prepare("DELETE FROM conditional_access_policies").run();
     }
 
-    for (const row of payload.autopilotRows) {
+    for (const row of payload.autopilotRows ?? []) {
       const existing = existingAutopilot.get(row.id);
       insertAutopilot.run({
         ...row,
@@ -163,22 +168,22 @@ export function persistSnapshot(db: Database.Database, payload: SnapshotPayload)
       });
     }
 
-    for (const row of payload.intuneRows) {
+    for (const row of payload.intuneRows ?? []) {
       insertIntune.run(row);
     }
-    for (const row of payload.entraRows) {
+    for (const row of payload.entraRows ?? []) {
       insertEntra.run(row);
     }
-    for (const row of payload.groupRows) {
+    for (const row of payload.groupRows ?? []) {
       insertGroup.run(row);
     }
-    for (const row of payload.membershipRows) {
+    for (const row of payload.membershipRows ?? []) {
       insertMembership.run(row);
     }
-    for (const row of payload.profileRows) {
+    for (const row of payload.profileRows ?? []) {
       insertProfile.run(row);
     }
-    for (const row of payload.profileAssignmentRows) {
+    for (const row of payload.profileAssignmentRows ?? []) {
       insertProfileAssignment.run(row);
     }
     for (const row of payload.compliancePolicies ?? []) {
@@ -202,8 +207,8 @@ export function persistSnapshot(db: Database.Database, payload: SnapshotPayload)
     for (const row of payload.graphAssignments ?? []) {
       insertGraphAssignment.run(row);
     }
-    if (shouldRefreshConditionalAccess) {
-      for (const row of payload.conditionalAccessPolicies ?? []) {
+    if (payload.conditionalAccessPolicies !== undefined) {
+      for (const row of payload.conditionalAccessPolicies) {
         insertConditionalAccessPolicy.run(row);
       }
     }

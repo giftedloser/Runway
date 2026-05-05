@@ -1,5 +1,6 @@
 import type { AutopilotRow } from "../db/types.js";
 import type { SnapshotPayload } from "./types.js";
+import { logger } from "../logger.js";
 import { GraphClient } from "./graph-client.js";
 
 interface GraphAutopilotDevice {
@@ -10,18 +11,28 @@ interface GraphAutopilotDevice {
   groupTag?: string | null;
   userPrincipalName?: string | null;
   azureActiveDirectoryDeviceId?: string | null;
-  deploymentProfileAssignmentStatus?: string | null;
+  deploymentProfileAssignmentStatus?: string | null; // derived: 'assigned' if deploymentProfile exists, else null
   deploymentProfile?: {
     id?: string | null;
     displayName?: string | null;
-    deploymentMode?: string | null;
   } | null;
 }
 
 export async function syncAutopilotDevices(client: GraphClient): Promise<SnapshotPayload["autopilotRows"]> {
-  const rows = await client.getAllPages<GraphAutopilotDevice>(
-    "/deviceManagement/windowsAutopilotDeviceIdentities?$select=id,serialNumber,model,manufacturer,groupTag,userPrincipalName,azureActiveDirectoryDeviceId,deploymentProfileAssignmentStatus,deploymentProfile"
-  );
+  let rows: GraphAutopilotDevice[];
+  try {
+    rows = await client.getAllPages<GraphAutopilotDevice>(
+      "/deviceManagement/windowsAutopilotDeviceIdentities?$select=id,serialNumber,model,manufacturer,groupTag,userPrincipalName,azureActiveDirectoryDeviceId&$expand=deploymentProfile($select=id,displayName)",
+      "beta"
+    );
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (message.includes("500")) {
+      logger.warn({ err: error }, "[sync] Autopilot endpoint returned 500; returning empty result (tenant may have no Autopilot data).");
+      return [];
+    }
+    throw error;
+  }
   const now = new Date().toISOString();
 
   return rows.map(
@@ -34,8 +45,8 @@ export async function syncAutopilotDevices(client: GraphClient): Promise<Snapsho
       assigned_user_upn: row.userPrincipalName ?? null,
       deployment_profile_id: row.deploymentProfile?.id ?? null,
       deployment_profile_name: row.deploymentProfile?.displayName ?? null,
-      profile_assignment_status: row.deploymentProfileAssignmentStatus ?? null,
-      deployment_mode: row.deploymentProfile?.deploymentMode ?? null,
+      profile_assignment_status: row.deploymentProfile ? "assigned" : null,
+      deployment_mode: null,
       entra_device_id: row.azureActiveDirectoryDeviceId ?? null,
       first_seen_at: now,
       first_profile_assigned_at: row.deploymentProfile?.id ? now : null,

@@ -165,7 +165,8 @@ describe("delegated auth flow", () => {
       authenticated: false
     });
 
-    await request(app).get("/api/settings").expect(401);
+    await request(app).get("/api/devices").expect(401);
+    await request(app).get("/api/settings").expect(200);
   });
 
   it("keeps the explicit disabled access mode available for local-only/dev runs", async () => {
@@ -239,11 +240,12 @@ describe("delegated auth flow", () => {
     const app = createApp(db);
     const agent = request.agent(app);
 
-    await agent.get("/api/settings").expect(401);
+    await agent.get("/api/devices").expect(401);
+    await agent.get("/api/settings").expect(200);
 
     const login = await agent.get("/api/auth/access-login").expect(200);
     expect(login.body.loginUrl).toContain("state=test-state");
-    expect(delegatedAuthMock.getAppAccessAuthUrl).toHaveBeenCalledWith("test-state");
+    expect(delegatedAuthMock.getAuthUrl).toHaveBeenCalledWith("test-state");
 
     const callback = await agent
       .get("/api/auth/callback")
@@ -255,18 +257,18 @@ describe("delegated auth flow", () => {
     expect(status.body).toMatchObject({
       required: true,
       authenticated: true,
-      user: "tech@example.com",
-      name: "Tech User"
+      user: "admin@example.com",
+      name: "Admin User"
     });
 
-    await agent.get("/api/settings").expect(200);
+    const adminStatus = await agent.get("/api/auth/status").expect(200);
+    expect(adminStatus.body).toMatchObject({
+      authenticated: true,
+      user: "admin@example.com",
+      name: "Admin User"
+    });
 
-    await agent.get("/api/auth/login").expect(200);
-    await agent
-      .get("/api/auth/callback")
-      .query({ code: "abc123", state: "test-state" })
-      .expect(200);
-
+    await agent.get("/api/devices").expect(200);
     await agent.get("/api/settings").expect(200);
   });
 
@@ -284,13 +286,16 @@ describe("delegated auth flow", () => {
 
     const status = await agent.get("/api/auth/access-status").expect(200);
     expect(status.body.authenticated).toBe(false);
-    await agent.get("/api/settings").expect(401);
+    await agent.get("/api/devices").expect(401);
+    await agent.get("/api/settings").expect(200);
   });
 
   it("requires the desktop session token for first-run Graph bootstrap when the token is configured", async () => {
-    delete process.env.AZURE_TENANT_ID;
-    delete process.env.AZURE_CLIENT_ID;
-    delete process.env.AZURE_CLIENT_SECRET;
+    process.env.AZURE_TENANT_ID = "";
+    process.env.AZURE_CLIENT_ID = "";
+    process.env.AZURE_CLIENT_SECRET = "";
+    process.env.AZURE_CLIENT_CERT_PATH = "";
+    process.env.AZURE_CLIENT_CERT_THUMBPRINT = "";
     process.env.RUNWAY_DESKTOP_TOKEN = "desktop-token-value-with-at-least-32-chars";
     const dir = mkdtempSync(path.join(tmpdir(), "runway-env-"));
     tempDirs.push(dir);

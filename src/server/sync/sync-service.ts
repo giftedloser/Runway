@@ -13,10 +13,11 @@ import { syncIntuneDevices } from "./intune-sync.js";
 import { syncEntraDevices } from "./entra-sync.js";
 import { syncGroups } from "./group-sync.js";
 import { syncProfiles } from "./profile-sync.js";
-import { syncCompliancePolicies } from "./compliance-sync.js";
-import { syncConfigProfiles } from "./config-profile-sync.js";
-import { syncAppAssignments } from "./app-sync.js";
-import { syncConditionalAccessPolicies } from "./conditional-access-sync.js";
+import { syncCompliancePolicies, type ComplianceSyncResult } from "./compliance-sync.js";
+import { syncConfigProfiles, type ConfigProfileSyncResult } from "./config-profile-sync.js";
+import { syncAppAssignments, type AppSyncResult } from "./app-sync.js";
+import { syncConditionalAccessPolicies, type ConditionalAccessSyncResult } from "./conditional-access-sync.js";
+import type { AutopilotRow, IntuneRow, EntraRow, GroupRow, GroupMembershipRow, ProfileRow, ProfileAssignmentRow } from "../db/types.js";
 
 const state = {
   inProgress: false,
@@ -31,7 +32,8 @@ export function getSyncState() {
 
 export async function fullSync(
   db: Database.Database,
-  syncType: "full" | "manual" = "full"
+  syncType: "full" | "manual" = "full",
+  delegatedToken: string
 ) {
   if (state.inProgress) {
     throw new Error("A sync is already in progress.");
@@ -71,54 +73,129 @@ export async function fullSync(
       return;
     }
 
-    const client = new GraphClient();
-    const [autopilotRows, intuneRows, entraRows, groupSync, profileSync] = await Promise.all([
-      syncAutopilotDevices(client),
-      syncIntuneDevices(client),
-      syncEntraDevices(client),
-      syncGroups(client),
-      syncProfiles(client)
-    ]);
-
+    const client = new GraphClient(delegatedToken);
     const syncWarnings: string[] = [];
-    const conditionalAccessSync = await syncConditionalAccessPolicies(client).catch((error) => {
-      const message = "Conditional access sync failed; preserved previous policy snapshot.";
-      logger.warn(
-        { err: error },
-        message
-      );
-      syncWarnings.push(message);
-      return null;
-    });
 
-    // Compliance + config profile syncs need Intune device IDs, so they run after the initial fetch
-    const intuneIds = intuneRows.map((r) => r.id);
-    const [complianceSync, configProfileSync, appSync] = await Promise.all([
-      syncCompliancePolicies(client, intuneIds),
-      syncConfigProfiles(client, intuneIds),
-      syncAppAssignments(client, intuneIds)
-    ]);
+    // --- Phase 1: primary device + group + profile data ---
+    // Each step is independently wrapped so a failure in one
+    // does not stop the others. Failed steps produce empty
+    // results and log a warning.
 
+    logger.info("[sync] → Autopilot devices");
+    let autopilotRows: AutopilotRow[] | undefined;
+    try {
+      autopilotRows = await syncAutopilotDevices(client);
+    } catch (error) {
+      const msg = "Autopilot device sync failed.";
+      logger.warn({ err: error }, msg);
+      syncWarnings.push(msg);
+    }
+
+    logger.info("[sync] → Intune managed devices");
+    let intuneRows: IntuneRow[] | undefined;
+    try {
+      intuneRows = await syncIntuneDevices(client);
+    } catch (error) {
+      const msg = "Intune device sync failed.";
+      logger.warn({ err: error }, msg);
+      syncWarnings.push(msg);
+    }
+
+    logger.info("[sync] → Entra devices");
+    let entraRows: EntraRow[] | undefined;
+    try {
+      entraRows = await syncEntraDevices(client);
+    } catch (error) {
+      const msg = "Entra device sync failed.";
+      logger.warn({ err: error }, msg);
+      syncWarnings.push(msg);
+    }
+
+    logger.info("[sync] → Groups");
+    let groupSync: { groups: GroupRow[]; memberships: GroupMembershipRow[] } | undefined;
+    try {
+      groupSync = await syncGroups(client);
+    } catch (error) {
+      const msg = "Group sync failed.";
+      logger.warn({ err: error }, msg);
+      syncWarnings.push(msg);
+    }
+
+    logger.info("[sync] → Autopilot deployment profiles");
+    let profileSync: { profiles: ProfileRow[]; assignments: ProfileAssignmentRow[] } | undefined;
+    try {
+      profileSync = await syncProfiles(client);
+    } catch (error) {
+      const msg = "Autopilot profile sync failed.";
+      logger.warn({ err: error }, msg);
+      syncWarnings.push(msg);
+    }
+
+    logger.info("[sync] → Conditional access policies");
+    let conditionalAccessSync: ConditionalAccessSyncResult | null = null;
+    try {
+      conditionalAccessSync = await syncConditionalAccessPolicies(client);
+    } catch (error) {
+      const msg = "Conditional access sync failed; preserved previous policy snapshot.";
+      logger.warn({ err: error }, msg);
+    }
+
+    // --- Phase 2: compliance / config / app syncs need Intune device IDs ---
+    const intuneIds =
+      intuneRows?.map((r) => r.id) ??
+      (db.prepare("SELECT id FROM intune_devices").all() as Array<{ id: string }>).map((row) => row.id);
+
+    logger.info("[sync] → Compliance policies");
+    let complianceSync: ComplianceSyncResult | undefined;
+    try {
+      complianceSync = await syncCompliancePolicies(client, intuneIds);
+    } catch (error) {
+      const msg = "Compliance policy sync failed.";
+      logger.warn({ err: error }, msg);
+    }
+
+    logger.info("[sync] → Configuration profiles");
+    let configProfileSync: ConfigProfileSyncResult | undefined;
+    try {
+      configProfileSync = await syncConfigProfiles(client, intuneIds);
+    } catch (error) {
+      const msg = "Configuration profile sync failed.";
+      logger.warn({ err: error }, msg);
+    }
+
+    logger.info("[sync] → App assignments");
+    let appSync: AppSyncResult | undefined;
+    try {
+      appSync = await syncAppAssignments(client, intuneIds);
+    } catch (error) {
+      const msg = "App assignment sync failed.";
+      logger.warn({ err: error }, msg);
+    }
+
+    // --- Persist whatever succeeded ---
     persistSnapshot(db, {
       autopilotRows,
       intuneRows,
       entraRows,
-      groupRows: groupSync.groups,
-      membershipRows: groupSync.memberships,
-      profileRows: profileSync.profiles,
-      profileAssignmentRows: profileSync.assignments,
-      compliancePolicies: complianceSync.policies,
-      deviceComplianceStates: complianceSync.deviceStates,
+      groupRows: groupSync?.groups,
+      membershipRows: groupSync?.memberships,
+      profileRows: profileSync?.profiles,
+      profileAssignmentRows: profileSync?.assignments,
+      compliancePolicies: complianceSync?.policies,
+      deviceComplianceStates: complianceSync?.deviceStates,
       conditionalAccessPolicies: conditionalAccessSync?.policies,
-      configProfiles: configProfileSync.profiles,
-      deviceConfigStates: configProfileSync.deviceStates,
-      mobileApps: appSync.apps,
-      deviceAppInstallStates: appSync.deviceStates,
-      graphAssignments: [
-        ...appSync.graphAssignments,
-        ...configProfileSync.graphAssignments,
-        ...complianceSync.graphAssignments
-      ]
+      configProfiles: configProfileSync?.profiles,
+      deviceConfigStates: configProfileSync?.deviceStates,
+      mobileApps: appSync?.apps,
+      deviceAppInstallStates: appSync?.deviceStates,
+      graphAssignments:
+        appSync || configProfileSync || complianceSync
+          ? [
+              ...(appSync?.graphAssignments ?? []),
+              ...(configProfileSync?.graphAssignments ?? []),
+              ...(complianceSync?.graphAssignments ?? [])
+            ]
+          : undefined
     });
 
     const devicesSynced = computeAllDeviceStates(db);
@@ -136,24 +213,13 @@ export async function fullSync(
 }
 
 export function startBackgroundSync(db: Database.Database) {
-  if (!config.isGraphConfigured) {
-    logger.info("Graph credentials missing; background sync disabled.");
-    return;
-  }
-
-  const pollMs = 30_000;
-  let lastAttemptAt = Date.now();
-
-  setInterval(() => {
-    const appSettings = getAppSettingValues(db);
-    if (appSettings.syncPaused || appSettings.syncManualOnly || state.inProgress) return;
-
-    const intervalMs = appSettings.syncIntervalMinutes * 60 * 1000;
-    if (Date.now() - lastAttemptAt < intervalMs) return;
-
-    lastAttemptAt = Date.now();
-    fullSync(db, "full").catch((error) => {
-      logger.error({ err: error }, "Background sync failed.");
-    });
-  }, pollMs).unref();
+  // Background sync cannot run without a delegated user token.
+  // All Graph calls require delegated access — client-credentials
+  // fallback has been removed. Sync must be triggered from a
+  // user session (POST /api/sync) where the session's access token
+  // is available.
+  logger.info(
+    "Background sync disabled: delegated token required for all Graph calls. " +
+      "Trigger sync from the UI after signing in."
+  );
 }

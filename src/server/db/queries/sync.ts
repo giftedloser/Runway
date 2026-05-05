@@ -4,6 +4,17 @@ import type { SyncLogEntry, SyncStatusResponse } from "../../../shared/types.js"
 import { config } from "../../config.js";
 import { asArray } from "../../engine/normalize.js";
 
+const NON_BLOCKING_SYNC_MESSAGES = new Set([
+  "Conditional access sync failed; preserved previous policy snapshot.",
+  "Compliance policy sync failed.",
+  "Configuration profile sync failed.",
+  "App assignment sync failed."
+]);
+
+function visibleSyncErrors(errors: string): string[] {
+  return asArray(errors).filter((error) => !NON_BLOCKING_SYNC_MESSAGES.has(error));
+}
+
 export function createSyncLog(db: Database.Database, syncType: "full" | "manual") {
   const startedAt = new Date().toISOString();
   const result = db
@@ -48,7 +59,7 @@ export function listSyncLogs(db: Database.Database, limit = 20): SyncLogEntry[] 
     startedAt: row.started_at,
     completedAt: row.completed_at,
     devicesSynced: row.devices_synced,
-    errors: asArray(row.errors)
+    errors: visibleSyncErrors(row.errors)
   }));
 }
 
@@ -64,7 +75,7 @@ export function getSyncStatus(
 ): SyncStatusResponse {
   const logs = listSyncLogs(db);
   const latestComplete = logs.find((entry) => entry.completedAt);
-  const latestError = logs.find((entry) => entry.errors.length > 0)?.errors[0] ?? null;
+  const latestError = latestComplete?.errors[0] ?? null;
   return {
     inProgress: syncState.inProgress,
     currentSyncType: syncState.currentSyncType,

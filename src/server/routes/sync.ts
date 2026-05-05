@@ -2,7 +2,7 @@ import { Router } from "express";
 
 import type Database from "better-sqlite3";
 
-import { hasValidDelegatedSession, requireDelegatedAuth } from "../auth/auth-middleware.js";
+import { getDelegatedToken, hasValidDelegatedSession, requireDelegatedAuth } from "../auth/auth-middleware.js";
 import { getSyncStatus } from "../db/queries/sync.js";
 import { logger } from "../logger.js";
 import { fullSync, getSyncState } from "../sync/sync-service.js";
@@ -25,8 +25,15 @@ export function syncRouter(db: Database.Database) {
 
   router.post("/", requireDelegatedAuth, async (_request, response, next) => {
     try {
+      if (getSyncState().inProgress) {
+        response.status(409).json({ message: "A sync is already in progress." });
+        return;
+      }
+      const delegatedToken = getDelegatedToken(_request);
       logger.info("[v1.6][sync-pill] Manual sync requested");
-      await fullSync(db, "manual");
+      void fullSync(db, "manual", delegatedToken).catch((error) => {
+        logger.error({ err: error }, "[v1.6][sync-pill] Manual sync failed after start");
+      });
       response.status(202).json(getSyncStatus(db, getSyncState(), { canTriggerManualSync: true }));
     } catch (error) {
       logger.error({ err: error }, "[v1.6][sync-pill] Manual sync failed");

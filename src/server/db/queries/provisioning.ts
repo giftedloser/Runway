@@ -77,17 +77,41 @@ function latestTimestamp(current: string | null, next: string) {
 export function listProvisioningTags(db: Database.Database): TagInventoryItem[] {
   const rows = db
     .prepare(
-      `SELECT
-         ds.group_tag,
-         COUNT(*) AS device_count,
-         MAX(COALESCE(ds.last_checkin_at, ds.computed_at)) AS last_seen_at,
+      `WITH discovered_tags AS (
+         SELECT
+           group_tag,
+           COUNT(*) AS device_count,
+           MAX(COALESCE(last_checkin_at, computed_at)) AS last_seen_at
+         FROM device_state
+         WHERE group_tag IS NOT NULL AND TRIM(group_tag) != ''
+         GROUP BY group_tag
+
+         UNION ALL
+
+         SELECT
+           ap.group_tag,
+           COUNT(*) AS device_count,
+           MAX(ap.last_synced_at) AS last_seen_at
+         FROM autopilot_devices ap
+         WHERE ap.group_tag IS NOT NULL
+           AND TRIM(ap.group_tag) != ''
+           AND NOT EXISTS (
+             SELECT 1
+             FROM device_state ds
+             WHERE ds.group_tag = ap.group_tag
+           )
+         GROUP BY ap.group_tag
+       )
+       SELECT
+         discovered_tags.group_tag,
+         SUM(discovered_tags.device_count) AS device_count,
+         MAX(discovered_tags.last_seen_at) AS last_seen_at,
          tc.group_tag AS configured_tag,
          tc.property_label
-       FROM device_state ds
-       LEFT JOIN tag_config tc ON tc.group_tag = ds.group_tag
-       WHERE ds.group_tag IS NOT NULL AND TRIM(ds.group_tag) != ''
-       GROUP BY ds.group_tag, tc.group_tag, tc.property_label
-       ORDER BY ds.group_tag COLLATE NOCASE`
+       FROM discovered_tags
+       LEFT JOIN tag_config tc ON tc.group_tag = discovered_tags.group_tag
+       GROUP BY discovered_tags.group_tag, tc.group_tag, tc.property_label
+       ORDER BY discovered_tags.group_tag COLLATE NOCASE`
     )
     .all() as Array<{
     group_tag: string;

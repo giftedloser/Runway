@@ -3,6 +3,7 @@ import type Database from "better-sqlite3";
 import type { AssignmentPath, FlagCode, TagConfigRecord } from "../../shared/types.js";
 import { loadStateEngineInput, replaceDeviceStates } from "../db/queries/devices.js";
 import { listRules } from "../db/queries/rules.js";
+import { logger } from "../logger.js";
 import { getAppSettingValues } from "../settings/app-settings.js";
 import type { GroupRow, ProfileRow } from "../db/types.js";
 import { computeOverallHealth } from "./compute-health.js";
@@ -71,6 +72,18 @@ export function computeAllDeviceStates(db: Database.Database) {
   const profileById = new Map(input.profileRows.map((row) => [row.id, row]));
   const profileByName = new Map(input.profileRows.map((row) => [row.display_name, row]));
 
+  // Build a lookup from Entra device ID → Entra object ID.
+  // Autopilot stores the Entra device ID (azureActiveDirectoryDeviceId),
+  // but group_memberships.member_device_id uses the Entra object ID.
+  // Without this bridge, devices with no entraRecord can't resolve their
+  // group memberships.
+  const entraDeviceIdToObjectId = new Map<string, string>();
+  for (const row of input.entraRows) {
+    if (row.device_id && row.id) {
+      entraDeviceIdToObjectId.set(normalizeString(row.device_id)!, row.id);
+    }
+  }
+
   const membershipsByDevice = new Map<string, string[]>();
   for (const row of input.membershipRows) {
     const current = membershipsByDevice.get(row.member_device_id) ?? [];
@@ -86,9 +99,30 @@ export function computeAllDeviceStates(db: Database.Database) {
   }
 
   const computedRows = correlations.map((bundle) => {
+    if (!bundle.autopilotRecord && (bundle.intuneRecord || bundle.entraRecord)) {
+      logger.warn(
+        {
+          intuneId: bundle.intuneRecord?.id ?? null,
+          entraId: bundle.entraRecord?.id ?? null,
+          serialNumber: bundle.serialNumber,
+          azureActiveDirectoryDeviceId:
+            bundle.intuneRecord?.entra_device_id ?? bundle.entraRecord?.device_id ?? null,
+          matchedOn: bundle.matchedOn
+        },
+        "[engine] No Autopilot match for device state correlation."
+      );
+    }
+    // Resolve the Entra OBJECT ID for group membership lookups.
+    // group_memberships.member_device_id stores the Entra object ID.
+    // - entraRecord.id IS the object ID.
+    // - autopilot's entra_device_id is the Entra DEVICE ID (different!),
+    //   so we must translate it via entraDeviceIdToObjectId.
+    // - intune's entra_device_id is already the object ID.
     const resolvedEntraId =
       bundle.entraRecord?.id ??
-      normalizeString(bundle.autopilotRecord?.entra_device_id) ??
+      (bundle.autopilotRecord?.entra_device_id
+        ? entraDeviceIdToObjectId.get(normalizeString(bundle.autopilotRecord.entra_device_id)!) ?? null
+        : null) ??
       normalizeString(bundle.intuneRecord?.entra_device_id);
     const groupIds = resolvedEntraId ? membershipsByDevice.get(resolvedEntraId) ?? [] : [];
     const memberGroups = groupIds
@@ -291,6 +325,9 @@ export function computeAllDeviceStates(db: Database.Database) {
       serialNumber: bundle.serialNumber,
       trustType: bundle.entraRecord?.trust_type ?? null,
       groupTag,
+      deploymentProfileId: bundle.autopilotRecord?.deployment_profile_id ?? actualProfile?.id ?? null,
+      deploymentProfileName:
+        bundle.autopilotRecord?.deployment_profile_name ?? actualProfile?.display_name ?? null,
       assignedProfileName:
         actualProfile?.display_name ?? bundle.autopilotRecord?.deployment_profile_name ?? null,
       profileAssignmentStatus: bundle.autopilotRecord?.profile_assignment_status ?? null,
@@ -355,6 +392,8 @@ export function computeAllDeviceStates(db: Database.Database) {
       device_name: context.deviceName,
       property_label: tagConfig?.propertyLabel ?? groupTag ?? null,
       group_tag: groupTag,
+      deployment_profile_id: context.deploymentProfileId,
+      deployment_profile_name: context.deploymentProfileName,
       assigned_profile_name: context.assignedProfileName,
       autopilot_assigned_user_upn: context.autopilotAssignedUserUpn,
       intune_primary_user_upn: context.intunePrimaryUserUpn,

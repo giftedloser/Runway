@@ -19,7 +19,7 @@ export async function syncGroups(client: GraphClient): Promise<{
   memberships: GroupMembershipRow[];
 }> {
   const rows = await client.getAllPages<GraphGroup>(
-    "/groups?$filter=startswith(displayName,'Autopilot') or startswith(displayName,'AP-')&$select=id,displayName,membershipRule,membershipRuleProcessingState,groupTypes"
+    "/groups?$select=id,displayName,membershipRule,membershipRuleProcessingState,groupTypes"
   );
   const now = new Date().toISOString();
   const groups = rows.map(

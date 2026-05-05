@@ -39,8 +39,8 @@ const KEY_ORDER: Array<{
   matchedOn: MatchedOnKey;
   confidence: MatchConfidence;
 }> = [
-  { field: "serial", matchedOn: "serial", confidence: "high" },
-  { field: "entra_device_id", matchedOn: "entra_device_id", confidence: "medium" },
+  { field: "entra_device_id", matchedOn: "entra_device_id", confidence: "high" },
+  { field: "serial", matchedOn: "serial", confidence: "medium" },
   { field: "device_id", matchedOn: "device_id", confidence: "medium" },
   { field: "device_name", matchedOn: "device_name", confidence: "low" }
 ];
@@ -71,7 +71,7 @@ function entraKeys(row: EntraRow | null): JoinKeys | null {
   if (!row) return null;
   return {
     serial: normalizeSerial(row.serial_number),
-    entra_device_id: normalizeString(row.id),
+    entra_device_id: normalizeString(row.device_id),
     device_id: normalizeString(row.device_id),
     device_name: normalizeName(row.display_name)
   };
@@ -183,6 +183,18 @@ export function correlateDevices(input: {
     entra: new Map<string, EntraRow[]>()
   };
 
+  // Entra "device ID" (the GUID from the deviceId field on Entra device
+  // objects). Autopilot stores this as azureActiveDirectoryDeviceId /
+  // entra_device_id. This is DIFFERENT from the Entra object ID (the
+  // `id` field) which is what group_memberships.member_device_id uses.
+  // Without this index, autopilot↔entra joins that miss the serial key
+  // cannot fall back to the device ID link.
+  const byEntraDeviceId = {
+    autopilot: new Map<string, AutopilotRow[]>(),
+    intune: new Map<string, IntuneRow[]>(),
+    entra: new Map<string, EntraRow[]>()
+  };
+
   const byDeviceId = {
     autopilot: new Map<string, AutopilotRow[]>(),
     intune: new Map<string, IntuneRow[]>(),
@@ -207,6 +219,7 @@ export function correlateDevices(input: {
   for (const row of input.autopilotRows) {
     push(bySerial.autopilot, normalizeSerial(row.serial_number), row);
     push(byEntraObjectId.autopilot, normalizeString(row.entra_device_id), row);
+    push(byEntraDeviceId.autopilot, normalizeString(row.entra_device_id), row);
     push(byDeviceId.autopilot, extractRawDeviceId(row.raw_json), row);
     push(byName.autopilot, normalizeName(row.serial_number), row);
   }
@@ -214,6 +227,7 @@ export function correlateDevices(input: {
   for (const row of input.intuneRows) {
     push(bySerial.intune, normalizeSerial(row.serial_number), row);
     push(byEntraObjectId.intune, normalizeString(row.entra_device_id), row);
+    push(byEntraDeviceId.intune, normalizeString(row.entra_device_id), row);
     push(byDeviceId.intune, extractRawDeviceId(row.raw_json), row);
     push(byName.intune, normalizeName(row.device_name), row);
   }
@@ -221,6 +235,7 @@ export function correlateDevices(input: {
   for (const row of input.entraRows) {
     push(bySerial.entra, normalizeSerial(row.serial_number), row);
     push(byEntraObjectId.entra, normalizeString(row.id), row);
+    push(byEntraDeviceId.entra, normalizeString(row.device_id), row);
     push(byDeviceId.entra, normalizeString(row.device_id), row);
     push(byName.entra, normalizeName(row.display_name), row);
   }
@@ -322,9 +337,18 @@ export function correlateDevices(input: {
       normalizeSerial(seed.entraRecord?.serial_number) ??
       null;
     const entraObjectId =
-      normalizeString(seed.autopilotRecord?.entra_device_id) ??
       normalizeString(seed.intuneRecord?.entra_device_id) ??
       normalizeString(seed.entraRecord?.id) ??
+      null;
+    // Autopilot's entra_device_id is the Entra device ID (not object ID).
+    // Entra's device_id is the same Entra device ID. Keep them in a
+    // separate variable so they index into byEntraDeviceId, not
+    // byEntraObjectId (which is for the Entra object ID used by
+    // group_memberships).
+    const entraDeviceId =
+      normalizeString(seed.autopilotRecord?.entra_device_id) ??
+      normalizeString(seed.intuneRecord?.entra_device_id) ??
+      normalizeString(seed.entraRecord?.device_id) ??
       null;
     const deviceId =
       extractRawDeviceId(seed.autopilotRecord?.raw_json) ??
@@ -340,8 +364,9 @@ export function correlateDevices(input: {
     const autopilotRecord =
       seed.autopilotRecord ??
       newest(
-        (serial ? bySerial.autopilot.get(serial) : undefined) ??
+        (entraDeviceId ? byEntraDeviceId.autopilot.get(entraDeviceId) : undefined) ??
           (entraObjectId ? byEntraObjectId.autopilot.get(entraObjectId) : undefined) ??
+          (serial ? bySerial.autopilot.get(serial) : undefined) ??
           (deviceId ? byDeviceId.autopilot.get(deviceId) : undefined) ??
           (name ? byName.autopilot.get(name) : undefined) ??
           []
@@ -350,8 +375,9 @@ export function correlateDevices(input: {
     const intuneRecord =
       seed.intuneRecord ??
       newest(
-        (serial ? bySerial.intune.get(serial) : undefined) ??
+        (entraDeviceId ? byEntraDeviceId.intune.get(entraDeviceId) : undefined) ??
           (entraObjectId ? byEntraObjectId.intune.get(entraObjectId) : undefined) ??
+          (serial ? bySerial.intune.get(serial) : undefined) ??
           (deviceId ? byDeviceId.intune.get(deviceId) : undefined) ??
           (name ? byName.intune.get(name) : undefined) ??
           []
@@ -360,8 +386,9 @@ export function correlateDevices(input: {
     const entraRecord =
       seed.entraRecord ??
       newest(
-        (serial ? bySerial.entra.get(serial) : undefined) ??
+        (entraDeviceId ? byEntraDeviceId.entra.get(entraDeviceId) : undefined) ??
           (entraObjectId ? byEntraObjectId.entra.get(entraObjectId) : undefined) ??
+          (serial ? bySerial.entra.get(serial) : undefined) ??
           (deviceId ? byDeviceId.entra.get(deviceId) : undefined) ??
           (name ? byName.entra.get(name) : undefined) ??
           []

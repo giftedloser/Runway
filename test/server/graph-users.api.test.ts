@@ -6,6 +6,7 @@ const requestWithDelegatedToken = vi.fn();
 
 vi.mock("../../src/server/auth/auth-middleware.js", () => ({
   requireDelegatedAuth: (_req: unknown, _res: unknown, next: () => void) => next(),
+  requireAppAccess: (_req: unknown, _res: unknown, next: () => void) => next(),
   hasValidDelegatedSession: () => true,
   hasValidAppAccessSession: () => false,
   getDelegatedToken: () => "delegated-token",

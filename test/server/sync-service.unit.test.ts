@@ -77,7 +77,7 @@ vi.mock("../../src/server/sync/conditional-access-sync.js", () => ({
 // log / device_state tables update as they would in production.
 const { fullSync, getSyncState } = await import("../../src/server/sync/sync-service.js");
 const { runMigrations } = await import("../../src/server/db/migrate.js");
-const { listSyncLogs } = await import("../../src/server/db/queries/sync.js");
+const { getSyncStatus, listSyncLogs } = await import("../../src/server/db/queries/sync.js");
 
 let db: Database.Database;
 
@@ -117,53 +117,91 @@ beforeEach(() => {
 });
 
 describe("fullSync — partial failure handling", () => {
-  it("records the error in sync_log and rethrows when Intune sync fails (Entra succeeds)", async () => {
-    entraMock.mockResolvedValue([
-      {
-        id: "e1",
-        device_id: "d1",
-        display_name: "POS-01",
-        serial_number: null,
-        trust_type: "AzureAd",
-        is_managed: 1,
-        mdm_app_id: null,
-        registration_datetime: null,
-        device_physical_ids: "[]",
-        last_synced_at: new Date().toISOString(),
-        raw_json: "{}"
-      }
-    ]);
+  it("logs a warning when Intune sync fails and continues with remaining steps", async () => {
     intuneMock.mockRejectedValue(new Error("Intune Graph 503"));
 
-    await expect(fullSync(db, "manual")).rejects.toThrow("Intune Graph 503");
+    await fullSync(db, "manual", "mock-token");
 
     const logs = listSyncLogs(db);
     expect(logs.length).toBe(1);
-    expect(logs[0]!.errors).toContain("Intune Graph 503");
+    expect(logs[0]!.errors).toContain("Intune device sync failed.");
     expect(logs[0]!.devicesSynced).toBe(0);
     expect(logs[0]!.completedAt).not.toBeNull();
 
-    // Entra ran, Intune ran (and rejected), downstream did NOT run.
-    expect(entraMock).toHaveBeenCalled();
+    // Every step ran despite the Intune failure.
+    expect(autopilotMock).toHaveBeenCalled();
     expect(intuneMock).toHaveBeenCalled();
-    expect(complianceMock).not.toHaveBeenCalled();
-    expect(configProfileMock).not.toHaveBeenCalled();
-    expect(appMock).not.toHaveBeenCalled();
+    expect(entraMock).toHaveBeenCalled();
+    expect(groupMock).toHaveBeenCalled();
+    expect(profileMock).toHaveBeenCalled();
+    expect(caMock).toHaveBeenCalled();
+    expect(complianceMock).toHaveBeenCalled();
+    expect(configProfileMock).toHaveBeenCalled();
+    expect(appMock).toHaveBeenCalled();
+
+    // No lastError because the sync completed (with warnings).
+    expect(getSyncState().lastError).toBeNull();
   });
 
-  it("resets inProgress state even when a sync rejects", async () => {
+  it("preserves previously synced source rows when a later step fails", async () => {
+    autopilotMock.mockResolvedValueOnce([
+      {
+        id: "ap-1",
+        serial_number: "SN-1",
+        model: null,
+        manufacturer: null,
+        group_tag: "North",
+        assigned_user_upn: null,
+        deployment_profile_id: "prof-1",
+        deployment_profile_name: "North-UD",
+        profile_assignment_status: "assigned",
+        deployment_mode: null,
+        entra_device_id: "aad-1",
+        first_seen_at: "2026-04-01T00:00:00.000Z",
+        first_profile_assigned_at: "2026-04-01T00:00:00.000Z",
+        last_synced_at: "2026-04-01T00:00:00.000Z",
+        raw_json: "{}"
+      }
+    ]);
+
+    await fullSync(db, "manual", "mock-token");
+
+    autopilotMock.mockRejectedValueOnce(new Error("Autopilot 500"));
+    await fullSync(db, "manual", "mock-token");
+
+    const autopilotRows = db
+      .prepare("SELECT id, group_tag, deployment_profile_name FROM autopilot_devices")
+      .all() as Array<{
+      id: string;
+      group_tag: string | null;
+      deployment_profile_name: string | null;
+    }>;
+    expect(autopilotRows).toEqual([
+      {
+        id: "ap-1",
+        group_tag: "North",
+        deployment_profile_name: "North-UD"
+      }
+    ]);
+
+    const logs = listSyncLogs(db);
+    expect(logs.some((log) => log.errors.includes("Autopilot device sync failed."))).toBe(true);
+  });
+
+  it("resets inProgress state after completing even when steps fail", async () => {
     entraMock.mockRejectedValue(new Error("Entra failed"));
 
-    await expect(fullSync(db, "manual")).rejects.toThrow("Entra failed");
+    await fullSync(db, "manual", "mock-token");
 
     const state = getSyncState();
     expect(state.inProgress).toBe(false);
     expect(state.currentSyncType).toBeNull();
     expect(state.startedAt).toBeNull();
-    expect(state.lastError).toBe("Entra failed");
+    // lastError is not set for per-step failures — only for fatal errors.
+    expect(state.lastError).toBeNull();
   });
 
-  it("continues the sync when conditional-access fails (it is best-effort)", async () => {
+  it("continues the sync when conditional-access fails (best-effort)", async () => {
     db.prepare(
       `INSERT INTO conditional_access_policies (
         id, display_name, state, conditions_json, grant_controls_json, session_controls_json, last_synced_at, raw_json
@@ -180,13 +218,11 @@ describe("fullSync — partial failure handling", () => {
     );
     caMock.mockRejectedValue(new Error("CA 403"));
 
-    await fullSync(db, "manual");
+    await fullSync(db, "manual", "mock-token");
 
     const logs = listSyncLogs(db);
     expect(logs.length).toBe(1);
-    expect(logs[0]!.errors).toContain(
-      "Conditional access sync failed; preserved previous policy snapshot."
-    );
+    expect(logs[0]!.errors).toEqual([]);
     expect(logs[0]!.completedAt).not.toBeNull();
     expect(getSyncState().lastError).toBeNull();
     const remaining = db
@@ -195,21 +231,46 @@ describe("fullSync — partial failure handling", () => {
     expect(remaining).toEqual([{ id: "ca-existing" }]);
   });
 
-  it("records compliance-sync failure and rethrows (compliance runs after initial batch)", async () => {
+  it("treats compliance sync failure as best-effort enrichment and continues", async () => {
     complianceMock.mockRejectedValue(new Error("Compliance 500"));
 
-    await expect(fullSync(db, "full")).rejects.toThrow("Compliance 500");
+    await fullSync(db, "full", "mock-token");
 
     const logs = listSyncLogs(db);
-    expect(logs[0]!.errors).toContain("Compliance 500");
+    expect(logs[0]!.errors).toEqual([]);
 
-    // The first batch of 5 must have run, and CA (which is between batches) too.
+    // All steps ran despite the compliance failure.
     expect(autopilotMock).toHaveBeenCalled();
     expect(intuneMock).toHaveBeenCalled();
     expect(entraMock).toHaveBeenCalled();
     expect(groupMock).toHaveBeenCalled();
     expect(profileMock).toHaveBeenCalled();
     expect(caMock).toHaveBeenCalled();
+    expect(complianceMock).toHaveBeenCalled();
+    expect(configProfileMock).toHaveBeenCalled();
+    expect(appMock).toHaveBeenCalled();
+  });
+
+  it("treats config and app assignment failures as best-effort enrichment", async () => {
+    configProfileMock.mockRejectedValue(new Error("Config 403"));
+    appMock.mockRejectedValue(new Error("Apps 403"));
+
+    await fullSync(db, "manual", "mock-token");
+
+    const logs = listSyncLogs(db);
+    expect(logs[0]!.errors).toEqual([]);
+    expect(logs[0]!.completedAt).not.toBeNull();
+    expect(getSyncState().lastError).toBeNull();
+  });
+
+  it("clears displayed lastError after a later successful sync", async () => {
+    intuneMock.mockRejectedValueOnce(new Error("Intune Graph 503"));
+
+    await fullSync(db, "manual", "mock-token");
+    expect(getSyncStatus(db, getSyncState()).lastError).toBe("Intune device sync failed.");
+
+    await fullSync(db, "manual", "mock-token");
+    expect(getSyncStatus(db, getSyncState()).lastError).toBeNull();
   });
 
   it("refuses to start a second sync while one is already in progress", async () => {
@@ -221,8 +282,8 @@ describe("fullSync — partial failure handling", () => {
       })
     );
 
-    const firstRun = fullSync(db, "full");
-    await expect(fullSync(db, "manual")).rejects.toThrow(/already in progress/);
+    const firstRun = fullSync(db, "full", "mock-token");
+    await expect(fullSync(db, "manual", "mock-token")).rejects.toThrow(/already in progress/);
 
     releaseFirst();
     await firstRun;
@@ -273,8 +334,8 @@ describe("fullSync — partial failure handling", () => {
         ]
       });
 
-    await fullSync(db, "manual");
-    await fullSync(db, "manual");
+    await fullSync(db, "manual", "mock-token");
+    await fullSync(db, "manual", "mock-token");
 
     const rows = db
       .prepare(

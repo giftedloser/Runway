@@ -7,7 +7,9 @@ import request from "supertest";
 // device lookup, validation), not the session/cookie machinery.
 vi.mock("../../src/server/auth/auth-middleware.js", () => ({
   requireDelegatedAuth: (_req: unknown, _res: unknown, next: () => void) => next(),
+  requireAppAccess: (_req: unknown, _res: unknown, next: () => void) => next(),
   hasValidDelegatedSession: () => false,
+  hasValidAppAccessSession: () => false,
   getDelegatedToken: () => "fake-token",
   getDelegatedUser: () => "tester@example.com"
 }));

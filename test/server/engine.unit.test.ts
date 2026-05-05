@@ -63,12 +63,12 @@ describe("ConfigMgr management agent detection", () => {
 });
 
 describe("correlation engine", () => {
-  it("matches by serial before lower-confidence fallbacks", () => {
+  it("matches by azureActiveDirectoryDeviceId before serial fallback", () => {
     const results = correlateDevices({
       autopilotRows: [
         {
           id: "auto-1",
-          serial_number: "CZC123",
+          serial_number: null,
           model: null,
           manufacturer: null,
           group_tag: "North",
@@ -77,19 +77,19 @@ describe("correlation engine", () => {
           deployment_profile_name: null,
           profile_assignment_status: null,
           deployment_mode: null,
-          entra_device_id: "entra-1",
+          entra_device_id: "aad-device-1",
           first_seen_at: null,
           first_profile_assigned_at: null,
           last_synced_at: "2026-04-06T00:00:00.000Z",
-          raw_json: JSON.stringify({ deviceId: "device-1" })
+          raw_json: JSON.stringify({ deviceId: "aad-device-1" })
         }
       ],
       intuneRows: [
         {
           id: "int-1",
           device_name: "DESKTOP-01",
-          serial_number: "czc123",
-          entra_device_id: "entra-1",
+          serial_number: null,
+          entra_device_id: "aad-device-1",
           os_version: null,
           compliance_state: null,
           enrollment_type: null,
@@ -100,15 +100,15 @@ describe("correlation engine", () => {
           autopilot_enrolled: 1,
           management_agent: null,
           last_synced_at: "2026-04-06T00:00:00.000Z",
-          raw_json: JSON.stringify({ deviceId: "device-1" })
+          raw_json: JSON.stringify({ deviceId: "aad-device-1" })
         }
       ],
       entraRows: [
         {
           id: "entra-1",
-          device_id: "device-1",
+          device_id: "aad-device-1",
           display_name: "DESKTOP-01",
-          serial_number: "CZC123",
+          serial_number: null,
           trust_type: "ServerAd",
           is_managed: 1,
           mdm_app_id: null,
@@ -121,7 +121,7 @@ describe("correlation engine", () => {
     });
 
     expect(results).toHaveLength(1);
-    expect(results[0].matchedOn).toBe("serial");
+    expect(results[0].matchedOn).toBe("entra_device_id");
     expect(results[0].matchConfidence).toBe("high");
     expect(results[0].identityConflict).toBe(false);
   });
@@ -186,9 +186,9 @@ describe("correlation engine", () => {
     // must report low/device_name because the IN↔Entra pair is name-only
     // and that is the weakest link in the chain.
     const results = correlateDevices({
-      autopilotRows: [ap({ serial: "CZC500", entra: "entra-1" })],
+      autopilotRows: [ap({ serial: "CZC500", entra: "aad-device-1" })],
       intuneRows: [intune({ serial: "CZC500", name: "KIOSK-A" })],
-      entraRows: [entra({ id: "entra-1", name: "KIOSK-A" })]
+      entraRows: [entra({ id: "entra-1", deviceId: "aad-device-1", name: "KIOSK-A" })]
     });
 
     expect(results).toHaveLength(1);
@@ -199,7 +199,7 @@ describe("correlation engine", () => {
     expect(results[0].entraRecord).not.toBeNull();
   });
 
-  it("reports medium when the only joining key is entra_device_id", () => {
+  it("reports high when the only joining key is azureActiveDirectoryDeviceId", () => {
     // AP and IN share entra_device_id E1 but have different serials. They
     // should join via entra id (medium) rather than overclaim "high via
     // serial" just because one of the records has a serial of its own.
@@ -210,7 +210,7 @@ describe("correlation engine", () => {
     });
 
     expect(results).toHaveLength(1);
-    expect(results[0].matchConfidence).toBe("medium");
+    expect(results[0].matchConfidence).toBe("high");
     expect(results[0].matchedOn).toBe("entra_device_id");
   });
 
@@ -266,9 +266,9 @@ describe("correlation engine", () => {
     // together) but their serials contradict. Old detector missed this
     // because it only compared entra_device_id across AP↔IN.
     const results = correlateDevices({
-      autopilotRows: [ap({ serial: "CZC900", entra: "entra-9" })],
+      autopilotRows: [ap({ serial: "CZC900", entra: "aad-device-9" })],
       intuneRows: [],
-      entraRows: [entra({ id: "entra-9", serial: "CZC999", name: "WS-9" })]
+      entraRows: [entra({ id: "entra-9", deviceId: "aad-device-9", serial: "CZC999", name: "WS-9" })]
     });
 
     expect(results).toHaveLength(1);
@@ -279,9 +279,9 @@ describe("correlation engine", () => {
     // Same physical device showing up with different rendered names
     // (DESKTOP-A vs desktop-a.corp.example) is legitimate, not a conflict.
     const results = correlateDevices({
-      autopilotRows: [ap({ serial: "CZC300", entra: "entra-3" })],
-      intuneRows: [intune({ serial: "CZC300", entra: "entra-3", name: "POS-A" })],
-      entraRows: [entra({ id: "entra-3", name: "pos-a.corp.example" })]
+      autopilotRows: [ap({ serial: "CZC300", entra: "aad-device-3" })],
+      intuneRows: [intune({ serial: "CZC300", entra: "aad-device-3", name: "POS-A" })],
+      entraRows: [entra({ id: "entra-3", deviceId: "aad-device-3", name: "pos-a.corp.example" })]
     });
 
     expect(results).toHaveLength(1);
@@ -302,18 +302,18 @@ describe("correlation engine", () => {
     expect(results[0].identityConflict).toBe(false);
   });
 
-  it("two-record bundle (AP+Entra) joined by entra_device_id reports medium, not high", () => {
+  it("two-record bundle (AP+Entra) joined by azureActiveDirectoryDeviceId reports high", () => {
     // Pre-fix bug: AP has a serial, so the old code reported high/serial
     // even though the AP↔Entra pair is actually joined by entra_device_id.
-    // The new code must surface medium/entra_device_id — the truth.
+    // The new code must surface high/entra_device_id — the truth.
     const results = correlateDevices({
-      autopilotRows: [ap({ serial: "CZC700", entra: "entra-7" })],
+      autopilotRows: [ap({ serial: "CZC700", entra: "aad-device-7" })],
       intuneRows: [],
-      entraRows: [entra({ id: "entra-7", name: "WS-7" })]
+      entraRows: [entra({ id: "entra-7", deviceId: "aad-device-7", name: "WS-7" })]
     });
 
     expect(results).toHaveLength(1);
-    expect(results[0].matchConfidence).toBe("medium");
+    expect(results[0].matchConfidence).toBe("high");
     expect(results[0].matchedOn).toBe("entra_device_id");
     expect(results[0].autopilotRecord).not.toBeNull();
     expect(results[0].entraRecord).not.toBeNull();

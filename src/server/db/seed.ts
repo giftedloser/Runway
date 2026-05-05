@@ -401,7 +401,7 @@ function buildMockPayload(): SnapshotPayload {
           : user;
     const intuneDeviceId = isNameJoined ? null : deviceId;
     const entraDeviceId = isNameJoined ? `${deviceId}-entra` : deviceId;
-    const intuneEntraId = isNameJoined ? null : entraId;
+    const intuneEntraId = isNameJoined ? null : deviceId;
     const intuneSerial = isNameJoined ? null : scenario.serial;
     const entraSerial = isNameJoined ? null : scenario.serial;
 
@@ -435,7 +435,7 @@ function buildMockPayload(): SnapshotPayload {
         deployment_mode:
           scenario.tag === "Kiosk" ? "selfDeploying" : "userDriven",
         entra_device_id:
-          scenario.kind === "identity_conflict" ? `${entraId}-stale` : entraId,
+          scenario.kind === "identity_conflict" ? `${deviceId}-stale` : deviceId,
         first_seen_at: isoOffset(48 + index * 2),
         first_profile_assigned_at:
           scenario.kind === "not_enrolled" ? isoOffset(6) : isoOffset(12 + index),
@@ -444,6 +444,8 @@ function buildMockPayload(): SnapshotPayload {
           id: autopilotId,
           serialNumber: scenario.serial,
           deviceId,
+          azureActiveDirectoryDeviceId:
+            scenario.kind === "identity_conflict" ? `${deviceId}-stale` : deviceId,
           model: hw.model,
           manufacturer: hw.manufacturer,
           groupTag: scenario.tag,

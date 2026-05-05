@@ -17,13 +17,13 @@ import type {
 } from "../db/types.js";
 
 export interface SnapshotPayload {
-  autopilotRows: AutopilotRow[];
-  intuneRows: IntuneRow[];
-  entraRows: EntraRow[];
-  groupRows: GroupRow[];
-  membershipRows: GroupMembershipRow[];
-  profileRows: ProfileRow[];
-  profileAssignmentRows: ProfileAssignmentRow[];
+  autopilotRows?: AutopilotRow[];
+  intuneRows?: IntuneRow[];
+  entraRows?: EntraRow[];
+  groupRows?: GroupRow[];
+  membershipRows?: GroupMembershipRow[];
+  profileRows?: ProfileRow[];
+  profileAssignmentRows?: ProfileAssignmentRow[];
   compliancePolicies?: CompliancePolicyRow[];
   deviceComplianceStates?: DeviceComplianceStateRow[];
   configProfiles?: ConfigProfileRow[];

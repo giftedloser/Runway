@@ -17,9 +17,13 @@ export function groupsRouter(db: Database.Database) {
            g.display_name,
            g.membership_rule,
            g.membership_type,
-           COUNT(gm.member_device_id) AS member_count
+           COUNT(DISTINCT gm.member_device_id) AS raw_member_count,
+           COUNT(DISTINCT ds.device_key) AS synced_member_count
          FROM groups g
          LEFT JOIN group_memberships gm ON gm.group_id = g.id
+         LEFT JOIN entra_devices ed ON ed.id = gm.member_device_id
+         LEFT JOIN device_state ds ON ds.entra_id = gm.member_device_id
+            OR ds.entra_id = ed.device_id
          GROUP BY g.id
          ORDER BY g.display_name`
       )
@@ -28,7 +32,8 @@ export function groupsRouter(db: Database.Database) {
       display_name: string;
       membership_rule: string | null;
       membership_type: string;
-      member_count: number;
+      raw_member_count: number;
+      synced_member_count: number;
     }>;
 
     // Count how many profiles target each group
@@ -52,7 +57,7 @@ export function groupsRouter(db: Database.Database) {
       groupName: g.display_name,
       membershipRule: g.membership_rule,
       membershipType: g.membership_type,
-      memberCount: g.member_count,
+      memberCount: g.synced_member_count || g.raw_member_count,
       assignedProfiles: profilesByGroup.get(g.id) ?? []
     }));
 
@@ -72,14 +77,26 @@ export function groupsRouter(db: Database.Database) {
       return;
     }
 
-    // Get members with their device state
+    const rawMemberCount = (
+      db
+        .prepare("SELECT COUNT(*) AS count FROM group_memberships WHERE group_id = ?")
+        .get(groupId) as { count: number }
+    ).count;
+
+    // Get members with their device state. Graph group memberships use the
+    // Entra object id; device_state may carry either the object id or Entra
+    // deviceId depending on which sources correlated. Bridge through
+    // entra_devices so the UI does not show empty groups for valid members.
     const members = db
       .prepare(
         `SELECT
            ds.device_key, ds.device_name, ds.serial_number, ds.overall_health, ds.group_tag,
-           ds.assigned_profile_name, ds.flag_count
+           COALESCE(ds.deployment_profile_name, ds.assigned_profile_name) AS assigned_profile_name,
+           ds.flag_count
          FROM group_memberships gm
+         LEFT JOIN entra_devices ed ON ed.id = gm.member_device_id
          JOIN device_state ds ON ds.entra_id = gm.member_device_id
+            OR ds.entra_id = ed.device_id
          WHERE gm.group_id = ?
          ORDER BY
            CASE ds.overall_health
@@ -116,7 +133,7 @@ export function groupsRouter(db: Database.Database) {
       groupName: group.display_name,
       membershipRule: group.membership_rule,
       membershipType: group.membership_type,
-      memberCount: members.length,
+      memberCount: members.length || rawMemberCount,
       assignedProfiles: profiles.map((p) => ({
         profileId: p.id,
         profileName: p.display_name,

@@ -34,6 +34,8 @@ interface DeviceStateRow {
   device_name: string | null;
   property_label: string | null;
   group_tag: string | null;
+  deployment_profile_id: string | null;
+  deployment_profile_name: string | null;
   assigned_profile_name: string | null;
   autopilot_assigned_user_upn: string | null;
   intune_primary_user_upn: string | null;
@@ -93,7 +95,21 @@ export function loadStateEngineInput(db: Database.Database) {
       property_label: string;
     }>,
     previousStates: db
-      .prepare("SELECT device_key, serial_number, compliance_state FROM device_state")
+      .prepare(
+        `SELECT device_key, serial_number, compliance_state
+           FROM device_state
+         UNION ALL
+         SELECT h.device_key, h.serial_number, h.compliance_state
+           FROM device_state_history h
+          WHERE h.computed_at = (
+                  SELECT MAX(h2.computed_at)
+                    FROM device_state_history h2
+                   WHERE h2.device_key = h.device_key
+                )
+            AND NOT EXISTS (
+                  SELECT 1 FROM device_state d WHERE d.device_key = h.device_key
+                )`
+      )
       .all() as Array<{
       device_key: string;
       serial_number: string | null;
@@ -107,9 +123,9 @@ export function replaceDeviceStates(
   rows: Array<Record<string, unknown> & { device_key: string }>
 ) {
   const insert = db.prepare(`
-    INSERT INTO device_state (
+    INSERT OR REPLACE INTO device_state (
       device_key, serial_number, autopilot_id, intune_id, entra_id, device_name, property_label,
-      group_tag, assigned_profile_name, autopilot_assigned_user_upn, intune_primary_user_upn,
+      group_tag, deployment_profile_id, deployment_profile_name, assigned_profile_name, autopilot_assigned_user_upn, intune_primary_user_upn,
       last_checkin_at, trust_type, has_autopilot_record, has_intune_record, has_entra_record,
       has_profile_assigned, profile_assignment_status, is_in_correct_group, deployment_mode,
       deployment_mode_mismatch, hybrid_join_configured, hybrid_join_risk, user_assignment_match,
@@ -118,7 +134,7 @@ export function replaceDeviceStates(
       matched_on, identity_conflict, active_rule_ids, computed_at
     ) VALUES (
       @device_key, @serial_number, @autopilot_id, @intune_id, @entra_id, @device_name, @property_label,
-      @group_tag, @assigned_profile_name, @autopilot_assigned_user_upn, @intune_primary_user_upn,
+      @group_tag, @deployment_profile_id, @deployment_profile_name, @assigned_profile_name, @autopilot_assigned_user_upn, @intune_primary_user_upn,
       @last_checkin_at, @trust_type, @has_autopilot_record, @has_intune_record, @has_entra_record,
       @has_profile_assigned, @profile_assignment_status, @is_in_correct_group, @deployment_mode,
       @deployment_mode_mismatch, @hybrid_join_configured, @hybrid_join_risk, @user_assignment_match,
@@ -130,8 +146,8 @@ export function replaceDeviceStates(
 
   const insertHistory = db.prepare(`
     INSERT OR REPLACE INTO device_state_history (
-      device_key, serial_number, computed_at, overall_health, active_flags
-    ) VALUES (?, ?, ?, ?, ?)
+      device_key, serial_number, compliance_state, computed_at, overall_health, active_flags
+    ) VALUES (?, ?, ?, ?, ?, ?)
   `);
 
   // Only write a history row when the (health, flags) state hash actually
@@ -158,6 +174,7 @@ export function replaceDeviceStates(
         insertHistory.run(
           row.device_key,
           row.serial_number ?? null,
+          row.compliance_state ?? null,
           row.computed_at,
           row.overall_health,
           row.active_flags
@@ -192,10 +209,13 @@ function parseDeviceListItem(row: DeviceStateRow, ruleLookup?: RuleLookup): Devi
     deviceName: row.device_name,
     serialNumber: row.serial_number,
     propertyLabel: row.property_label,
+    groupTag: row.group_tag,
     health: row.overall_health,
     flags: safeJsonParse<FlagCode[]>(row.active_flags, []),
     flagCount: row.flag_count,
-    assignedProfileName: row.assigned_profile_name,
+    deploymentProfileId: row.deployment_profile_id,
+    deploymentProfileName: row.deployment_profile_name,
+    assignedProfileName: row.deployment_profile_name ?? row.assigned_profile_name,
     deploymentMode: row.deployment_mode,
     lastCheckinAt: row.last_checkin_at,
     complianceState: row.compliance_state,
@@ -255,7 +275,7 @@ export function listDeviceStates(
   }
 
   if (filters.profile) {
-    where.push("assigned_profile_name = @profile");
+    where.push("(assigned_profile_name = @profile OR deployment_profile_name = @profile)");
     params.profile = filters.profile;
   }
 

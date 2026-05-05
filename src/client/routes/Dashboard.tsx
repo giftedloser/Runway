@@ -119,8 +119,7 @@ export function DashboardPage() {
     },
   ];
 
-  const setupIncomplete =
-    settings.data?.tagConfig.length === 0 || dashboard.data.lastSync === null;
+  const setupIncomplete = dashboard.data.lastSync === null;
 
   return (
     <div className="space-y-5">
@@ -135,8 +134,7 @@ export function DashboardPage() {
               Finish first-run setup
             </span>
             <span className="ml-2 text-[var(--pc-text-muted)]">
-              Configure Graph credentials, run an initial sync, and add at least
-              one tag mapping.
+              Configure Graph credentials and run an initial sync.
             </span>
           </span>
           <ChevronRight className="hidden h-3.5 w-3.5 text-[var(--pc-text-muted)] sm:block" />

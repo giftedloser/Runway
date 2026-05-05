@@ -1,8 +1,4 @@
-import fs from "node:fs";
-
-import { ConfidentialClientApplication } from "@azure/msal-node";
-
-import { config } from "../config.js";
+import { logger } from "../logger.js";
 
 type ApiVersion = "v1.0" | "beta";
 
@@ -11,54 +7,38 @@ const graphBase = {
   beta: "https://graph.microsoft.com/beta"
 };
 
-function buildAuth() {
-  const base = {
-    clientId: config.AZURE_CLIENT_ID ?? "",
-    authority: `https://login.microsoftonline.com/${config.AZURE_TENANT_ID}`
-  };
-  if (config.graphAuthMode === "certificate") {
-    return {
-      ...base,
-      clientCertificate: {
-        thumbprint: config.AZURE_CLIENT_CERT_THUMBPRINT!,
-        privateKey: fs.readFileSync(config.AZURE_CLIENT_CERT_PATH!, "utf8")
-      }
-    };
-  }
-  return { ...base, clientSecret: config.AZURE_CLIENT_SECRET ?? "" };
-}
-
 export class GraphClient {
-  private msal = new ConfidentialClientApplication({ auth: buildAuth() });
+  private delegatedToken: string;
+
+  constructor(delegatedToken: string) {
+    if (!delegatedToken) {
+      throw new Error(
+        "GraphClient requires a delegated access token. " +
+          "Pass the session's delegatedToken — never call new GraphClient() without one."
+      );
+    }
+    this.delegatedToken = delegatedToken;
+  }
 
   async getToken() {
-    const result = await this.msal.acquireTokenByClientCredential({
-      scopes: ["https://graph.microsoft.com/.default"]
-    });
-
-    if (!result?.accessToken) {
-      throw new Error("Unable to acquire Microsoft Graph token.");
-    }
-
-    return result.accessToken;
+    return this.delegatedToken;
   }
 
   async requestJson<T>(path: string, version: ApiVersion = "v1.0", attempt = 0): Promise<T> {
     const token = await this.getToken();
+    const fullUrl = path.startsWith("http") ? path : `${graphBase[version]}${path}`;
+    logger.info({ url: fullUrl, attempt }, "[graph] → GET");
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15000);
 
     try {
-      const response = await fetch(
-        path.startsWith("http") ? path : `${graphBase[version]}${path}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: "application/json"
-          },
-          signal: controller.signal
-        }
-      );
+      const response = await fetch(fullUrl, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json"
+        },
+        signal: controller.signal
+      });
 
       if ((response.status === 429 || response.status >= 500) && attempt < 3) {
         const raw = Number(response.headers.get("Retry-After") ?? "2");
@@ -72,6 +52,8 @@ export class GraphClient {
       }
 
       if (!response.ok) {
+        const body = await response.text().catch(() => "");
+        logger.error({ url: fullUrl, status: response.status, body }, "[graph] ✗ response");
         throw new Error(`Graph request failed: ${response.status} ${response.statusText}`);
       }
 

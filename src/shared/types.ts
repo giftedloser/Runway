@@ -69,9 +69,12 @@ export interface DeviceListItem {
   deviceName: string | null;
   serialNumber: string | null;
   propertyLabel: string | null;
+  groupTag: string | null;
   health: HealthLevel;
   flags: FlagCode[];
   flagCount: number;
+  deploymentProfileId: string | null;
+  deploymentProfileName: string | null;
   assignedProfileName: string | null;
   deploymentMode: string | null;
   lastCheckinAt: string | null;

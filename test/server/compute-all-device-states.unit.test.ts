@@ -142,6 +142,11 @@ function snapshot(overrides: Partial<SnapshotPayload> = {}): SnapshotPayload {
 interface DeviceStateRow {
   device_key: string;
   serial_number: string | null;
+  group_tag: string | null;
+  deployment_profile_id: string | null;
+  deployment_profile_name: string | null;
+  assigned_profile_name: string | null;
+  matched_on: string;
   overall_health: string;
   active_flags: string;
   flag_count: number;
@@ -149,7 +154,11 @@ interface DeviceStateRow {
 
 function readStates(): Array<DeviceStateRow & { flags: FlagCode[] }> {
   const rows = db
-    .prepare("SELECT device_key, serial_number, overall_health, active_flags, flag_count FROM device_state")
+    .prepare(
+      `SELECT device_key, serial_number, group_tag, deployment_profile_id, deployment_profile_name,
+              assigned_profile_name, matched_on, overall_health, active_flags, flag_count
+         FROM device_state`
+    )
     .all() as DeviceStateRow[];
   return rows.map((r) => ({ ...r, flags: JSON.parse(r.active_flags) as FlagCode[] }));
 }
@@ -577,6 +586,57 @@ describe("computeAllDeviceStates — flag detection", () => {
     expect(states).toHaveLength(1);
     expect(states[0].flags).toEqual([]);
     expect(states[0].overall_health).toBe("healthy");
+    expect(states[0].group_tag).toBe("North");
+    expect(states[0].deployment_profile_id).toBe("prof-north");
+    expect(states[0].deployment_profile_name).toBe("North-UD");
+    expect(states[0].assigned_profile_name).toBe("North-UD");
+  });
+
+  it("joins Autopilot to Entra and Intune by azureActiveDirectoryDeviceId before serial", () => {
+    persistSnapshot(
+      db,
+      snapshot({
+        autopilotRows: [
+          autopilot({
+            id: "ap-right",
+            serial_number: "STALE-SERIAL",
+            group_tag: "AAD",
+            deployment_profile_id: "prof-aad",
+            deployment_profile_name: "AAD-Profile",
+            entra_device_id: "aad-device-guid"
+          }),
+          autopilot({
+            id: "ap-wrong-serial",
+            serial_number: "SN-LIVE",
+            group_tag: "SERIAL",
+            deployment_profile_id: "prof-serial",
+            deployment_profile_name: "Serial-Profile",
+            entra_device_id: "other-aad-device-guid"
+          })
+        ],
+        intuneRows: [
+          intune({
+            id: "int-live",
+            serial_number: "SN-LIVE",
+            entra_device_id: "aad-device-guid"
+          })
+        ],
+        entraRows: [
+          entra({
+            id: "entra-object-live",
+            device_id: "aad-device-guid",
+            serial_number: "SN-LIVE"
+          })
+        ]
+      })
+    );
+
+    computeAllDeviceStates(db);
+    const liveState = readStates().find((state) => state.device_key === "ap:ap-right");
+    expect(liveState?.group_tag).toBe("AAD");
+    expect(liveState?.deployment_profile_id).toBe("prof-aad");
+    expect(liveState?.deployment_profile_name).toBe("AAD-Profile");
+    expect(liveState?.matched_on).toBe("entra_device_id");
   });
 
   it("computes states for multiple devices in a single pass", () => {

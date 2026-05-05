@@ -6,7 +6,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // The dedicated 401-guard assertions live in provisioning-groups.api.test.ts.
 vi.mock("../../src/server/auth/auth-middleware.js", () => ({
   requireDelegatedAuth: (_req: unknown, _res: unknown, next: () => void) => next(),
+  requireAppAccess: (_req: unknown, _res: unknown, next: () => void) => next(),
   hasValidDelegatedSession: () => true,
+  hasValidAppAccessSession: () => false,
   getDelegatedToken: () => "test-token",
   getDelegatedUser: () => "test-user"
 }));

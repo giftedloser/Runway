@@ -1,4 +1,5 @@
 import { Link, useRouterState, useSearch } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import {
   Building2,
   CircleAlert,
@@ -28,6 +29,8 @@ import {
   type Theme
 } from "../../hooks/useTheme.js";
 import { cn } from "../../lib/utils.js";
+import { apiRequest } from "../../lib/api.js";
+import type { TagInventoryItem } from "../provisioning/types.js";
 import { requestCommandPaletteOpen } from "../command/events.js";
 import { HelpTooltip } from "../shared/HelpTooltip.js";
 import { AuthIndicator } from "./AuthIndicator.js";
@@ -136,6 +139,10 @@ export function Sidebar() {
     select: (state) => state.location.pathname,
   });
   const settings = useSettings();
+  const tagInventory = useQuery({
+    queryKey: ["provisioning-tags"],
+    queryFn: () => apiRequest<TagInventoryItem[]>("/api/provisioning/tags")
+  });
   const firstRun = useFirstRunStatus();
   const [, , , setTheme] = useTheme();
   const setAppSetting = useSetAppSetting();
@@ -157,13 +164,13 @@ export function Sidebar() {
     );
   };
 
-  // Properties pulled from tag_config so each casino's leader can jump
-  // straight to "their" devices. Deduped because the same property label
-  // may map to multiple group tags.
+  // Properties come from currently discovered tags, not raw tag_config.
+  // This prevents stale seeded/mock mappings from lingering in the sidebar
+  // after a real tenant has been configured.
   const properties = (() => {
-    if (!settings.data) return [] as string[];
+    if (!tagInventory.data) return [] as string[];
     const seen = new Set<string>();
-    for (const tag of settings.data.tagConfig) {
+    for (const tag of tagInventory.data) {
       if (tag.propertyLabel && !seen.has(tag.propertyLabel)) {
         seen.add(tag.propertyLabel);
       }

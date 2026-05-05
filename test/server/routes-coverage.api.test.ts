@@ -7,7 +7,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // assertions for these routes live in provisioning-groups.api.test.ts instead.
 vi.mock("../../src/server/auth/auth-middleware.js", () => ({
   requireDelegatedAuth: (_req: unknown, _res: unknown, next: () => void) => next(),
+  requireAppAccess: (_req: unknown, _res: unknown, next: () => void) => next(),
   hasValidDelegatedSession: () => true,
+  hasValidAppAccessSession: () => false,
   getDelegatedToken: () => "test-token",
   getDelegatedUser: () => "test-user"
 }));
@@ -63,6 +65,37 @@ describe("GET /api/profiles", () => {
       expect(typeof profile.assignedDevices).toBe("number");
     }
   });
+
+  it("includes profiles discovered from Autopilot devices when profile cache is incomplete", async () => {
+    db.prepare("DELETE FROM autopilot_profiles").run();
+    db.prepare("DELETE FROM autopilot_profile_assignments").run();
+    db.prepare("DELETE FROM device_state").run();
+    db.prepare(
+      `INSERT INTO autopilot_devices (
+        id, serial_number, group_tag, deployment_profile_id, deployment_profile_name, deployment_mode, last_synced_at, raw_json
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+    ).run(
+      "ap-profile-fallback",
+      "SN-PROFILE-FALLBACK",
+      "FallbackTag",
+      "prof-fallback",
+      "AP-Fallback",
+      "userDriven",
+      "2026-05-05T15:00:00.000Z",
+      "{}"
+    );
+
+    const app = createApp(db);
+    const res = await request(app).get("/api/profiles").expect(200);
+
+    expect(res.body).toContainEqual(
+      expect.objectContaining({
+        profileId: "prof-fallback",
+        profileName: "AP-Fallback",
+        deploymentMode: "userDriven"
+      })
+    );
+  });
 });
 
 describe("GET /api/profiles/:profileId", () => {
@@ -117,6 +150,77 @@ describe("GET /api/groups/:groupId", () => {
       expect(typeof member.deviceKey).toBe("string");
       expect(typeof member.health).toBe("string");
     }
+  });
+
+  it("bridges group membership object ids to device_state Entra device ids", async () => {
+    db.prepare("DELETE FROM group_memberships").run();
+    db.prepare("DELETE FROM groups").run();
+    db.prepare("DELETE FROM entra_devices").run();
+    db.prepare("DELETE FROM device_state").run();
+    db.prepare(
+      `INSERT INTO groups (
+        id, display_name, membership_rule, membership_rule_processing_state, membership_type, last_synced_at, raw_json
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)`
+    ).run("group-object-bridge", "Object Bridge Group", null, null, "Assigned", "2026-05-05T15:00:00.000Z", "{}");
+    db.prepare(
+      `INSERT INTO entra_devices (
+        id, device_id, display_name, serial_number, trust_type, is_managed, mdm_app_id,
+        registration_datetime, device_physical_ids, last_synced_at, raw_json
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).run(
+      "entra-object-1",
+      "entra-device-1",
+      "BRIDGE-DEVICE",
+      "SN-BRIDGE",
+      "AzureAd",
+      1,
+      null,
+      null,
+      "[]",
+      "2026-05-05T15:00:00.000Z",
+      "{}"
+    );
+    db.prepare(
+      "INSERT INTO group_memberships (group_id, member_device_id, last_synced_at) VALUES (?, ?, ?)"
+    ).run("group-object-bridge", "entra-object-1", "2026-05-05T15:00:00.000Z");
+    db.prepare(
+      `INSERT INTO device_state (
+        device_key, serial_number, entra_id, device_name, property_label,
+        group_tag, deployment_profile_name, assigned_profile_name,
+        has_autopilot_record, has_intune_record, has_entra_record, has_profile_assigned,
+        is_in_correct_group, deployment_mode_mismatch, hybrid_join_configured,
+        hybrid_join_risk, provisioning_stalled, tag_mismatch,
+        assignment_path, assignment_chain_complete, active_flags, flag_count,
+        overall_health, diagnosis, match_confidence, matched_on, computed_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, ?, 1, ?, 0, ?, ?, ?, ?, ?)`
+    ).run(
+      "ap:bridge",
+      "SN-BRIDGE",
+      "entra-device-1",
+      "BRIDGE-DEVICE",
+      "Bridge",
+      "BridgeTag",
+      "Bridge Profile",
+      "Bridge Profile",
+      "{}",
+      "[]",
+      "healthy",
+      "ok",
+      "high",
+      "entra_device_id",
+      "2026-05-05T15:00:00.000Z"
+    );
+
+    const app = createApp(db);
+    const res = await request(app).get("/api/groups/group-object-bridge").expect(200);
+
+    expect(res.body.memberCount).toBe(1);
+    expect(res.body.members).toEqual([
+      expect.objectContaining({
+        deviceKey: "ap:bridge",
+        assignedProfileName: "Bridge Profile"
+      })
+    ]);
   });
 
   it("returns 404 for unknown group", async () => {

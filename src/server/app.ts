@@ -84,6 +84,7 @@ export function createApp(db: Database.Database) {
   // come from an allowed Origin so a stray browser tab on the same box
   // cannot pivot off the user's cookies.
   app.use("/api", requireLocalAccess);
+  app.use("/api/settings", settingsRouter(db));
   if (config.isAppAccessRequired) {
     app.use("/api", requireAppAccess);
   }
@@ -93,7 +94,6 @@ export function createApp(db: Database.Database) {
   app.use("/api/groups", groupsRouter(db));
   app.use("/api/graph", graphRouter());
   app.use("/api/sync", syncRouter(db));
-  app.use("/api/settings", settingsRouter(db));
   app.use("/api/setup", setupRouter(db));
   app.use("/api/rules", rulesRouter(db));
   app.use("/api/user-views", userViewsRouter(db));

@@ -1,6 +1,16 @@
 import Database from "better-sqlite3";
 import request from "supertest";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("../../src/server/auth/auth-middleware.js", async () => {
+  const actual = await vi.importActual<typeof import("../../src/server/auth/auth-middleware.js")>(
+    "../../src/server/auth/auth-middleware.js"
+  );
+  return {
+    ...actual,
+    requireAppAccess: (_req: unknown, _res: unknown, next: () => void) => next()
+  };
+});
 
 import { createApp } from "../../src/server/app.js";
 import { runMigrations } from "../../src/server/db/migrate.js";
@@ -51,6 +61,35 @@ describe("GET /api/provisioning/tags", () => {
     expect(unmapped).toBeDefined();
     expect(unmapped.configured).toBe(false);
     expect(unmapped.propertyLabel).toBeNull();
+  });
+
+  it("falls back to Autopilot rows when computed device_state has not carried the tag yet", async () => {
+    db.prepare("DELETE FROM device_state").run();
+    db.prepare(
+      `INSERT INTO autopilot_devices (
+        id, serial_number, group_tag, deployment_profile_id, deployment_profile_name, last_synced_at, raw_json
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)`
+    ).run(
+      "ap-fallback",
+      "SN-FALLBACK",
+      "FallbackTag",
+      "prof-fallback",
+      "AP-Fallback",
+      "2026-05-05T15:00:00.000Z",
+      "{}"
+    );
+
+    const app = createApp(db);
+    const res = await request(app).get("/api/provisioning/tags").expect(200);
+
+    const fallback = res.body.find((tag: { groupTag: string }) => tag.groupTag === "FallbackTag");
+    expect(fallback).toMatchObject({
+      groupTag: "FallbackTag",
+      deviceCount: 1,
+      lastSeenAt: "2026-05-05T15:00:00.000Z",
+      configured: false,
+      propertyLabel: null
+    });
   });
 });
 

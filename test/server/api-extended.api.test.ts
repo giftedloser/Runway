@@ -1,6 +1,16 @@
 import Database from "better-sqlite3";
 import request from "supertest";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("../../src/server/auth/auth-middleware.js", async () => {
+  const actual = await vi.importActual<typeof import("../../src/server/auth/auth-middleware.js")>(
+    "../../src/server/auth/auth-middleware.js"
+  );
+  return {
+    ...actual,
+    requireAppAccess: (_req: unknown, _res: unknown, next: () => void) => next()
+  };
+});
 
 import { createApp } from "../../src/server/app.js";
 import { runMigrations } from "../../src/server/db/migrate.js";

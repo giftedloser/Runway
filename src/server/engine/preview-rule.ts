@@ -26,6 +26,8 @@ interface PreviewRow {
   device_name: string | null;
   property_label: string | null;
   group_tag: string | null;
+  deployment_profile_id: string | null;
+  deployment_profile_name: string | null;
   assigned_profile_name: string | null;
   autopilot_assigned_user_upn: string | null;
   intune_primary_user_upn: string | null;
@@ -82,10 +84,13 @@ function rowToListItem(row: PreviewRow): DeviceListItem {
     deviceName: row.device_name,
     serialNumber: row.serial_number,
     propertyLabel: row.property_label,
+    groupTag: row.group_tag,
     health: row.overall_health,
     flags: safeJsonParse<FlagCode[]>(row.active_flags, []),
     flagCount: row.flag_count,
-    assignedProfileName: row.assigned_profile_name,
+    deploymentProfileId: row.deployment_profile_id,
+    deploymentProfileName: row.deployment_profile_name,
+    assignedProfileName: row.deployment_profile_name ?? row.assigned_profile_name,
     deploymentMode: row.deployment_mode,
     lastCheckinAt: row.last_checkin_at,
     complianceState: row.compliance_state,
@@ -108,7 +113,8 @@ export function previewRule(
   const rows = db
     .prepare(
       `SELECT d.device_key, d.serial_number, d.device_name, d.property_label,
-              d.group_tag, d.assigned_profile_name, d.autopilot_assigned_user_upn,
+              d.group_tag, d.deployment_profile_id, d.deployment_profile_name,
+              d.assigned_profile_name, d.autopilot_assigned_user_upn,
               d.intune_primary_user_upn, d.last_checkin_at, d.trust_type,
               d.deployment_mode, d.compliance_state, d.profile_assignment_status,
               d.has_autopilot_record, d.has_intune_record, d.has_entra_record,

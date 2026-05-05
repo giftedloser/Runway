@@ -31,7 +31,7 @@ function nextFlagsFor(row: TagPreviewRow, record: TagConfigRecord) {
   const hasExpectedGroups = record.expectedGroupNames.length > 0;
   const nextInTargetGroup = expectedGroupMatched(path, record.expectedGroupNames);
   const nextProfileMatches = expectedProfileMatched(
-    row.assigned_profile_name,
+    row.deployment_profile_name ?? row.assigned_profile_name,
     record.expectedProfileNames
   );
   const nextTagMismatch = !nextProfileMatches || !nextInTargetGroup;
@@ -56,6 +56,7 @@ type TagPreviewRow = {
   device_name: string | null;
   serial_number: string | null;
   property_label: string | null;
+  deployment_profile_name: string | null;
   assigned_profile_name: string | null;
   active_flags: string;
   assignment_path: string;
@@ -68,7 +69,7 @@ export function previewTagConfig(
 ): TagConfigPreviewResponse {
   const rows = db
     .prepare(
-      `SELECT device_key, device_name, serial_number, property_label, assigned_profile_name,
+      `SELECT device_key, device_name, serial_number, property_label, deployment_profile_name, assigned_profile_name,
               active_flags, assignment_path, has_autopilot_record
          FROM device_state
         WHERE group_tag = ?
@@ -109,7 +110,7 @@ export function previewTagConfig(
         deviceKey: row.device_key,
         deviceName: row.device_name,
         serialNumber: row.serial_number,
-        assignedProfileName: row.assigned_profile_name,
+        assignedProfileName: row.deployment_profile_name ?? row.assigned_profile_name,
         currentPropertyLabel: row.property_label,
         nextPropertyLabel: record.propertyLabel,
         currentFlags: beforeFlags,

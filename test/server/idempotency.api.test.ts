@@ -9,6 +9,7 @@ vi.mock("../../src/server/auth/auth-middleware.js", async () => {
   return {
     ...actual,
     requireDelegatedAuth: (_req: unknown, _res: unknown, next: () => void) => next(),
+    requireAppAccess: (_req: unknown, _res: unknown, next: () => void) => next(),
     getDelegatedToken: () => "test-token",
     getDelegatedUser: () => "test-admin"
   };

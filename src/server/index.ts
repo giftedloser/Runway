@@ -32,11 +32,18 @@ async function bootstrap() {
     .count;
   const appSettings = getAppSettingValues(db);
 
-  // First-run seed/sync. fullSync owns the mock-vs-real branching now —
-  // we just trigger it once here when device_state is empty.
-  if (stateCount === 0 && appSettings.syncOnLaunch && !appSettings.syncPaused) {
-    fullSync(db, "full").catch((error) => {
-      logger.error({ err: error }, "Initial sync/seed failed.");
+  // First-run mock seeding: when Graph is not configured and the DB
+  // is empty, fullSync can seed mock data. No Graph calls happen in
+  // this path, so no delegated token is needed. Real Graph syncs are
+  // always triggered from the UI (POST /api/sync) after the admin
+  // signs in, which supplies the session's delegated token.
+  if (stateCount === 0 && !config.isGraphConfigured && appSettings.syncOnLaunch && !appSettings.syncPaused) {
+    // Mock-only seed: no Graph calls happen in this path, but fullSync
+    // requires a delegatedToken parameter. Pass a placeholder — it is
+    // never used because GraphClient is only instantiated when
+    // isGraphConfigured is true.
+    fullSync(db, "full", "mock-token").catch((error) => {
+      logger.error({ err: error }, "Initial mock seed failed.");
     });
   }
 

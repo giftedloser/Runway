@@ -14,10 +14,12 @@ describe("requireLocalAccess gate", () => {
     process.env.NODE_ENV = "production";
     process.env.SESSION_SECRET = "long-test-session-secret-1234567890abcdef";
     process.env.RUNWAY_DESKTOP_TOKEN = "x".repeat(40);
-    delete process.env.AZURE_TENANT_ID;
-    delete process.env.AZURE_CLIENT_ID;
-    delete process.env.AZURE_CLIENT_SECRET;
-    delete process.env.APP_ACCESS_MODE;
+    process.env.AZURE_TENANT_ID = "";
+    process.env.AZURE_CLIENT_ID = "";
+    process.env.AZURE_CLIENT_SECRET = "";
+    process.env.AZURE_CLIENT_CERT_PATH = "";
+    process.env.AZURE_CLIENT_CERT_THUMBPRINT = "";
+    process.env.APP_ACCESS_MODE = "disabled";
 
     db = new Database(":memory:");
     const { runMigrations } = await import("../../src/server/db/migrate.js");

@@ -56,7 +56,7 @@ export function hasValidAppAccessSession(request: Request): boolean {
 }
 
 export function requireAppAccess(request: Request, response: Response, next: NextFunction) {
-  if (!hasValidAppAccessSession(request)) {
+  if (!hasValidAppAccessSession(request) && !hasValidDelegatedSession(request)) {
     response.status(401).json({ message: "Runway Entra sign-in required." });
     return;
   }
