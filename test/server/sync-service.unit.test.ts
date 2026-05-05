@@ -113,6 +113,7 @@ beforeEach(() => {
   state.inProgress = false;
   state.currentSyncType = null;
   state.startedAt = null;
+  state.currentLogId = null;
   state.lastError = null;
 });
 
@@ -370,5 +371,39 @@ describe("fullSync — partial failure handling", () => {
     expect(complianceMock).not.toHaveBeenCalled();
     expect(configProfileMock).not.toHaveBeenCalled();
     expect(appMock).not.toHaveBeenCalled();
+  });
+
+  it("marks abandoned sync logs as interrupted when no sync is actually running", () => {
+    db.prepare(
+      "INSERT INTO sync_log (sync_type, started_at, errors) VALUES (?, ?, '[]')"
+    ).run("manual", "2026-05-05T10:00:00.000Z");
+
+    const status = getSyncStatus(db, getSyncState());
+
+    expect(status.inProgress).toBe(false);
+    expect(status.logs[0]!.completedAt).not.toBeNull();
+    expect(status.logs[0]!.errors).toEqual(["Sync was interrupted before completion."]);
+    expect(status.lastError).toBe("Sync was interrupted before completion.");
+  });
+
+  it("keeps the active sync log open while closing older abandoned rows", () => {
+    db.prepare(
+      "INSERT INTO sync_log (sync_type, started_at, errors) VALUES (?, ?, '[]')"
+    ).run("manual", "2026-05-05T10:00:00.000Z");
+    const active = db.prepare(
+      "INSERT INTO sync_log (sync_type, started_at, errors) VALUES (?, ?, '[]')"
+    ).run("manual", "2026-05-05T10:05:00.000Z");
+    const state = getSyncState();
+    state.inProgress = true;
+    state.currentSyncType = "manual";
+    state.startedAt = "2026-05-05T10:05:00.000Z";
+    state.currentLogId = Number(active.lastInsertRowid);
+
+    const status = getSyncStatus(db, state);
+
+    expect(status.logs[0]!.id).toBe(Number(active.lastInsertRowid));
+    expect(status.logs[0]!.completedAt).toBeNull();
+    expect(status.logs[1]!.completedAt).not.toBeNull();
+    expect(status.logs[1]!.errors).toEqual(["Sync was interrupted before completion."]);
   });
 });

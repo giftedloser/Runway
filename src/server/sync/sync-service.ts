@@ -1,7 +1,7 @@
 import type Database from "better-sqlite3";
 
 import { logger } from "../logger.js";
-import { createSyncLog, completeSyncLog } from "../db/queries/sync.js";
+import { createSyncLog, completeSyncLog, markInterruptedSyncLogs } from "../db/queries/sync.js";
 import { computeAllDeviceStates } from "../engine/compute-all-device-states.js";
 import { config } from "../config.js";
 import { seedMockData } from "../db/seed.js";
@@ -23,6 +23,7 @@ const state = {
   inProgress: false,
   currentSyncType: null as "full" | "manual" | null,
   startedAt: null as string | null,
+  currentLogId: null as number | null,
   lastError: null as string | null
 };
 
@@ -42,9 +43,12 @@ export async function fullSync(
   state.inProgress = true;
   state.currentSyncType = syncType;
   state.startedAt = new Date().toISOString();
+  state.currentLogId = null;
   state.lastError = null;
 
+  markInterruptedSyncLogs(db);
   const log = createSyncLog(db, syncType);
+  state.currentLogId = log.id;
 
   try {
     if (!config.isGraphConfigured) {
@@ -216,6 +220,7 @@ export async function fullSync(
     state.inProgress = false;
     state.currentSyncType = null;
     state.startedAt = null;
+    state.currentLogId = null;
   }
 }
 

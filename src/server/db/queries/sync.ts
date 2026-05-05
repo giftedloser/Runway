@@ -11,8 +11,23 @@ const NON_BLOCKING_SYNC_MESSAGES = new Set([
   "App assignment sync failed."
 ]);
 
+const INTERRUPTED_SYNC_MESSAGE = "Sync was interrupted before completion.";
+
 function visibleSyncErrors(errors: string): string[] {
   return asArray(errors).filter((error) => !NON_BLOCKING_SYNC_MESSAGES.has(error));
+}
+
+export function markInterruptedSyncLogs(db: Database.Database, activeLogId: number | null = null) {
+  const errors = JSON.stringify([INTERRUPTED_SYNC_MESSAGE]);
+
+  if (activeLogId !== null) {
+    db.prepare(
+      "UPDATE sync_log SET completed_at = started_at, errors = ? WHERE completed_at IS NULL AND id != ?"
+    ).run(errors, activeLogId);
+    return;
+  }
+
+  db.prepare("UPDATE sync_log SET completed_at = started_at, errors = ? WHERE completed_at IS NULL").run(errors);
 }
 
 export function createSyncLog(db: Database.Database, syncType: "full" | "manual") {
@@ -70,9 +85,12 @@ export function getSyncStatus(
     currentSyncType: "full" | "manual" | null;
     startedAt: string | null;
     lastError: string | null;
+    currentLogId?: number | null;
   },
   options: { canTriggerManualSync?: boolean } = {}
 ): SyncStatusResponse {
+  markInterruptedSyncLogs(db, syncState.inProgress ? syncState.currentLogId ?? null : null);
+
   const logs = listSyncLogs(db);
   const latestComplete = logs.find((entry) => entry.completedAt);
   const latestError = latestComplete?.errors[0] ?? null;
