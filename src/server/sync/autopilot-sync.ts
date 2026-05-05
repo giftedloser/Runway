@@ -27,11 +27,22 @@ export async function syncAutopilotDevices(client: GraphClient): Promise<Snapsho
     );
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    if (message.includes("500")) {
-      logger.warn({ err: error }, "[sync] Autopilot endpoint returned 500; returning empty result (tenant may have no Autopilot data).");
-      return [];
+    if (message.includes("400") || message.includes("Bad Request")) {
+      logger.warn(
+        { err: error },
+        "[sync] Autopilot expanded query failed; retrying without deploymentProfile expansion."
+      );
+      rows = await client.getAllPages<GraphAutopilotDevice>(
+        "/deviceManagement/windowsAutopilotDeviceIdentities?$select=id,serialNumber,model,manufacturer,groupTag,userPrincipalName,azureActiveDirectoryDeviceId",
+        "beta"
+      );
+    } else {
+      if (message.includes("500")) {
+        logger.warn({ err: error }, "[sync] Autopilot endpoint returned 500; returning empty result (tenant may have no Autopilot data).");
+        return [];
+      }
+      throw error;
     }
-    throw error;
   }
   const now = new Date().toISOString();
 

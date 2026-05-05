@@ -159,13 +159,37 @@ export function devicesForProvisioningTag(
     compliance_state: string | null;
   }>;
 
-  return rows.map((row) => ({
-    deviceKey: row.device_key,
-    deviceName: row.device_name,
+  if (rows.length > 0) {
+    return rows.map((row) => ({
+      deviceKey: row.device_key,
+      deviceName: row.device_name,
+      serialNumber: row.serial_number,
+      lastSyncAt: row.last_sync_at,
+      health: row.overall_health,
+      complianceState: row.compliance_state
+    }));
+  }
+
+  const autopilotRows = db
+    .prepare(
+      `SELECT id, serial_number, last_synced_at
+       FROM autopilot_devices
+       WHERE group_tag = ?
+       ORDER BY COALESCE(serial_number, id) COLLATE NOCASE ASC`
+    )
+    .all(groupTag) as Array<{
+    id: string;
+    serial_number: string | null;
+    last_synced_at: string | null;
+  }>;
+
+  return autopilotRows.map((row) => ({
+    deviceKey: `ap:${row.id}`,
+    deviceName: null,
     serialNumber: row.serial_number,
-    lastSyncAt: row.last_sync_at,
-    health: row.overall_health,
-    complianceState: row.compliance_state
+    lastSyncAt: row.last_synced_at,
+    health: "info",
+    complianceState: null
   }));
 }
 
@@ -173,11 +197,16 @@ export function countDevicesForProvisioningTag(
   db: Database.Database,
   groupTag: string
 ) {
-  // Provisioning UI counts use device_state so Tags, discovery, and the
-  // tagged-device panel agree on the same computed device inventory.
-  return (
+  const deviceStateCount = (
     db
       .prepare("SELECT COUNT(*) as count FROM device_state WHERE group_tag = ?")
+      .get(groupTag) as { count: number }
+  ).count;
+  if (deviceStateCount > 0) return deviceStateCount;
+
+  return (
+    db
+      .prepare("SELECT COUNT(*) as count FROM autopilot_devices WHERE group_tag = ?")
       .get(groupTag) as { count: number }
   ).count;
 }

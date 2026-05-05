@@ -8,6 +8,7 @@ import {
   type GraphAssignmentWithTarget
 } from "./graph-assignment-normalize.js";
 import { GraphClient } from "./graph-client.js";
+import { logger } from "../logger.js";
 
 interface GraphConfigProfileResponse {
   id: string;
@@ -64,9 +65,17 @@ export async function syncConfigProfiles(
   // Fetch per-device config profile states in batches
   const deviceStates: DeviceConfigStateRow[] = [];
   const BATCH_SIZE = 20;
+  const DEVICE_STATE_LIMIT = 50;
+  const deviceIdsForState = intuneDeviceIds.slice(0, DEVICE_STATE_LIMIT);
+  if (intuneDeviceIds.length > DEVICE_STATE_LIMIT) {
+    logger.info(
+      { totalDevices: intuneDeviceIds.length, sampledDevices: DEVICE_STATE_LIMIT },
+      "[sync] Configuration per-device state sync capped to keep manual sync responsive."
+    );
+  }
 
-  for (let i = 0; i < intuneDeviceIds.length; i += BATCH_SIZE) {
-    const batch = intuneDeviceIds.slice(i, i + BATCH_SIZE);
+  for (let i = 0; i < deviceIdsForState.length; i += BATCH_SIZE) {
+    const batch = deviceIdsForState.slice(i, i + BATCH_SIZE);
     const results = await Promise.all(
       batch.map(async (deviceId) => {
         try {
