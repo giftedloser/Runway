@@ -111,22 +111,24 @@ export async function fullSync(
       syncWarnings.push(msg);
     }
 
-    logger.info("[sync] → Groups");
-    let groupSync: { groups: GroupRow[]; memberships: GroupMembershipRow[] } | undefined;
-    try {
-      groupSync = await syncGroups(client);
-    } catch (error) {
-      const msg = "Group sync failed.";
-      logger.warn({ err: error }, msg);
-      syncWarnings.push(msg);
-    }
-
     logger.info("[sync] → Autopilot deployment profiles");
     let profileSync: { profiles: ProfileRow[]; assignments: ProfileAssignmentRow[] } | undefined;
     try {
       profileSync = await syncProfiles(client);
     } catch (error) {
       const msg = "Autopilot profile sync failed.";
+      logger.warn({ err: error }, msg);
+      syncWarnings.push(msg);
+    }
+
+    logger.info("[sync] → Groups");
+    let groupSync: { groups: GroupRow[]; memberships: GroupMembershipRow[] } | undefined;
+    try {
+      groupSync = await syncGroups(client, {
+        targetGroupIds: profileSync?.assignments.map((assignment) => assignment.group_id) ?? []
+      });
+    } catch (error) {
+      const msg = "Group sync failed.";
       logger.warn({ err: error }, msg);
       syncWarnings.push(msg);
     }

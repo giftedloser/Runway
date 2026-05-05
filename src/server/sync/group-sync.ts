@@ -1,4 +1,5 @@
 import type { GroupMembershipRow, GroupRow } from "../db/types.js";
+import { logger } from "../logger.js";
 import { GraphClient } from "./graph-client.js";
 
 interface GraphGroup {
@@ -14,7 +15,14 @@ interface GraphGroupMember {
   deviceId?: string | null;
 }
 
-export async function syncGroups(client: GraphClient): Promise<{
+export function syncGroups(client: GraphClient): Promise<{
+  groups: GroupRow[];
+  memberships: GroupMembershipRow[];
+}>;
+export async function syncGroups(
+  client: GraphClient,
+  options: { targetGroupIds?: Iterable<string> } = {}
+): Promise<{
   groups: GroupRow[];
   memberships: GroupMembershipRow[];
 }> {
@@ -35,19 +43,40 @@ export async function syncGroups(client: GraphClient): Promise<{
   );
 
   const memberships: GroupMembershipRow[] = [];
+  const targetGroupIds = new Set(options.targetGroupIds ?? []);
+  const groupsToExpand = groups.filter((group) => shouldExpandMembership(group, targetGroupIds));
 
-  for (const group of groups) {
-    const members = await client.getAllPages<GraphGroupMember>(
-      `/groups/${group.id}/members?$select=id,deviceId`
-    );
-    for (const member of members) {
-      memberships.push({
-        group_id: group.id,
-        member_device_id: member.id,
-        last_synced_at: now
-      });
+  logger.info(
+    { groupCount: groups.length, membershipGroupCount: groupsToExpand.length },
+    "[sync] Group sync will expand device memberships for relevant groups."
+  );
+
+  for (const group of groupsToExpand) {
+    try {
+      const members = await client.getAllPages<GraphGroupMember>(
+        `/groups/${group.id}/members/microsoft.graph.device?$select=id,deviceId`
+      );
+      for (const member of members) {
+        memberships.push({
+          group_id: group.id,
+          member_device_id: member.id,
+          last_synced_at: now
+        });
+      }
+    } catch (error) {
+      logger.warn({ err: error, groupId: group.id, groupName: group.display_name }, "Group membership sync failed.");
     }
   }
 
   return { groups, memberships };
+}
+
+function shouldExpandMembership(group: GroupRow, targetGroupIds: Set<string>) {
+  if (targetGroupIds.has(group.id)) return true;
+
+  const name = group.display_name.toLowerCase();
+  if (name.includes("autopilot") || name.startsWith("ap-")) return true;
+
+  const rule = group.membership_rule?.toLowerCase() ?? "";
+  return rule.includes("device.") || rule.includes("devicephysicalids");
 }

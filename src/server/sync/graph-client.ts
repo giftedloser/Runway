@@ -45,7 +45,7 @@ export class GraphClient {
         // Cap at 60s so a misbehaving Graph response cannot hang the
         // whole sync. Floor at 1s to avoid hot-loops.
         const retryAfter = Number.isFinite(raw)
-          ? Math.min(Math.max(raw, 1), 60)
+          ? Math.min(Math.max(raw, 1), 10)
           : 2;
         await new Promise((resolve) => setTimeout(resolve, retryAfter * 1000));
         return this.requestJson<T>(path, version, attempt + 1);
@@ -63,11 +63,19 @@ export class GraphClient {
     }
   }
 
-  async getAllPages<T>(path: string, version: ApiVersion = "v1.0") {
+  async getAllPages<T>(path: string, version: ApiVersion = "v1.0", maxPages = 200) {
     const results: T[] = [];
     let url: string | null = `${graphBase[version]}${path}`;
+    const seen = new Set<string>();
 
     while (url) {
+      if (seen.has(url)) {
+        throw new Error(`Graph pagination loop detected for ${path}`);
+      }
+      if (seen.size >= maxPages) {
+        throw new Error(`Graph pagination exceeded ${maxPages} pages for ${path}`);
+      }
+      seen.add(url);
       const payload: { value: T[]; "@odata.nextLink"?: string } =
         await this.requestJson<{ value: T[]; "@odata.nextLink"?: string }>(url, version);
       results.push(...(payload.value ?? []));
