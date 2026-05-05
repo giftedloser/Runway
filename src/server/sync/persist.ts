@@ -7,6 +7,14 @@ function placeholders(columns: string[]) {
 }
 
 export function persistSnapshot(db: Database.Database, payload: SnapshotPayload) {
+  const hasCoreSourcePayload =
+    payload.autopilotRows !== undefined ||
+    payload.intuneRows !== undefined ||
+    payload.entraRows !== undefined ||
+    payload.groupRows !== undefined ||
+    payload.profileRows !== undefined ||
+    payload.profileAssignmentRows !== undefined;
+
   const existingAutopilot = new Map(
     (
       db
@@ -148,7 +156,7 @@ export function persistSnapshot(db: Database.Database, payload: SnapshotPayload)
     if (payload.mobileApps !== undefined) db.prepare("DELETE FROM mobile_apps").run();
     if (payload.deviceAppInstallStates !== undefined) db.prepare("DELETE FROM device_app_install_states").run();
     if (payload.graphAssignments !== undefined) db.prepare("DELETE FROM graph_assignments").run();
-    db.prepare("DELETE FROM device_state").run();
+    if (hasCoreSourcePayload) db.prepare("DELETE FROM device_state").run();
     // Only clear conditional_access_policies if we have fresh data
     // to insert. If CA sync failed, we must preserve the previous
     // snapshot so operators don't lose their policy view.

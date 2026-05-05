@@ -128,16 +128,16 @@ describe("fullSync — partial failure handling", () => {
     expect(logs[0]!.devicesSynced).toBe(0);
     expect(logs[0]!.completedAt).not.toBeNull();
 
-    // Every step ran despite the Intune failure.
+    // Core steps ran despite the Intune failure.
     expect(autopilotMock).toHaveBeenCalled();
     expect(intuneMock).toHaveBeenCalled();
     expect(entraMock).toHaveBeenCalled();
     expect(groupMock).toHaveBeenCalled();
     expect(profileMock).toHaveBeenCalled();
-    expect(caMock).toHaveBeenCalled();
-    expect(complianceMock).toHaveBeenCalled();
-    expect(configProfileMock).toHaveBeenCalled();
-    expect(appMock).toHaveBeenCalled();
+    expect(caMock).not.toHaveBeenCalled();
+    expect(complianceMock).not.toHaveBeenCalled();
+    expect(configProfileMock).not.toHaveBeenCalled();
+    expect(appMock).not.toHaveBeenCalled();
 
     // No lastError because the sync completed (with warnings).
     expect(getSyncState().lastError).toBeNull();
@@ -201,7 +201,7 @@ describe("fullSync — partial failure handling", () => {
     expect(state.lastError).toBeNull();
   });
 
-  it("continues the sync when conditional-access fails (best-effort)", async () => {
+  it("continues the full sync when conditional-access fails (best-effort)", async () => {
     db.prepare(
       `INSERT INTO conditional_access_policies (
         id, display_name, state, conditions_json, grant_controls_json, session_controls_json, last_synced_at, raw_json
@@ -218,7 +218,7 @@ describe("fullSync — partial failure handling", () => {
     );
     caMock.mockRejectedValue(new Error("CA 403"));
 
-    await fullSync(db, "manual", "mock-token");
+    await fullSync(db, "full", "mock-token");
 
     const logs = listSyncLogs(db);
     expect(logs.length).toBe(1);
@@ -251,11 +251,11 @@ describe("fullSync — partial failure handling", () => {
     expect(appMock).toHaveBeenCalled();
   });
 
-  it("treats config and app assignment failures as best-effort enrichment", async () => {
+  it("treats config and app assignment failures as best-effort enrichment during full sync", async () => {
     configProfileMock.mockRejectedValue(new Error("Config 403"));
     appMock.mockRejectedValue(new Error("Apps 403"));
 
-    await fullSync(db, "manual", "mock-token");
+    await fullSync(db, "full", "mock-token");
 
     const logs = listSyncLogs(db);
     expect(logs[0]!.errors).toEqual([]);
@@ -334,8 +334,8 @@ describe("fullSync — partial failure handling", () => {
         ]
       });
 
-    await fullSync(db, "manual", "mock-token");
-    await fullSync(db, "manual", "mock-token");
+    await fullSync(db, "full", "mock-token");
+    await fullSync(db, "full", "mock-token");
 
     const rows = db
       .prepare(
@@ -356,5 +356,19 @@ describe("fullSync — partial failure handling", () => {
         group_id: "group-kiosk"
       }
     ]);
+  });
+
+  it("skips optional enrichment during manual sync so core inventory completes quickly", async () => {
+    await fullSync(db, "manual", "mock-token");
+
+    expect(autopilotMock).toHaveBeenCalled();
+    expect(intuneMock).toHaveBeenCalled();
+    expect(entraMock).toHaveBeenCalled();
+    expect(profileMock).toHaveBeenCalled();
+    expect(groupMock).toHaveBeenCalled();
+    expect(caMock).not.toHaveBeenCalled();
+    expect(complianceMock).not.toHaveBeenCalled();
+    expect(configProfileMock).not.toHaveBeenCalled();
+    expect(appMock).not.toHaveBeenCalled();
   });
 });

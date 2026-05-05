@@ -133,45 +133,50 @@ export async function fullSync(
       syncWarnings.push(msg);
     }
 
-    logger.info("[sync] → Conditional access policies");
-    let conditionalAccessSync: ConditionalAccessSyncResult | null = null;
-    try {
-      conditionalAccessSync = await syncConditionalAccessPolicies(client);
-    } catch (error) {
-      const msg = "Conditional access sync failed; preserved previous policy snapshot.";
-      logger.warn({ err: error }, msg);
-    }
-
-    // --- Phase 2: compliance / config / app syncs need Intune device IDs ---
-    const intuneIds =
-      intuneRows?.map((r) => r.id) ??
-      (db.prepare("SELECT id FROM intune_devices").all() as Array<{ id: string }>).map((row) => row.id);
-
-    logger.info("[sync] → Compliance policies");
     let complianceSync: ComplianceSyncResult | undefined;
-    try {
-      complianceSync = await syncCompliancePolicies(client, intuneIds);
-    } catch (error) {
-      const msg = "Compliance policy sync failed.";
-      logger.warn({ err: error }, msg);
-    }
-
-    logger.info("[sync] → Configuration profiles");
     let configProfileSync: ConfigProfileSyncResult | undefined;
-    try {
-      configProfileSync = await syncConfigProfiles(client, intuneIds);
-    } catch (error) {
-      const msg = "Configuration profile sync failed.";
-      logger.warn({ err: error }, msg);
-    }
-
-    logger.info("[sync] → App assignments");
     let appSync: AppSyncResult | undefined;
-    try {
-      appSync = await syncAppAssignments(client, intuneIds);
-    } catch (error) {
-      const msg = "App assignment sync failed.";
-      logger.warn({ err: error }, msg);
+    let conditionalAccessSync: ConditionalAccessSyncResult | null = null;
+
+    if (syncType === "full") {
+      logger.info("[sync] → Conditional access policies");
+      try {
+        conditionalAccessSync = await syncConditionalAccessPolicies(client);
+      } catch (error) {
+        const msg = "Conditional access sync failed; preserved previous policy snapshot.";
+        logger.warn({ err: error }, msg);
+      }
+
+      // --- Phase 2: compliance / config / app syncs need Intune device IDs ---
+      const intuneIds =
+        intuneRows?.map((r) => r.id) ??
+        (db.prepare("SELECT id FROM intune_devices").all() as Array<{ id: string }>).map((row) => row.id);
+
+      logger.info("[sync] → Compliance policies");
+      try {
+        complianceSync = await syncCompliancePolicies(client, intuneIds);
+      } catch (error) {
+        const msg = "Compliance policy sync failed.";
+        logger.warn({ err: error }, msg);
+      }
+
+      logger.info("[sync] → Configuration profiles");
+      try {
+        configProfileSync = await syncConfigProfiles(client, intuneIds);
+      } catch (error) {
+        const msg = "Configuration profile sync failed.";
+        logger.warn({ err: error }, msg);
+      }
+
+      logger.info("[sync] → App assignments");
+      try {
+        appSync = await syncAppAssignments(client, intuneIds);
+      } catch (error) {
+        const msg = "App assignment sync failed.";
+        logger.warn({ err: error }, msg);
+      }
+    } else {
+      logger.info("[sync] Manual sync uses fast core inventory path; optional enrichment is skipped.");
     }
 
     // --- Persist whatever succeeded ---
