@@ -257,7 +257,7 @@ export function TagsPage() {
               <div>
                 <div className="font-semibold">Tag mappings could not be loaded.</div>
                 <div className="mt-0.5 text-[11.5px] leading-relaxed opacity-90">
-                  Editing is disabled until Runway can load full tag_config data. Row clicks still open Provisioning Builder.
+                  Editing is disabled until Runway can load full tag_config data. Row clicks still open Provisioning Path.
                 </div>
               </div>
             </div>
@@ -310,7 +310,7 @@ export function TagsPage() {
                       type="button"
                       className="grid min-w-0 cursor-pointer gap-2 rounded-[var(--pc-radius-sm)] text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pc-accent)] sm:col-span-5 sm:grid-cols-[minmax(0,1.35fr)_110px_150px_150px_minmax(0,1fr)] sm:items-center"
                       onClick={() => navigateToBuilder(tag.groupTag)}
-                      aria-label={`Open Provisioning Builder for ${tag.groupTag}`}
+                      aria-label={`Open Provisioning Path for ${tag.groupTag}`}
                     >
                       <div className="min-w-0">
                         <div className="truncate text-[13px] font-semibold text-[var(--pc-text)]">

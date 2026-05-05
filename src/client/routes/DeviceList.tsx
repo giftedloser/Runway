@@ -136,14 +136,14 @@ export function DeviceListPage() {
         toast.push({
           variant: "success",
           title: `Bulk ${label.toLowerCase()} queued`,
-          description: `${result.successCount} of ${result.total} devices accepted. Check Action Audit for the timeline.`,
+          description: `${result.successCount} of ${result.total} devices accepted. Check Action History for the timeline.`,
         });
         clearSelection();
       } else {
         toast.push({
           variant: "warning",
           title: `Bulk ${label.toLowerCase()} partially completed`,
-          description: `${result.successCount} succeeded, ${result.failureCount} failed. Check Action Audit for details.`,
+          description: `${result.successCount} succeeded, ${result.failureCount} failed. Check Action History for details.`,
           durationMs: 8000,
         });
       }

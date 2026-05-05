@@ -176,7 +176,7 @@ export function SettingsPage() {
         <SettingsSectionHeader
           index="2"
           title="Graph Integration"
-          detail="Read-only ingestion for Overview and joins"
+          detail="Read-only ingestion for Start and joins"
         />
 
         <Card className="p-5">

@@ -439,7 +439,7 @@ describe("client drilldown", () => {
     return findDashboardTitle();
   }
 
-  it("navigates from overview to devices to a device detail", async () => {
+  it("navigates from Start to devices to a device detail", async () => {
     await renderApp();
 
     // Default landing opens Start.
@@ -453,14 +453,12 @@ describe("client drilldown", () => {
     fireEvent.click(await screen.findByText("DESKTOP-North-001"));
 
     // Device detail renders; the default tab is severity-driven (targeting),
-    // so the device name is shown in the hero header. Switch to the enrollment
+    // so the device name is shown in the hero header. Switch to the provisioning
     // tab where the diagnostic panel renders each flag title.
-    await screen.findAllByText("Device Diagnostics", {}, { timeout: 3000 });
+    await screen.findAllByText("Device record", {}, { timeout: 3000 });
     expect(screen.getByRole("button", { name: /open in intune/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /open in entra/i })).toBeInTheDocument();
-    // Two "Enrollment" buttons exist: the breakpoint chip in the hero and the
-    // tab nav button. Either one activates the enrollment tab; grab the tab.
-    const enrollmentButtons = screen.getAllByRole("button", { name: /enrollment/i });
+    const enrollmentButtons = screen.getAllByRole("button", { name: /provisioning/i });
     fireEvent.click(enrollmentButtons[enrollmentButtons.length - 1]);
     expect(
       await screen.findByText("No Profile Assigned", {}, { timeout: 3000 })
@@ -490,7 +488,7 @@ describe("client drilldown", () => {
     expect(await screen.findByText("Setting saved")).toBeInTheDocument();
   });
 
-  it("surfaces overview master search results and opens a device", async () => {
+  it("surfaces Start master search results and opens a device", async () => {
     await renderApp();
 
     expect(await openStart()).toBeInTheDocument();
@@ -502,7 +500,7 @@ describe("client drilldown", () => {
     fireEvent.click(await screen.findByRole("button", { name: /DESKTOP-North-001/i }));
 
     expect(
-      await screen.findByText("Device Diagnostics", {}, { timeout: 3000 })
+      await screen.findByText("Device record", {}, { timeout: 3000 })
     ).toBeInTheDocument();
   });
 
@@ -518,8 +516,8 @@ describe("client drilldown", () => {
 
     fireEvent.click((await screen.findAllByText("Needs attention"))[0]);
     fireEvent.click(await screen.findByText("DESKTOP-North-001"));
-    await screen.findAllByText("Device Diagnostics", {}, { timeout: 3000 });
-    const enrollmentButtons = screen.getAllByRole("button", { name: /enrollment/i });
+    await screen.findAllByText("Device record", {}, { timeout: 3000 });
+    const enrollmentButtons = screen.getAllByRole("button", { name: /provisioning/i });
     fireEvent.click(enrollmentButtons[enrollmentButtons.length - 1]);
 
     const openButtons = await screen.findAllByRole("button", { name: "Open" });
@@ -575,7 +573,7 @@ describe("client drilldown", () => {
 
     fireEvent.click((await screen.findAllByText("Needs attention"))[0]);
     fireEvent.click(await screen.findByText("DESKTOP-North-001"));
-    await screen.findAllByText("Device Diagnostics", {}, { timeout: 3000 });
+    await screen.findAllByText("Device record", {}, { timeout: 3000 });
     fireEvent.click(screen.getByRole("button", { name: /^actions$/i }));
 
     expect(await screen.findByText("Admin sign-in required")).toBeInTheDocument();
@@ -590,7 +588,7 @@ describe("client drilldown", () => {
 
     fireEvent.click((await screen.findAllByText("Needs attention"))[0]);
     fireEvent.click(await screen.findByText("DESKTOP-North-001"));
-    await screen.findAllByText("Device Diagnostics", {}, { timeout: 3000 });
+    await screen.findAllByText("Device record", {}, { timeout: 3000 });
     const actionTabs = screen.getAllByRole("button", { name: /^actions$/i });
     fireEvent.click(actionTabs[actionTabs.length - 1]);
     expect(await screen.findByText("Remote Actions")).toBeInTheDocument();

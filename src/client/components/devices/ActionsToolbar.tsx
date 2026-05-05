@@ -208,8 +208,8 @@ export function ActionsToolbar({ device }: { device: DeviceDetailResponse }) {
         description:
           result.message ??
           (result.success
-            ? "Action sent to Intune. Check Action Audit for the timeline."
-            : "Action failed. Check Action Audit for details.")
+            ? "Action sent to Intune. Check Action History for the timeline."
+            : "Action failed. Check Action History for details.")
       });
       setPending(null);
     } catch (error) {
@@ -218,8 +218,8 @@ export function ActionsToolbar({ device }: { device: DeviceDetailResponse }) {
         title: `${spec.label} failed`,
         description:
           error instanceof Error
-            ? `${error.message} Check Action Audit for details.`
-            : "Action failed. Check Action Audit for details."
+            ? `${error.message} Check Action History for details.`
+            : "Action failed. Check Action History for details."
       });
       setPending(null);
     }

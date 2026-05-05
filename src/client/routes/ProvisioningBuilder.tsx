@@ -230,7 +230,7 @@ export function ProvisioningBuilderPage() {
     <div className="space-y-5">
       <PageHeader
         eyebrow="Inspect"
-        title="Provisioning Builder"
+        title="Provisioning Path"
         description="Trace a group tag through targeting and profile assignment."
         actions={
           <>
@@ -420,7 +420,7 @@ export function ProvisioningBuilderPage() {
               <EmptyState
                 id="builder-no-tag-loaded"
                 title="Pick a tag from the Tags view, or type one above."
-                description="Provisioning Builder needs one Autopilot group tag before it can show target groups, payloads, or devices."
+                description="Provisioning Path needs one Autopilot group tag before it can show target groups, payloads, or devices."
                 action={{ label: "Open Tags", onClick: () => void navigate({ to: "/tags" }) }}
               />
             </Card>

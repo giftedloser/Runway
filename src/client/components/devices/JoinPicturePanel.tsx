@@ -57,6 +57,12 @@ function buildStages(
   formatTimestamp: (value: string | null | undefined) => string
 ): JoinStage[] {
   const path = device.assignmentPath;
+  const hasCoverageOnlyAutopilotGap =
+    !path.autopilotRecord &&
+    device.identity.intuneId &&
+    device.diagnostics.some((diag) =>
+      diag.code === "no_autopilot_record" || diag.code === "missing_ztdid"
+    );
   const targetGroup = path.targetingGroups.find((group) => group.membershipState === "member");
   const missingTargetGroup = path.targetingGroups.find(
     (group) => group.membershipState === "missing"
@@ -70,8 +76,14 @@ function buildStages(
       value: path.autopilotRecord ? "Record found" : "Missing record",
       detail: path.autopilotRecord?.groupTag
         ? `Group tag ${path.autopilotRecord.groupTag}`
-        : "Hardware identity",
-      tone: path.autopilotRecord ? "ok" : "broken",
+        : hasCoverageOnlyAutopilotGap
+          ? "Coverage context"
+          : "Hardware identity",
+      tone: path.autopilotRecord
+        ? "ok"
+        : hasCoverageOnlyAutopilotGap
+          ? "missing"
+          : "broken",
       icon: Fingerprint
     },
     {
@@ -158,10 +170,10 @@ export function JoinPicturePanel({
         <div>
           <div className="flex items-center gap-2">
             <Fingerprint className="h-4 w-4 text-[var(--pc-accent)]" />
-            <span className="text-[13px] font-semibold text-[var(--pc-text)]">Join Picture</span>
+            <span className="text-[13px] font-semibold text-[var(--pc-text)]">Device path</span>
           </div>
           <p className="mt-1 text-[12px] text-[var(--pc-text-muted)]">
-            The end-to-end path from hardware identity to management state.
+            The source trail from hardware identity to management state.
           </p>
         </div>
         <span

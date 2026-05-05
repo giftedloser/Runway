@@ -170,7 +170,7 @@ export function AccessSecuritySection({
               <ShieldCheck className="h-4 w-4 text-[var(--pc-accent)]" />
               <div className="mt-3 text-[13px] font-semibold text-[var(--pc-text)]">Audit log</div>
               <p className="mt-1 text-[12px] leading-relaxed text-[var(--pc-text-muted)]">
-                View recent admin and remediation actions in Action Audit.
+                View recent admin and remediation actions in Action History.
               </p>
             </Link>
           </div>

@@ -38,10 +38,10 @@ const PAGE_SIZE_OPTIONS = [25, 50, 100, 200].map((value) => ({
   label: `${value} rows`
 }));
 const LANDING_OPTIONS = [
-  { value: "overview", label: "Overview" },
-  { value: "devices", label: "Devices" },
+  { value: "overview", label: "Start" },
+  { value: "devices", label: "Device Queue" },
   { value: "tags", label: "Tags" },
-  { value: "provisioning", label: "Provisioning Builder" }
+  { value: "provisioning", label: "Provisioning Path" }
 ] as const;
 
 export function DisplayBehaviorSection({
@@ -151,7 +151,7 @@ export function DisplayBehaviorSection({
               <div className="min-w-0">
                 <div className="text-[12px] font-semibold text-[var(--pc-text-secondary)]">Help tips</div>
                 <div className="mt-0.5 text-[12px] leading-relaxed text-[var(--pc-text-muted)]">
-                  Restore dismissed sidebar and Provisioning Builder help tips for this install.
+                  Restore dismissed sidebar and Provisioning Path help tips for this install.
                 </div>
               </div>
             </div>

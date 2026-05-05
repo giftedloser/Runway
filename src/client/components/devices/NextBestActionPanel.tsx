@@ -162,7 +162,7 @@ function buildRecommendation(device: DeviceDetailResponse): Recommendation {
   return {
     title: "Start with the first critical diagnostic",
     action: "Open the diagnostics below and work from the highest severity item first.",
-    verify: "Run a sync after each fix and watch the Join Picture update.",
+    verify: "Run a sync after each fix and watch the Device path update.",
     wait: "Depends on the Microsoft service propagation path involved.",
     tone: "info",
     icon: ArrowRight

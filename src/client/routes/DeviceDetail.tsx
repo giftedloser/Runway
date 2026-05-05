@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-router";
 import {
   ArrowLeft,
+  AlertTriangle,
   CheckCircle2,
   ChevronRight,
   Clock,
@@ -72,10 +73,10 @@ const TAB_LABELS: Record<TabKey, { label: string; icon: typeof Fingerprint }> =
   {
     identity: { label: "Identity", icon: Fingerprint },
     targeting: { label: "Targeting", icon: Target },
-    enrollment: { label: "Enrollment", icon: Radio },
+    enrollment: { label: "Provisioning", icon: Radio },
     drift: { label: "Compliance & Drift", icon: GitBranch },
     operate: { label: "Actions", icon: Wrench },
-    history: { label: "History & Raw Data", icon: Clock },
+    history: { label: "Evidence", icon: Clock },
   };
 
 const BREAKPOINT_BUCKETS: Record<BreakpointKey, FlagCode[]> = {
@@ -162,6 +163,71 @@ function bucketDiagnostics(diagnostics: FlagExplanation[]) {
     }
   }
   return buckets;
+}
+
+type OperatorDisposition = {
+  label: string;
+  description: string;
+  tone: "critical" | "warning" | "info" | "healthy";
+  icon: typeof CheckCircle2;
+};
+
+const COVERAGE_FLAGS = new Set<FlagCode>([
+  "no_autopilot_record",
+  "orphaned_autopilot",
+  "missing_ztdid",
+]);
+
+function getOperatorDisposition(device: DeviceDetailResponse): OperatorDisposition {
+  if (device.identity.identityConflict || device.identity.nameJoined) {
+    return {
+      label: "Verify identity",
+      description:
+        "Source records are not trusted enough yet. Confirm the device identity before acting on diagnostics.",
+      tone: "critical",
+      icon: Fingerprint,
+    };
+  }
+
+  const actionable = device.diagnostics.filter((diag) => !COVERAGE_FLAGS.has(diag.code));
+  const highest = actionable.find((diag) => diag.severity === "critical")
+    ?? actionable.find((diag) => diag.severity === "warning");
+
+  if (highest) {
+    return {
+      label: highest.severity === "critical" ? "Needs action" : "Needs review",
+      description: highest.summary,
+      tone: highest.severity,
+      icon: highest.severity === "critical" ? AlertTriangle : Target,
+    };
+  }
+
+  const coverageOnly = device.diagnostics.some((diag) => COVERAGE_FLAGS.has(diag.code));
+  if (coverageOnly) {
+    return {
+      label: "Autopilot coverage",
+      description:
+        "Managed device with Autopilot coverage gaps. Treat as adoption context unless this device is expected to use Autopilot.",
+      tone: "info",
+      icon: Radio,
+    };
+  }
+
+  return {
+    label: "No action needed",
+    description: "Identity is trusted and Runway is not seeing active provisioning or policy issues.",
+    tone: "healthy",
+    icon: CheckCircle2,
+  };
+}
+
+function dispositionToneClass(tone: OperatorDisposition["tone"]) {
+  return {
+    critical: "border-[var(--pc-critical)]/40 bg-[var(--pc-critical-muted)] text-[var(--pc-critical)]",
+    warning: "border-[var(--pc-warning)]/40 bg-[var(--pc-warning-muted)] text-[var(--pc-warning)]",
+    info: "border-[var(--pc-info)]/40 bg-[var(--pc-info-muted)] text-[var(--pc-info)]",
+    healthy: "border-[var(--pc-healthy)]/35 bg-[var(--pc-healthy-muted)] text-[var(--pc-healthy)]",
+  }[tone];
 }
 
 function BreakpointChip({
@@ -390,6 +456,8 @@ export function DeviceDetailPage() {
   const displayName =
     data.summary.deviceName ?? data.summary.serialNumber ?? deviceKey;
   const breakpoints = bucketDiagnostics(data.diagnostics);
+  const disposition = getOperatorDisposition(data);
+  const DispositionIcon = disposition.icon;
 
   // Default tab: the highest-severity breakpoint bucket, or "identity" if clear.
   const defaultTab: TabKey =
@@ -473,7 +541,7 @@ export function DeviceDetailPage() {
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
             <div className="text-[10.5px] font-medium uppercase tracking-wide text-[var(--pc-text-muted)]">
-              Device Diagnostics
+              Device record
             </div>
             <h1
               className="mt-0.5 truncate text-[1.7rem] font-semibold tracking-tight text-[var(--pc-text)]"
@@ -481,9 +549,22 @@ export function DeviceDetailPage() {
             >
               {displayName}
             </h1>
-            <p className="mt-1 pc-helper-text max-w-3xl">
-              Tap a problem-area chip to jump to the failing subsystem.
-            </p>
+            <div
+              className={cn(
+                "mt-3 flex max-w-3xl items-start gap-2.5 rounded-[var(--pc-radius)] border px-3 py-2.5",
+                dispositionToneClass(disposition.tone),
+              )}
+            >
+              <DispositionIcon className="mt-0.5 h-4 w-4 shrink-0" />
+              <div>
+                <div className="text-[12.5px] font-semibold">
+                  {disposition.label}
+                </div>
+                <p className="mt-0.5 text-[12px] leading-relaxed text-[var(--pc-text-secondary)]">
+                  {disposition.description}
+                </p>
+              </div>
+            </div>
             <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-[var(--pc-text-muted)]">
               <span>
                 Serial{" "}
@@ -550,7 +631,7 @@ export function DeviceDetailPage() {
           </div>
         )}
 
-        {/* Breakpoint chips — click to jump to the failing subsystem tab */}
+        {/* Problem-area chips — click to open the matching subsystem tab. */}
         <div className="mt-4 grid grid-cols-2 gap-2 md:grid-cols-4">
           {(Object.keys(BREAKPOINT_BUCKETS) as BreakpointKey[]).map((key) => (
             <BreakpointChip
@@ -623,7 +704,7 @@ export function DeviceDetailPage() {
       {activeTab === "enrollment" ? (
         <section className="space-y-3">
           <TabHeading
-            title="Enrollment"
+            title="Provisioning"
             description="OOBE, Autopilot, and Intune enrollment state."
           />
           <ProvisioningTimeline device={data} />
@@ -665,7 +746,7 @@ export function DeviceDetailPage() {
       {activeTab === "history" ? (
         <section className="space-y-3">
           <TabHeading
-            title="History & Raw Data"
+            title="Evidence"
             description="State transitions and raw Graph evidence."
           />
           <HistoryPanel device={data} />
