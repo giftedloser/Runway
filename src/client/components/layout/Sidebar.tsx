@@ -30,7 +30,7 @@ import {
 } from "../../hooks/useTheme.js";
 import { cn } from "../../lib/utils.js";
 import { apiRequest } from "../../lib/api.js";
-import type { TagInventoryItem } from "../provisioning/types.js";
+import { normalizeTagInventory } from "../../lib/provisioning-tags.js";
 import { requestCommandPaletteOpen } from "../command/events.js";
 import { HelpTooltip } from "../shared/HelpTooltip.js";
 import { AuthIndicator } from "./AuthIndicator.js";
@@ -141,7 +141,7 @@ export function Sidebar() {
   const settings = useSettings();
   const tagInventory = useQuery({
     queryKey: ["provisioning-tags"],
-    queryFn: () => apiRequest<TagInventoryItem[]>("/api/provisioning/tags")
+    queryFn: async () => normalizeTagInventory(await apiRequest<unknown>("/api/provisioning/tags"))
   });
   const firstRun = useFirstRunStatus();
   const [, , , setTheme] = useTheme();

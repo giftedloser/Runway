@@ -166,6 +166,44 @@ describe("cleanup settings flows", () => {
     expect(screen.queryByRole("dialog", { name: /tag mapping/i })).not.toBeInTheDocument();
   });
 
+  it("does not crash when tag inventory returns malformed rows", async () => {
+    global.fetch = vi.fn(async (input) => {
+      const url = String(input);
+      if (url.includes("/api/provisioning/tags"))
+        return jsonResponse([
+          { groupTag: "", deviceCount: 4 },
+          { groupTag: "North", deviceCount: null, configured: "yes" },
+          { message: "unexpected row" },
+        ]);
+      if (url.includes("/api/settings")) return jsonResponse(buildSettingsPayload());
+      if (url.includes("/api/auth/access-status"))
+        return jsonResponse({
+          required: false,
+          configured: false,
+          mode: "disabled",
+          authenticated: false,
+          user: null,
+          name: null,
+          expiresAt: null,
+          allowedUsersConfigured: false,
+          reason: "App access enforcement is disabled.",
+        });
+      if (url.includes("/api/auth/status"))
+        return jsonResponse({ authenticated: true, user: "admin@example.test" });
+      if (url.includes("/api/sync/status"))
+        return jsonResponse({ inProgress: false, lastError: null, lastCompletedAt: null, canTriggerManualSync: true });
+      if (url.includes("/api/setup/status"))
+        return jsonResponse({ graphCredentialsPresent: true, successfulSyncCompleted: true, deviceRowsPresent: true, complete: true });
+      return jsonResponse({ message: "Not found" }, 404);
+    }) as typeof fetch;
+
+    await renderApp();
+
+    expect(await screen.findByText("Tag Inventory")).toBeInTheDocument();
+    expect(screen.getAllByText("North").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("0")[0]).toBeInTheDocument();
+  });
+
   it("disables tag mapping edits and shows retry when settings tag_config fails", async () => {
     const tagRows = [...northTagRows];
 
